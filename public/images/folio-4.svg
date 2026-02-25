@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" fill="none">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="640" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#30261B"/>
+      <stop offset="1" stop-color="#141514"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="420" rx="20" fill="url(#g)"/>
+  <rect x="42" y="48" width="556" height="324" rx="16" stroke="#D0AD68" stroke-opacity="0.38"/>
+  <text x="70" y="96" fill="#D0AD68" font-size="26" font-family="Georgia, serif">Voltrune Project</text>
+  <text x="70" y="132" fill="#CFC3AE" font-size="18" font-family="Arial, sans-serif">Placeholder Visual</text>
+</svg>

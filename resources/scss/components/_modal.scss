@@ -1,0 +1,42 @@
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 80;
+}
+
+.modal.is-open {
+  display: grid;
+  place-items: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 6, 5, 0.72);
+}
+
+.modal-panel {
+  position: relative;
+  width: min(680px, calc(100% - 1.5rem));
+  border-radius: 16px;
+  border: 1px solid rgba(208, 173, 104, 0.36);
+  background: linear-gradient(165deg, #2b2117, #1a1510);
+  padding: 1.4rem;
+  z-index: 1;
+}
+
+.modal-close {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  width: 2rem;
+  height: 2rem;
+}
+
+body.modal-open {
+  overflow: hidden;
+}

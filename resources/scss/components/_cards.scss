@@ -1,0 +1,110 @@
+.service-card,
+.portfolio-card,
+.mission-card,
+.steps-grid article,
+.hosting-box {
+  background: linear-gradient(145deg, rgba(48, 39, 28, 0.92), rgba(34, 28, 21, 0.95));
+  border: 1px solid rgba(208, 173, 104, 0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position: relative;
+}
+
+.service-card,
+.portfolio-card,
+.mission-card,
+.steps-grid article,
+.hosting-box {
+  overflow: hidden;
+}
+
+.service-card::before,
+.portfolio-card::before,
+.mission-card::before,
+.hosting-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 56px;
+  height: 56px;
+  border-top: 1px solid rgba(208, 173, 104, 0.4);
+  border-right: 1px solid rgba(208, 173, 104, 0.4);
+  border-top-right-radius: var(--radius);
+  pointer-events: none;
+}
+
+.services-grid,
+.steps-grid,
+.portfolio-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.service-card {
+  padding: 1.2rem;
+}
+
+.service-card,
+.portfolio-card,
+.steps-grid article,
+.hosting-box {
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.service-card:hover,
+.portfolio-card:hover,
+.steps-grid article:hover,
+.hosting-box:hover {
+  transform: translateY(-2px);
+  border-color: rgba(208, 173, 104, 0.38);
+  box-shadow: 0 22px 34px rgba(0, 0, 0, 0.42);
+}
+
+.service-card .material-symbols-rounded {
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.portfolio-card img {
+  width: 100%;
+  height: auto;
+  border-bottom: 1px solid rgba(208, 173, 104, 0.16);
+}
+
+.portfolio-content {
+  padding: 1rem;
+}
+
+.portfolio-result {
+  color: var(--text);
+  font-weight: 600;
+  margin-top: 0.6rem;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 720px) {
+  .services-grid,
+  .steps-grid,
+  .portfolio-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 980px) {
+  .services-grid,
+  .steps-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .portfolio-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

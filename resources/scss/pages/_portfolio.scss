@@ -1,0 +1,38 @@
+.portfolio-hero {
+  position: relative;
+}
+
+.portfolio-hero::after {
+  content: '';
+  position: absolute;
+  inset: 30% 4% auto;
+  height: 120px;
+  background: radial-gradient(circle at center, rgba(208, 173, 104, 0.2), transparent 72%);
+  pointer-events: none;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.filter-btn {
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.36rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.filter-btn.is-active,
+.filter-btn:hover {
+  color: var(--text);
+  border-color: rgba(208, 173, 104, 0.5);
+  background: rgba(208, 173, 104, 0.14);
+}
+
+.portfolio-card.is-hidden {
+  display: none;
+}

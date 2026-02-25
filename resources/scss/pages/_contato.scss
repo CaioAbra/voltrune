@@ -1,0 +1,27 @@
+.contact-form {
+  display: grid;
+  gap: 0.72rem;
+  padding: 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(208, 173, 104, 0.2);
+  background: linear-gradient(165deg, rgba(45, 36, 27, 0.9), rgba(31, 25, 18, 0.95));
+}
+
+.contact-form label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(208, 173, 104, 0.2);
+  background: rgba(20, 16, 12, 0.8);
+  color: var(--text);
+  padding: 0.7rem 0.8rem;
+}
+
+.contact-form button {
+  margin-top: 0.3rem;
+}

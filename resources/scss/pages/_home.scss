@@ -1,0 +1,78 @@
+.home-hero {
+  padding-top: clamp(6.2rem, 14vw, 8.8rem);
+}
+
+.hero-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.badge-row span {
+  display: inline-flex;
+  border: 1px solid rgba(208, 173, 104, 0.35);
+  border-radius: 999px;
+  padding: 0.34rem 0.65rem;
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.mission-card {
+  padding: 1.2rem;
+}
+
+.mission-card ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
+.mission-card li {
+  margin-bottom: 0.6rem;
+  color: var(--muted);
+}
+
+.steps-grid article {
+  padding: 1rem;
+}
+
+.steps-grid article span {
+  color: var(--accent);
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.1em;
+}
+
+.hosting-box {
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.2rem;
+}
+
+.final-cta {
+  text-align: center;
+}
+
+.final-cta .hero-actions {
+  justify-content: center;
+}
+
+.section-head h2 {
+  margin-bottom: 0.2rem;
+}
+
+@media (min-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1.25fr 0.9fr;
+    align-items: center;
+  }
+
+  .hosting-box {
+    grid-template-columns: 1fr auto;
+  }
+}
