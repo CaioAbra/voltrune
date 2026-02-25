@@ -1,7 +1,13 @@
 <header class="site-header" data-header>
     <div class="container nav-wrap">
         <a class="brand" href="{{ route('home') }}" aria-label="Voltrune - inicio">
-            <span class="brand-rune" aria-hidden="true">V</span>
+            <span class="brand-rune" aria-hidden="true">
+                @if (file_exists(public_path('images/brand-rune.webp')))
+                    <img src="{{ asset('images/brand-rune.webp') }}" alt="" width="32" height="32" loading="eager" decoding="async">
+                @else
+                    V
+                @endif
+            </span>
             <span class="brand-text">Voltrune</span>
         </a>
 

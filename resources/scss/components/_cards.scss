@@ -82,6 +82,13 @@
   margin-top: 0.6rem;
 }
 
+.portfolio-meta {
+  margin-top: 0.6rem;
+  margin-bottom: 0;
+  font-size: 0.88rem;
+  color: color-mix(in srgb, var(--muted) 88%, #fff 12%);
+}
+
 .section-head {
   display: flex;
   align-items: baseline;

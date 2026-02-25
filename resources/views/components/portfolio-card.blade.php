@@ -25,6 +25,6 @@
         @if ($result)
             <p class="portfolio-result">{{ $result }}</p>
         @endif
-        <a class="text-link" href="{{ route('contato') }}">Abrir missao</a>
+        <p class="portfolio-meta">Disponibilidade de detalhes sob consulta.</p>
     </div>
 </article>
