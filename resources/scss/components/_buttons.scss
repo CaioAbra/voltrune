@@ -1,0 +1,30 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(208, 173, 104, 0.4);
+  background: linear-gradient(130deg, var(--accent), #be9552);
+  color: #1a1208;
+  padding: 0.72rem 1.1rem;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+}
+
+.btn:hover,
+.btn:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(208, 173, 104, 0.2);
+  filter: brightness(1.03);
+}
+
+.btn-ghost {
+  background: rgba(208, 173, 104, 0.08);
+  color: var(--text);
+}
+
+.btn-sm {
+  font-size: 0.85rem;
+  padding: 0.55rem 0.86rem;
+}

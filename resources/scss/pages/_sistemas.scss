@@ -1,0 +1,38 @@
+.systems-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.system-card {
+  background: linear-gradient(145deg, rgba(48, 39, 28, 0.92), rgba(34, 28, 21, 0.95));
+  border: 1px solid rgba(208, 173, 104, 0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.2rem;
+}
+
+.system-card h2 {
+  margin-bottom: 0.3rem;
+}
+
+.system-badge {
+  display: inline-flex;
+  margin-bottom: 0.9rem;
+  border: 1px solid rgba(208, 173, 104, 0.4);
+  border-radius: 999px;
+  color: var(--accent);
+  padding: 0.22rem 0.58rem;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.system-card.is-live {
+  border-color: rgba(208, 173, 104, 0.4);
+}
+
+@media (min-width: 920px) {
+  .systems-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
