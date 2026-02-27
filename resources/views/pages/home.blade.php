@@ -98,14 +98,14 @@
 </section>
 
 <section class="section section-alt">
-    <div class="container">
+    <div class="container quest-board">
         <div class="section-head">
             <h2>Missoes em destaque</h2>
             <a class="text-link" href="{{ route('portfolio') }}">Abrir grimorio completo</a>
         </div>
-        <div class="portfolio-grid">
-            <x-portfolio-card title="Landing para consultoria B2B" description="Reposicionamento de oferta e funil de captacao." :tags="['site','seo','b2b']" result="+48% em leads qualificados" :image="asset('images/folio-1.svg')" />
-            <x-portfolio-card title="Dashboard de operacoes" description="Painel com automacoes para equipe comercial." :tags="['dashboard','app','automacao']" result="-32% tempo operacional" :image="asset('images/folio-2.svg')" />
+        <div class="portfolio-grid quest-grid">
+            <x-portfolio-card title="Landing para consultoria B2B" description="Reposicionamento de oferta e funil de captacao." :tags="['site','seo','b2b']" result="+48% em leads qualificados" :image="asset('images/folio-1.svg')" seal="Aprovado" />
+            <x-portfolio-card title="Dashboard de operacoes" description="Painel com automacoes para equipe comercial." :tags="['dashboard','app','automacao']" result="-32% tempo operacional" :image="asset('images/folio-2.svg')" seal="Concluida" />
             <x-portfolio-card title="Campanha de lancamento" description="Criativos e paginas para nova linha de produto." :tags="['midia','campanha','tracking']" result="ROI 4.1 em 45 dias" :image="asset('images/folio-3.svg')" />
             <x-portfolio-card title="Rebranding premium" description="Novo sistema visual para escritorio juridico." :tags="['marca','design']" result="Aumento de percepcao de valor" :image="asset('images/folio-4.svg')" />
         </div>

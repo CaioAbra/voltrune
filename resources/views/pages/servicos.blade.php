@@ -102,7 +102,9 @@
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
-                <p>Sim. Estruturamos estrategia para empresas, profissionais liberais, startups e operacoes de e-commerce.</p>
+                <div class="faq-answer-inner">
+                    <p>Sim. Estruturamos estrategia para empresas, profissionais liberais, startups e operacoes de e-commerce.</p>
+                </div>
             </div>
         </details>
         <details class="faq-item">
@@ -111,7 +113,9 @@
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
-                <p>Configuramos GA4, Pixel, eventos, tags e metas para acompanhar funil completo.</p>
+                <div class="faq-answer-inner">
+                    <p>Configuramos GA4, Pixel, eventos, tags e metas para acompanhar funil completo.</p>
+                </div>
             </div>
         </details>
         <details class="faq-item">
@@ -120,7 +124,9 @@
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
-                <p>Sim. SEO tecnico e on-page entram no escopo base de websites e landings.</p>
+                <div class="faq-answer-inner">
+                    <p>Sim. SEO tecnico e on-page entram no escopo base de websites e landings.</p>
+                </div>
             </div>
         </details>
         <details class="faq-item">
@@ -129,7 +135,9 @@
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
-                <p>Depende do escopo. Em geral, de 2 a 12 semanas.</p>
+                <div class="faq-answer-inner">
+                    <p>Depende do escopo. Em geral, de 2 a 12 semanas.</p>
+                </div>
             </div>
         </details>
         <details class="faq-item">
@@ -138,7 +146,9 @@
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
-                <p>Sim. Montamos uma trilha de entregas priorizando impacto comercial.</p>
+                <div class="faq-answer-inner">
+                    <p>Sim. Montamos uma trilha de entregas priorizando impacto comercial.</p>
+                </div>
             </div>
         </details>
     </div>

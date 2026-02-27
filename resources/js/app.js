@@ -1,5 +1,7 @@
 import './bootstrap';
 
+document.documentElement.classList.add('js');
+
 const body = document.body;
 
 const initMobileMenu = () => {
@@ -107,46 +109,175 @@ const initModals = () => {
 
 const initPortfolioFilter = () => {
   const buttons = Array.from(document.querySelectorAll('[data-filter]'));
-  const cards = Array.from(document.querySelectorAll('[data-portfolio-grid] [data-tags]'));
+  const cards = Array.from(document.querySelectorAll('[data-portfolio-grid] .quest-card[data-tags]'));
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   if (!buttons.length || !cards.length) return;
+
+  const hideCard = (card) => {
+    if (reduceMotion) {
+      card.classList.add('is-filtered');
+      card.classList.remove('is-filtering-out');
+      return;
+    }
+
+    card.classList.add('is-filtering-out');
+    window.setTimeout(() => {
+      card.classList.add('is-filtered');
+      card.classList.remove('is-filtering-out');
+    }, 170);
+  };
+
+  const showCard = (card) => {
+    card.classList.remove('is-filtered');
+
+    if (reduceMotion) {
+      card.classList.remove('is-filtering-out');
+      return;
+    }
+
+    card.classList.add('is-filtering-out');
+    requestAnimationFrame(() => {
+      card.classList.remove('is-filtering-out');
+    });
+  };
 
   buttons.forEach((button) => {
     button.addEventListener('click', () => {
       const filter = button.getAttribute('data-filter');
 
-      buttons.forEach((item) => item.classList.remove('is-active'));
+      buttons.forEach((item) => {
+        item.classList.remove('is-active');
+        item.setAttribute('aria-pressed', 'false');
+      });
       button.classList.add('is-active');
+      button.setAttribute('aria-pressed', 'true');
 
       cards.forEach((card) => {
         if (!filter || filter === 'all') {
-          card.classList.remove('is-hidden');
+          showCard(card);
           return;
         }
 
         const tags = (card.getAttribute('data-tags') || '').split(',').map((tag) => tag.trim());
         const shouldShow = tags.includes(filter);
-        card.classList.toggle('is-hidden', !shouldShow);
+        if (shouldShow) {
+          showCard(card);
+        } else {
+          hideCard(card);
+        }
       });
     });
+  });
+};
+
+const initQuestReveal = () => {
+  const revealItems = Array.from(document.querySelectorAll('.quest-card[data-reveal]'));
+  if (!revealItems.length) return;
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    revealItems.forEach((item) => item.classList.add('is-visible'));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const target = entry.target;
+        const stagger = Number(target.getAttribute('data-stagger') || 0);
+
+        window.setTimeout(() => {
+          target.classList.add('is-visible');
+        }, stagger);
+
+        observer.unobserve(target);
+      });
+    },
+    {
+      threshold: 0.16,
+      rootMargin: '0px 0px -10% 0px',
+    },
+  );
+
+  revealItems.forEach((item, index) => {
+    item.setAttribute('data-stagger', String(index * 45));
+    observer.observe(item);
   });
 };
 
 const initFaqAccordion = () => {
   const groups = Array.from(document.querySelectorAll('[data-faq-group]'));
   if (!groups.length) return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   groups.forEach((group) => {
     const items = Array.from(group.querySelectorAll('details.faq-item'));
     if (!items.length) return;
 
+    const getAnswer = (item) => item.querySelector('.faq-answer');
+
+    const closeItem = (item) => {
+      const answer = getAnswer(item);
+      if (!answer || !item.open) return;
+
+      if (reduceMotion) {
+        answer.style.height = '0px';
+        item.open = false;
+        return;
+      }
+
+      answer.style.height = `${answer.scrollHeight}px`;
+      requestAnimationFrame(() => {
+        answer.style.height = '0px';
+      });
+      window.setTimeout(() => {
+        item.open = false;
+      }, 320);
+    };
+
+    const openItem = (item) => {
+      const answer = getAnswer(item);
+      if (!answer) return;
+
+      item.open = true;
+
+      if (reduceMotion) {
+        answer.style.height = 'auto';
+        return;
+      }
+
+      answer.style.height = '0px';
+      requestAnimationFrame(() => {
+        answer.style.height = `${answer.scrollHeight}px`;
+      });
+      window.setTimeout(() => {
+        answer.style.height = 'auto';
+      }, 320);
+    };
+
     items.forEach((item) => {
-      item.addEventListener('toggle', () => {
-        if (!item.open) return;
+      const answer = getAnswer(item);
+      const summary = item.querySelector('summary');
+      if (!answer || !summary) return;
+
+      answer.style.height = item.open ? 'auto' : '0px';
+
+      summary.addEventListener('click', (event) => {
+        event.preventDefault();
+
+        if (item.open) {
+          closeItem(item);
+          return;
+        }
 
         items.forEach((other) => {
-          if (other !== item) other.open = false;
+          if (other !== item) closeItem(other);
         });
+
+        openItem(item);
       });
     });
   });
@@ -157,5 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initSmoothScroll();
   initModals();
   initPortfolioFilter();
+  initQuestReveal();
   initFaqAccordion();
 });
