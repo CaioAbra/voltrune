@@ -29,7 +29,7 @@
             </div>
         @endif
 
-        <form class="contact-form" method="POST" action="{{ route('vigilante.store') }}">
+        <form class="contact-form" method="POST" action="{{ route('vigilante.store', [], false) }}">
             @csrf
             <label for="name">Nome</label>
             <input id="name" name="name" type="text" value="{{ old('name') }}" required maxlength="120">
@@ -38,7 +38,7 @@
             <input id="email" name="email" type="email" value="{{ old('email') }}" maxlength="160">
 
             <label for="whatsapp">WhatsApp</label>
-            <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp') }}" maxlength="30">
+            <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp') }}" maxlength="30" inputmode="tel" autocomplete="tel" placeholder="(11) 99847-9359" data-phone-mask>
 
             <label for="interest">Como pretende usar o Vigilante?</label>
             <textarea id="interest" name="interest" rows="4" required maxlength="300">{{ old('interest') }}</textarea>
