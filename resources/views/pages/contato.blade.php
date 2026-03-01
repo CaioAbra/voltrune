@@ -30,7 +30,7 @@
             </div>
         @endif
 
-        <form class="contact-form" method="POST" action="{{ route('contato.store') }}">
+        <form class="contact-form" method="POST" action="{{ route('contato.store', [], false) }}">
             @csrf
             <label for="name">Nome</label>
             <input id="name" name="name" type="text" value="{{ old('name') }}" required maxlength="120">
@@ -39,10 +39,25 @@
             <input id="email" name="email" type="email" value="{{ old('email') }}" required maxlength="160">
 
             <label for="whatsapp">WhatsApp</label>
-            <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp') }}" required maxlength="30">
+            <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp') }}" required maxlength="30" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" data-phone-mask>
 
             <label for="subject">Assunto</label>
-            <input id="subject" name="subject" type="text" value="{{ old('subject') }}" required maxlength="160">
+            <select id="subject" name="subject" required>
+                <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Selecione um servico</option>
+                @foreach ([
+                    'Websites e Landings',
+                    'Apps e Dashboards',
+                    'Trafego Pago e Midia',
+                    'Marca, Banner e Logo',
+                    'Hospedagem e Manutencao',
+                    'Vigilante Juridico',
+                    'Outro',
+                ] as $serviceOption)
+                    <option value="{{ $serviceOption }}" {{ old('subject') === $serviceOption ? 'selected' : '' }}>
+                        {{ $serviceOption }}
+                    </option>
+                @endforeach
+            </select>
 
             <label for="message">Mensagem</label>
             <textarea id="message" name="message" rows="6" required maxlength="2000">{{ old('message') }}</textarea>

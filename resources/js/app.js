@@ -283,6 +283,29 @@ const initFaqAccordion = () => {
   });
 };
 
+const initPhoneMask = () => {
+  const fields = Array.from(document.querySelectorAll('[data-phone-mask]'));
+  if (!fields.length) return;
+
+  const formatPhone = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+
+    if (digits.length <= 2) return digits ? `(${digits}` : '';
+    if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
+  fields.forEach((field) => {
+    field.value = formatPhone(field.value);
+
+    field.addEventListener('input', () => {
+      field.value = formatPhone(field.value);
+    });
+  });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initSmoothScroll();
@@ -290,4 +313,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initPortfolioFilter();
   initQuestReveal();
   initFaqAccordion();
+  initPhoneMask();
 });
