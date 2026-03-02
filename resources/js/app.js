@@ -125,7 +125,7 @@ const initPortfolioFilter = () => {
     window.setTimeout(() => {
       card.classList.add('is-filtered');
       card.classList.remove('is-filtering-out');
-    }, 170);
+    }, 260);
   };
 
   const showCard = (card) => {
@@ -138,7 +138,9 @@ const initPortfolioFilter = () => {
 
     card.classList.add('is-filtering-out');
     requestAnimationFrame(() => {
-      card.classList.remove('is-filtering-out');
+      requestAnimationFrame(() => {
+        card.classList.remove('is-filtering-out');
+      });
     });
   };
 
@@ -203,7 +205,7 @@ const initQuestReveal = () => {
   );
 
   revealItems.forEach((item, index) => {
-    item.setAttribute('data-stagger', String(index * 45));
+    item.setAttribute('data-stagger', String(index * 85));
     observer.observe(item);
   });
 };

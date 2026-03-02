@@ -2,10 +2,30 @@
   margin-bottom: 1.4rem;
   padding-bottom: 1.1rem;
   border-bottom: 1px solid rgba(208, 173, 104, 0.16);
+  position: relative;
 }
 
 .service-longform h3 {
   color: var(--text);
+}
+
+.service-longform article::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.3rem;
+  width: 3px;
+  height: calc(100% - 1.2rem);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(208, 173, 104, 0.52), transparent);
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: opacity 220ms ease, transform 220ms var(--ease-ritual);
+}
+
+.service-longform article:hover::before {
+  opacity: 1;
+  transform: translateX(-14px);
 }
 
 .faq-item {
@@ -14,6 +34,10 @@
   background: linear-gradient(165deg, rgba(45, 36, 27, 0.84), rgba(28, 23, 17, 0.92));
   margin-bottom: 0.7rem;
   overflow: clip;
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms var(--ease-ritual);
 }
 
 .faq-item summary {
@@ -26,6 +50,7 @@
   padding: 0.95rem 1rem;
   color: var(--text);
   font-weight: 700;
+  transition: background-color 180ms ease;
 }
 
 .faq-item summary::-webkit-details-marker {
@@ -39,6 +64,19 @@
 
 .faq-item[open] .faq-icon {
   transform: rotate(180deg);
+}
+
+.faq-item:hover,
+.faq-item:focus-within {
+  border-color: rgba(208, 173, 104, 0.34);
+  box-shadow: 0 16px 24px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
+}
+
+.faq-item:hover summary,
+.faq-item:focus-within summary,
+.faq-item[open] summary {
+  background: rgba(208, 173, 104, 0.04);
 }
 
 .faq-answer {
@@ -69,8 +107,10 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   z-index: 40;
-  background: rgba(16, 12, 9, 0.95);
+  background: rgba(16, 12, 9, 0.92);
   border-top: 1px solid rgba(208, 173, 104, 0.2);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 -10px 22px rgba(0, 0, 0, 0.28);
 }
 
 .mobile-sticky-cta a {
@@ -79,10 +119,16 @@
   min-height: 52px;
   color: var(--text);
   font-weight: 700;
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
 .mobile-sticky-cta a:first-child {
   background: rgba(208, 173, 104, 0.16);
+}
+
+.mobile-sticky-cta a:hover,
+.mobile-sticky-cta a:focus-visible {
+  background: rgba(208, 173, 104, 0.12);
 }
 
 @media (min-width: 860px) {

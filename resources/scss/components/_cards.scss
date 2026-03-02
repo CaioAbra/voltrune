@@ -8,6 +8,7 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   position: relative;
+  backdrop-filter: blur(3px);
 }
 
 .service-card,
@@ -49,21 +50,40 @@
 .portfolio-card,
 .steps-grid article,
 .hosting-box {
-  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  transition:
+    transform 220ms var(--ease-ritual),
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
 }
 
 .service-card:hover,
 .portfolio-card:hover,
 .steps-grid article:hover,
 .hosting-box:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   border-color: rgba(208, 173, 104, 0.38);
-  box-shadow: 0 22px 34px rgba(0, 0, 0, 0.42);
+  box-shadow:
+    0 22px 34px rgba(0, 0, 0, 0.42),
+    0 0 18px rgba(208, 173, 104, 0.07);
 }
 
 .service-card .material-symbols-rounded {
   color: var(--accent);
   margin-bottom: 0.5rem;
+  font-size: 1.6rem;
+}
+
+.service-card p,
+.steps-grid article p,
+.hosting-box p,
+.mission-card li {
+  color: color-mix(in srgb, var(--muted) 88%, #fff 12%);
+}
+
+.service-card .btn,
+.hosting-box .btn {
+  margin-top: 0.35rem;
 }
 
 .portfolio-card img {
@@ -74,12 +94,14 @@
 
 .portfolio-content {
   padding: 1rem;
+  display: grid;
+  gap: 0.55rem;
 }
 
 .portfolio-result {
   color: var(--text);
   font-weight: 600;
-  margin-top: 0.6rem;
+  margin-top: 0.3rem;
 }
 
 .portfolio-meta {
@@ -95,6 +117,10 @@
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.section-head .text-link {
+  flex-shrink: 0;
 }
 
 @media (min-width: 720px) {

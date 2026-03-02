@@ -19,6 +19,7 @@ body {
     radial-gradient(circle at 90% 0%, rgba(157, 122, 66, 0.13), transparent 44%),
     linear-gradient(145deg, #120f0c 0%, #1a1511 45%, #100d0a 100%);
   line-height: 1.6;
+  text-rendering: optimizeLegibility;
 }
 
 main {
@@ -98,6 +99,7 @@ textarea:focus-visible {
 .lead {
   font-size: clamp(1.02rem, 2.2vw, 1.2rem);
   max-width: 62ch;
+  color: color-mix(in srgb, var(--muted) 88%, #fff 12%);
 }
 
 .hero-actions {
@@ -105,6 +107,29 @@ textarea:focus-visible {
   flex-wrap: wrap;
   gap: 0.8rem;
   margin-top: 1.2rem;
+}
+
+.page-hero .eyebrow,
+.page-hero h1,
+.page-hero .lead,
+.page-hero .hero-actions,
+.home-hero .badge-row,
+.page-hero .mission-card {
+  animation: rise-fade 820ms var(--ease-out-arc) both;
+}
+
+.page-hero h1 {
+  animation-delay: 90ms;
+}
+
+.page-hero .lead {
+  animation-delay: 170ms;
+}
+
+.page-hero .hero-actions,
+.home-hero .badge-row,
+.page-hero .mission-card {
+  animation-delay: 240ms;
 }
 
 .text-link {
@@ -188,6 +213,19 @@ textarea:focus-visible {
   background: rgba(208, 173, 104, 0.08);
   padding: 0.45rem;
   border-radius: 10px;
+  transition:
+    border-color 180ms ease,
+    transform 180ms var(--ease-ritual),
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.menu-toggle:hover,
+.menu-toggle:focus-visible {
+  border-color: rgba(208, 173, 104, 0.48);
+  background: rgba(208, 173, 104, 0.14);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+  transform: translateY(-1px);
 }
 
 .menu-toggle .material-symbols-rounded {
@@ -196,22 +234,35 @@ textarea:focus-visible {
 }
 
 .main-nav {
-  display: none;
+  display: grid;
   position: absolute;
   left: 0.6rem;
   right: 0.6rem;
   top: 68px;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: var(--panel);
+  background: linear-gradient(165deg, rgba(40, 31, 22, 0.96), rgba(24, 19, 14, 0.98));
   padding: 0.6rem;
   max-height: calc(100dvh - 78px);
   overflow-y: auto;
+  gap: 0.28rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px) scale(0.985);
+  transform-origin: top center;
+  box-shadow: var(--shadow-strong);
+  transition:
+    opacity 220ms ease,
+    transform 220ms var(--ease-out-arc),
+    visibility 220ms ease;
 }
 
 .main-nav.is-open {
-  display: grid;
-  gap: 0.28rem;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .nav-link,
@@ -228,12 +279,18 @@ textarea:focus-visible {
   border-radius: 8px;
   color: #b9a06b;
   text-align: center;
+  transition:
+    color 180ms ease,
+    background-color 180ms ease,
+    transform 180ms var(--ease-ritual);
 }
 
 .nav-link.active,
-.nav-link:hover {
+.nav-link:hover,
+.nav-link:focus-visible {
   color: #e5cc8e;
   background: rgba(208, 173, 104, 0.08);
+  transform: translateY(-1px);
 }
 
 .nav-cta {
@@ -256,18 +313,21 @@ textarea:focus-visible {
   position: relative;
   padding: 3rem 0 1.6rem;
   border-top: 1px solid rgba(208, 173, 104, 0.16);
-  background: rgba(12, 10, 8, 0.75);
+  background:
+    linear-gradient(180deg, rgba(14, 11, 8, 0.86), rgba(9, 7, 5, 0.92)),
+    rgba(12, 10, 8, 0.75);
   overflow: hidden;
 }
 
 .site-footer::before {
   content: '';
   position: absolute;
-  inset: -20% -15% auto;
-  height: 120px;
-  background: radial-gradient(circle at 35% 0%, rgba(208, 173, 104, 0.14), transparent 68%);
+  inset: 0 auto auto 8%;
+  width: 180px;
+  height: 80px;
+  background: radial-gradient(circle at center, rgba(208, 173, 104, 0.08), transparent 72%);
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.42;
 }
 
 .footer-grid {
@@ -277,10 +337,25 @@ textarea:focus-visible {
   gap: 1.4rem;
 }
 
+.footer-intro,
+.footer-column {
+  min-width: 0;
+}
+
+.footer-column {
+  display: grid;
+  align-content: start;
+}
+
+.footer-intro p:last-child {
+  max-width: 34ch;
+}
+
 .footer-brand {
   color: var(--text);
   font-family: 'Cinzel', serif;
   font-size: 1.1rem;
+  letter-spacing: 0.04em;
 }
 
 .footer-title {
@@ -294,7 +369,11 @@ textarea:focus-visible {
   display: block;
   margin-bottom: 0.45rem;
   color: var(--muted);
-  transition: color 180ms ease, transform 180ms ease;
+  width: fit-content;
+  transition:
+    color 180ms ease,
+    transform 180ms var(--ease-ritual),
+    text-shadow 180ms ease;
 }
 
 .footer-grid a::after {
@@ -313,7 +392,8 @@ textarea:focus-visible {
 .footer-grid a:hover,
 .footer-grid a:focus-visible {
   color: #e5cc8e;
-  transform: translateX(1px);
+  transform: translateX(2px);
+  text-shadow: 0 0 12px rgba(208, 173, 104, 0.14);
 }
 
 .footer-grid a:hover::after,
@@ -342,6 +422,10 @@ textarea:focus-visible {
   padding-top: 1rem;
 }
 
+.footer-meta small {
+  color: color-mix(in srgb, var(--muted) 78%, #fff 22%);
+}
+
 .tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -363,6 +447,7 @@ textarea:focus-visible {
   border: 1px solid transparent;
   padding: 0.8rem 1rem;
   margin-bottom: 1rem;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
 }
 
 .flash-success {
@@ -375,6 +460,18 @@ textarea:focus-visible {
   border-color: rgba(255, 179, 167, 0.4);
   background: rgba(255, 179, 167, 0.08);
   color: var(--danger);
+}
+
+@keyframes rise-fade {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hp-field {
@@ -416,6 +513,66 @@ textarea:focus-visible {
     align-items: flex-start;
     gap: 0.4rem;
   }
+
+  .site-footer {
+    padding: 2.4rem 0 1.25rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1.1rem;
+    align-items: start;
+  }
+
+  .footer-intro {
+    grid-column: 1 / -1;
+  }
+
+  .footer-intro p:last-child {
+    max-width: 42ch;
+    margin-bottom: 0;
+  }
+
+  .footer-column {
+    gap: 0.15rem;
+  }
+
+  .footer-meta {
+    margin-top: 1rem;
+    padding-top: 0.9rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .site-footer {
+    padding: 2rem 0 1.1rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .footer-intro {
+    grid-column: auto;
+  }
+
+  .footer-intro p:last-child {
+    max-width: none;
+  }
+
+  .footer-brand {
+    font-size: 1rem;
+  }
+
+  .footer-grid a {
+    margin-bottom: 0.38rem;
+  }
+
+  .footer-meta small {
+    display: block;
+    line-height: 1.55;
+  }
 }
 
 @media (min-width: 860px) {
@@ -436,6 +593,12 @@ textarea:focus-visible {
     border-radius: 0;
     background: transparent;
     gap: 0.9rem;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    box-shadow: none;
+    transition: none;
   }
 
   .nav-link {
@@ -458,9 +621,11 @@ textarea:focus-visible {
   }
 
   .nav-link.active,
-  .nav-link:hover {
+  .nav-link:hover,
+  .nav-link:focus-visible {
     background: transparent;
     color: #e5cc8e;
+    transform: none;
   }
 
   .nav-link.active::after,
@@ -488,5 +653,14 @@ textarea:focus-visible {
 
   .site-footer::before {
     opacity: 0.28;
+  }
+
+  .page-hero .eyebrow,
+  .page-hero h1,
+  .page-hero .lead,
+  .page-hero .hero-actions,
+  .home-hero .badge-row,
+  .page-hero .mission-card {
+    animation: none !important;
   }
 }
