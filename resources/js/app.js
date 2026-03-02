@@ -306,6 +306,45 @@ const initPhoneMask = () => {
   });
 };
 
+const initSubmitGuards = () => {
+  const forms = Array.from(document.querySelectorAll('form.contact-form'));
+  if (!forms.length) return;
+
+  forms.forEach((form) => {
+    const submitButton = form.querySelector('button[type="submit"]');
+    if (!submitButton) return;
+
+    const defaultLabel = submitButton.textContent;
+
+    form.addEventListener('submit', (event) => {
+      if (!form.checkValidity()) return;
+
+      if (form.dataset.submitting === 'true') {
+        event.preventDefault();
+        return;
+      }
+
+      form.dataset.submitting = 'true';
+      form.classList.add('is-submitting');
+      submitButton.disabled = true;
+      submitButton.setAttribute('aria-disabled', 'true');
+      submitButton.textContent = 'Enviando...';
+    });
+
+    window.addEventListener(
+      'pageshow',
+      () => {
+        form.dataset.submitting = 'false';
+        form.classList.remove('is-submitting');
+        submitButton.disabled = false;
+        submitButton.removeAttribute('aria-disabled');
+        submitButton.textContent = defaultLabel;
+      },
+      { once: true },
+    );
+  });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initSmoothScroll();
@@ -314,4 +353,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initQuestReveal();
   initFaqAccordion();
   initPhoneMask();
+  initSubmitGuards();
 });
