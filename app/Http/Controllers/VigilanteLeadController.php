@@ -10,19 +10,16 @@ class VigilanteLeadController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        if (filled((string) $request->input('company_website', ''))) {
+            return back()->with('vigilante_status', 'Interesse registrado. Avisaremos quando abrir.');
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['nullable', 'email:rfc,dns', 'max:160', 'required_without:whatsapp'],
             'whatsapp' => ['nullable', 'string', 'max:30', 'required_without:email'],
             'interest' => ['required', 'string', 'max:300'],
-            'company_website' => ['nullable', 'max:0'],
         ]);
-
-        if (! empty($validated['company_website'] ?? null)) {
-            return back()->with('vigilante_status', 'Interesse registrado. Avisaremos quando abrir.');
-        }
-
-        unset($validated['company_website']);
 
         Log::info('voltrune.vigilante_interest', [
             ...$validated,
@@ -31,6 +28,7 @@ class VigilanteLeadController extends Controller
             'received_at' => now()->toIso8601String(),
         ]);
 
-        return back()->with('vigilante_status', 'Interesse registrado. Você será avisado quando o Vigilante abrir.');
+        return back()->with('vigilante_status', 'Interesse registrado. VocÃª serÃ¡ avisado quando o Vigilante abrir.');
     }
 }
+
