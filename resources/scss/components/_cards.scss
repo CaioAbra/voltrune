@@ -39,11 +39,16 @@
 .steps-grid,
 .portfolio-grid {
   display: grid;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .service-card {
-  padding: 1.2rem;
+  display: grid;
+  align-content: start;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 0.55rem;
+  min-height: 100%;
+  padding: 1.35rem;
 }
 
 .service-card,
@@ -70,7 +75,7 @@
 
 .service-card .material-symbols-rounded {
   color: var(--accent);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.15rem;
   font-size: 1.6rem;
 }
 
@@ -83,7 +88,27 @@
 
 .service-card .btn,
 .hosting-box .btn {
-  margin-top: 0.35rem;
+  margin-top: 0.7rem;
+}
+
+.service-card::after,
+.mission-card::after,
+.hosting-box::after,
+.system-card::after {
+  content: '';
+  position: absolute;
+  left: var(--spark-x, 82%);
+  top: var(--spark-y, 18%);
+  width: var(--spark-size, 0.72rem);
+  height: var(--spark-size, 0.72rem);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, rgba(255, 247, 230, 0.42), rgba(208, 173, 104, 0.18) 46%, transparent 72%);
+  opacity: 0.22;
+  pointer-events: none;
+  filter: blur(0.15px);
+  animation: arcane-pulse var(--spark-duration, 4.8s) ease-in-out infinite;
+  animation-delay: var(--spark-delay, 0s);
 }
 
 .portfolio-card img {
@@ -93,9 +118,10 @@
 }
 
 .portfolio-content {
-  padding: 1rem;
+  position: relative;
+  padding: 1.15rem;
   display: grid;
-  gap: 0.55rem;
+  gap: 0.65rem;
 }
 
 .portfolio-result {
@@ -116,7 +142,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .section-head .text-link {

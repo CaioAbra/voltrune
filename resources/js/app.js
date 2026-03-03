@@ -10,9 +10,31 @@ const initMobileMenu = () => {
 
   if (!toggle || !menu) return;
 
+  const closeMenu = () => {
+    menu.classList.remove('is-open');
+    toggle.setAttribute('aria-expanded', 'false');
+    body.classList.remove('menu-open');
+  };
+
   toggle.addEventListener('click', () => {
     const isOpen = menu.classList.toggle('is-open');
     toggle.setAttribute('aria-expanded', String(isOpen));
+    body.classList.toggle('menu-open', isOpen);
+  });
+
+  menu.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', closeMenu);
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Node)) return;
+    if (toggle.contains(event.target) || menu.contains(event.target)) return;
+    closeMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    closeMenu();
   });
 };
 
@@ -536,6 +558,45 @@ const initCustomSelects = () => {
   });
 };
 
+const initArcaneAccents = () => {
+  const targets = Array.from(
+    document.querySelectorAll('.service-card, .mission-card, .hosting-box, .system-card, .quest-card, .faq-item'),
+  );
+
+  if (!targets.length) return;
+
+  targets.forEach((target) => {
+    const sparkX = `${12 + Math.random() * 74}%`;
+    const sparkY = `${10 + Math.random() * 68}%`;
+    const sparkSize = `${8 + Math.random() * 8}px`;
+    const sparkDelay = `${(Math.random() * 2.6).toFixed(2)}s`;
+    const sparkDuration = `${(4 + Math.random() * 2.8).toFixed(2)}s`;
+
+    target.style.setProperty('--spark-x', sparkX);
+    target.style.setProperty('--spark-y', sparkY);
+    target.style.setProperty('--spark-size', sparkSize);
+    target.style.setProperty('--spark-delay', sparkDelay);
+    target.style.setProperty('--spark-duration', sparkDuration);
+
+    if (target.querySelector('.arcane-orb')) return;
+
+    const orbCount = target.classList.contains('quest-card') ? 2 : 1;
+
+    for (let index = 0; index < orbCount; index += 1) {
+      const orb = document.createElement('span');
+      orb.className = `arcane-orb${index > 0 ? ' arcane-orb--alt' : ''}`;
+
+      orb.style.setProperty('--orb-x', `${8 + Math.random() * 80}%`);
+      orb.style.setProperty('--orb-y', `${8 + Math.random() * 76}%`);
+      orb.style.setProperty('--orb-size', `${7 + Math.random() * 10}px`);
+      orb.style.setProperty('--orb-delay', `${(Math.random() * 3.2).toFixed(2)}s`);
+      orb.style.setProperty('--orb-duration', `${(6.8 + Math.random() * 4.2).toFixed(2)}s`);
+
+      target.appendChild(orb);
+    }
+  });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initSmoothScroll();
@@ -546,4 +607,5 @@ document.addEventListener('DOMContentLoaded', () => {
   initPhoneMask();
   initSubmitLocks();
   initCustomSelects();
+  initArcaneAccents();
 });
