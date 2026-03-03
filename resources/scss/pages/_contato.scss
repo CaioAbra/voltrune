@@ -23,19 +23,258 @@
   padding: 0.7rem 0.8rem;
 }
 
-.contact-form select {
-  appearance: none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, rgba(208, 173, 104, 0.85) 50%),
-    linear-gradient(135deg, rgba(208, 173, 104, 0.85) 50%, transparent 50%);
-  background-position:
-    calc(100% - 18px) calc(50% - 1px),
-    calc(100% - 12px) calc(50% - 1px);
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
-  padding-right: 2.4rem;
-}
-
 .contact-form button {
   margin-top: 0.3rem;
+}
+
+.custom-select {
+  position: relative;
+}
+
+.custom-select__trigger {
+  width: 100%;
+  min-height: 3.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  border-radius: 12px;
+  border: 1px solid rgba(208, 173, 104, 0.24);
+  background:
+    linear-gradient(145deg, rgba(32, 25, 19, 0.96), rgba(18, 14, 10, 0.98));
+  color: var(--text);
+  padding: 0.78rem 0.95rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 213, 0.03),
+    0 10px 24px rgba(0, 0, 0, 0.16);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms var(--ease-ritual);
+}
+
+.custom-select__trigger:hover,
+.custom-select__trigger:focus-visible,
+.custom-select.is-open .custom-select__trigger {
+  border-color: rgba(208, 173, 104, 0.42);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 244, 213, 0.05),
+    0 14px 28px rgba(0, 0, 0, 0.22),
+    0 0 0 3px rgba(208, 173, 104, 0.08);
+}
+
+.custom-select__trigger:hover,
+.custom-select__trigger:focus-visible {
+  transform: translateY(-1px);
+}
+
+.custom-select.is-open .custom-select__trigger {
+  transform: translateY(0);
+}
+
+.custom-select__value {
+  display: block;
+  flex: 1;
+  text-align: left;
+  color: rgba(245, 236, 211, 0.94);
+}
+
+.custom-select__value.is-placeholder {
+  color: rgba(245, 236, 211, 0.6);
+}
+
+.custom-select__icon {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-right: 2px solid rgba(208, 173, 104, 0.88);
+  border-bottom: 2px solid rgba(208, 173, 104, 0.88);
+  transform: translateY(-60%) rotate(45deg);
+  pointer-events: none;
+  transition: transform 180ms var(--ease-ritual);
+}
+
+.custom-select:hover .custom-select__icon,
+.custom-select:focus-within .custom-select__icon {
+  transform: translateY(-45%) rotate(45deg);
+}
+
+.custom-select.is-open .custom-select__icon {
+  transform: translateY(-25%) rotate(225deg);
+}
+
+.custom-select__panel {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  border-radius: 14px;
+  border: 1px solid rgba(208, 173, 104, 0.2);
+  background:
+    linear-gradient(165deg, rgba(34, 27, 20, 0.98), rgba(18, 14, 10, 0.99));
+  box-shadow:
+    0 20px 38px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 244, 213, 0.03);
+}
+
+.custom-select__panel[hidden] {
+  display: none;
+}
+
+.custom-select__option {
+  width: 100%;
+  display: block;
+  border-radius: 10px;
+  padding: 0.72rem 0.78rem;
+  text-align: left;
+  color: rgba(245, 236, 211, 0.84);
+  background: transparent;
+  border: 1px solid transparent;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease,
+    color 160ms ease;
+}
+
+.custom-select__option:hover,
+.custom-select__option:focus-visible {
+  color: rgba(255, 248, 227, 0.98);
+  background: rgba(208, 173, 104, 0.08);
+  border-color: rgba(208, 173, 104, 0.14);
+  transform: translateX(2px);
+}
+
+.custom-select__option.is-selected {
+  color: #fff7df;
+  background: rgba(208, 173, 104, 0.12);
+  border-color: rgba(208, 173, 104, 0.22);
+}
+
+.js .custom-select select[data-custom-select-native] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.contact-submit {
+  justify-self: end;
+  min-width: 13.5rem;
+  padding-inline: 1.2rem 1rem;
+  isolation: isolate;
+  transition:
+    transform 180ms var(--ease-ritual),
+    box-shadow 180ms var(--ease-ritual),
+    filter 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.contact-submit::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(115deg, rgba(255, 248, 227, 0.18), transparent 34%, transparent 66%, rgba(26, 18, 8, 0.14));
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.contact-submit:hover::after,
+.contact-submit:focus-visible::after {
+  opacity: 1;
+}
+
+.contact-submit__label,
+.contact-submit__hint,
+.contact-submit__spinner {
+  position: relative;
+  z-index: 1;
+}
+
+.contact-submit__hint {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: translateX(0) rotate(45deg);
+  transition:
+    transform 180ms var(--ease-ritual),
+    opacity 180ms ease;
+}
+
+.contact-submit:hover .contact-submit__hint,
+.contact-submit:focus-visible .contact-submit__hint {
+  transform: translateX(2px) rotate(45deg);
+}
+
+.contact-submit__spinner {
+  width: 0;
+  height: 1rem;
+  border-radius: 999px;
+  border: 2px solid rgba(26, 18, 8, 0.18);
+  border-top-color: #1a1208;
+  opacity: 0;
+  transform: scale(0.7);
+  transition:
+    width 180ms ease,
+    opacity 180ms ease,
+    transform 180ms ease;
+  pointer-events: none;
+}
+
+.contact-submit.is-submitting,
+.contact-submit:disabled {
+  cursor: wait;
+  transform: translateY(0);
+  filter: saturate(0.94) brightness(0.98);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 248, 227, 0.16);
+}
+
+.contact-submit.is-submitting::before,
+.contact-submit:disabled::before {
+  transform: translateX(0);
+}
+
+.contact-submit.is-submitting::after,
+.contact-submit:disabled::after {
+  opacity: 1;
+}
+
+.contact-submit.is-submitting .contact-submit__hint,
+.contact-submit:disabled .contact-submit__hint {
+  width: 0;
+  opacity: 0;
+  transform: translateX(-4px) rotate(45deg);
+}
+
+.contact-submit.is-submitting .contact-submit__spinner,
+.contact-submit:disabled .contact-submit__spinner {
+  width: 1rem;
+  opacity: 1;
+  transform: scale(1) rotate(360deg);
+  animation: contact-submit-spin 780ms linear infinite;
+}
+
+@media (max-width: 640px) {
+  .contact-submit {
+    width: 100%;
+    justify-self: stretch;
+  }
+}
+
+@keyframes contact-submit-spin {
+  to {
+    transform: scale(1) rotate(360deg);
+  }
 }

@@ -30,7 +30,7 @@
             </div>
         @endif
 
-        <form class="contact-form" method="POST" action="{{ route('contato.store', [], false) }}">
+        <form class="contact-form" method="POST" action="{{ route('contato.store', [], false) }}" data-lock-submit>
             @csrf
             <label for="name">Nome</label>
             <input id="name" name="name" type="text" value="{{ old('name') }}" required maxlength="120">
@@ -42,22 +42,35 @@
             <input id="whatsapp" name="whatsapp" type="text" value="{{ old('whatsapp') }}" required maxlength="30" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000" data-phone-mask>
 
             <label for="subject">Assunto</label>
-            <select id="subject" name="subject" required>
-                <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Selecione um servico</option>
-                @foreach ([
-                    'Websites e Landings',
-                    'Apps e Dashboards',
-                    'Trafego Pago e Midia',
-                    'Marca, Banner e Logo',
-                    'Hospedagem e Manutencao',
-                    'Vigilante Juridico',
-                    'Outro',
-                ] as $serviceOption)
-                    <option value="{{ $serviceOption }}" {{ old('subject') === $serviceOption ? 'selected' : '' }}>
-                        {{ $serviceOption }}
-                    </option>
-                @endforeach
-            </select>
+            <div class="custom-select" data-custom-select>
+                <select id="subject" name="subject" required data-custom-select-native>
+                    <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Selecione um servico</option>
+                    @foreach ([
+                        'Websites e Landings',
+                        'Apps e Dashboards',
+                        'Trafego Pago e Midia',
+                        'Marca, Banner e Logo',
+                        'Hospedagem e Manutencao',
+                        'Vigilante Juridico',
+                        'Outro',
+                    ] as $serviceOption)
+                        <option value="{{ $serviceOption }}" {{ old('subject') === $serviceOption ? 'selected' : '' }}>
+                            {{ $serviceOption }}
+                        </option>
+                    @endforeach
+                </select>
+                <button
+                    type="button"
+                    class="custom-select__trigger"
+                    data-custom-select-trigger
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                >
+                    <span class="custom-select__value" data-custom-select-value>Selecione um servico</span>
+                    <span class="custom-select__icon" aria-hidden="true"></span>
+                </button>
+                <div class="custom-select__panel" data-custom-select-panel hidden></div>
+            </div>
 
             <label for="message">Mensagem</label>
             <textarea id="message" name="message" rows="6" required maxlength="2000">{{ old('message') }}</textarea>
@@ -67,7 +80,17 @@
                 <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off">
             </div>
 
-            <button class="btn" type="submit">Enviar mensagem</button>
+            <button
+                class="btn contact-submit"
+                type="submit"
+                data-submit-button
+                data-default-label="Solicitar proposta"
+                data-loading-label="Enviando pedido..."
+            >
+                <span class="contact-submit__label" data-submit-label>Solicitar proposta</span>
+                <span class="contact-submit__hint" aria-hidden="true"></span>
+                <span class="contact-submit__spinner" aria-hidden="true"></span>
+            </button>
         </form>
     </div>
 </section>

@@ -3,6 +3,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   gap: 0.4rem;
   border-radius: 999px;
   border: 1px solid rgba(208, 173, 104, 0.4);
@@ -48,6 +49,10 @@
 .btn:active {
   transform: translateY(0);
   filter: brightness(0.99);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
 }
 
 .btn-ghost {
