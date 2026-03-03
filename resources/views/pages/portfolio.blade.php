@@ -9,7 +9,7 @@
     <div class="container narrow">
         <p class="eyebrow">Grimorio de missoes</p>
         <h1>Projetos pensados para converter, escalar e valorizar marcas.</h1>
-        <p class="lead">A Voltrune atende negocios de diferentes portes: empresas estabelecidas, profissionais liberais, startups e e-commerce.</p>
+        <p class="lead">Projetos desenhados para diferentes momentos de negocio, de operacoes consolidadas a marcas em expansao.</p>
     </div>
 </section>
 

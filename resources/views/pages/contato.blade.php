@@ -9,7 +9,7 @@
     <div class="container narrow">
         <p class="eyebrow">Contato Voltrune</p>
         <h1>Envie sua missao e receba um plano de execucao.</h1>
-        <p class="lead">Respondemos com rapidez, clareza de escopo e foco em resultado comercial.</p>
+        <p class="lead">Voce recebe retorno com clareza de escopo, prioridade comercial e proxima etapa bem definida.</p>
     </div>
 </section>
 
@@ -21,7 +21,7 @@
 
         @if (isset($errors) && $errors->any())
             <div class="flash-error" role="alert">
-                <p>Verifique os campos abaixo:</p>
+                <p>Revise os campos abaixo antes de enviar:</p>
                 <ul>
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>

@@ -30,6 +30,6 @@
         @if ($result)
             <p class="portfolio-result">{{ $result }}</p>
         @endif
-        <p class="portfolio-meta">Disponibilidade de detalhes sob consulta.</p>
+        <p class="portfolio-meta">Detalhamento completo apresentado na etapa comercial.</p>
     </div>
 </article>

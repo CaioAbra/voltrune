@@ -24,7 +24,7 @@ class ContactController extends Controller
     public function store(Request $request): RedirectResponse
     {
         if (filled((string) $request->input('company_website', ''))) {
-            return back()->with('status', 'Recebemos sua mensagem e retornaremos em breve.');
+            return back()->with('status', 'Recebemos seu envio. Retornaremos em breve.');
         }
 
         $validated = $request->validate([
@@ -74,6 +74,6 @@ class ContactController extends Controller
             ]);
         }
 
-        return back()->with('status', 'Mensagem enviada com sucesso. Sua missao foi registrada.');
+        return back()->with('status', 'Briefing recebido com sucesso. Sua missao entrou na fila de analise.');
     }
 }

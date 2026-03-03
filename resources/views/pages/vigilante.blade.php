@@ -9,7 +9,7 @@
     <div class="container narrow">
         <p class="eyebrow">Projeto Vigilante</p>
         <h1>Vigilante esta em preparacao para o setor juridico.</h1>
-        <p class="lead">Estamos finalizando um sistema para apoiar advogados no controle de rotinas e prazos. Em breve o acesso principal sera em <strong>vigilante.voltrune.com</strong>.</p>
+        <p class="lead">Estamos finalizando um sistema para dar mais controle a rotinas e prazos juridicos. Em breve, o acesso principal sera em <strong>vigilante.voltrune.com</strong>.</p>
     </div>
 </section>
 
@@ -48,7 +48,7 @@
                 <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off">
             </div>
 
-            <button class="btn" type="submit">Quero ser avisado</button>
+            <button class="btn" type="submit">Entrar na lista de aviso</button>
         </form>
     </div>
 </section>

@@ -2,7 +2,7 @@
     <div class="container footer-grid">
         <div class="footer-intro">
             <p class="footer-brand">Voltrune</p>
-            <p>Ordem de artesaos digitais focada em conversao, SEO e execucao objetiva.</p>
+            <p>Estrategia, design e execucao tecnica para marcas que precisam vender com mais consistencia.</p>
         </div>
 
         <div class="footer-column">
@@ -14,9 +14,9 @@
         </div>
 
         <div class="footer-column">
-            <p class="footer-title">Acao</p>
-            <a href="{{ env('WHATSAPP_URL', 'https://wa.me/5511998479359') }}" target="_blank" rel="noopener">Falar no WhatsApp</a>
-            <a href="{{ route('portal') }}">Contratar Hospedagem</a>
+            <p class="footer-title">Proximos passos</p>
+            <a href="{{ env('WHATSAPP_URL', 'https://wa.me/5511998479359') }}" target="_blank" rel="noopener">Falar com a Voltrune</a>
+            <a href="{{ route('portal') }}">Ver hospedagem</a>
         </div>
     </div>
 
