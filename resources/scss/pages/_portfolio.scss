@@ -5,10 +5,14 @@
 .portfolio-hero::after {
   content: '';
   position: absolute;
-  inset: 30% 4% auto;
-  height: 120px;
-  background: radial-gradient(circle at center, rgba(208, 173, 104, 0.14), transparent 72%);
+  right: 6%;
+  bottom: 8%;
+  width: clamp(220px, 32vw, 420px);
+  height: clamp(120px, 18vw, 190px);
+  background: radial-gradient(circle at center, rgba(208, 173, 104, 0.1), transparent 70%);
   pointer-events: none;
+  filter: blur(4px);
+  opacity: 0.78;
 }
 
 .quest-board {

@@ -22,6 +22,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+body.menu-open {
+  overflow: hidden;
+}
+
 main {
   flex: 1 0 auto;
 }
@@ -85,6 +89,16 @@ textarea:focus-visible {
 
 .page-hero {
   padding-top: clamp(6rem, 14vw, 8rem);
+  padding-bottom: clamp(1.1rem, 2.2vw, 1.9rem);
+}
+
+.page-hero .lead:last-child,
+.page-hero p:last-child {
+  margin-bottom: 0;
+}
+
+.page-hero + .section {
+  padding-top: clamp(0.45rem, 1.2vw, 1rem);
 }
 
 .eyebrow {
@@ -105,7 +119,7 @@ textarea:focus-visible {
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  gap: 0.9rem;
   margin-top: 1.2rem;
 }
 
@@ -113,22 +127,31 @@ textarea:focus-visible {
 .page-hero h1,
 .page-hero .lead,
 .page-hero .hero-actions,
+.home-hero .eyebrow,
+.home-hero h1,
+.home-hero .lead,
+.home-hero .hero-actions,
 .home-hero .badge-row,
-.page-hero .mission-card {
+.page-hero .mission-card,
+.home-hero .mission-card {
   animation: rise-fade 820ms var(--ease-out-arc) both;
 }
 
-.page-hero h1 {
+.page-hero h1,
+.home-hero h1 {
   animation-delay: 90ms;
 }
 
-.page-hero .lead {
+.page-hero .lead,
+.home-hero .lead {
   animation-delay: 170ms;
 }
 
 .page-hero .hero-actions,
+.home-hero .hero-actions,
 .home-hero .badge-row,
-.page-hero .mission-card {
+.page-hero .mission-card,
+.home-hero .mission-card {
   animation-delay: 240ms;
 }
 
@@ -403,6 +426,59 @@ textarea:focus-visible {
   transform: scaleX(1);
 }
 
+@keyframes arcane-pulse {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: translate3d(0, 0, 0) scale(0.9);
+  }
+
+  50% {
+    opacity: 0.52;
+    transform: translate3d(0, -2px, 0) scale(1.1);
+  }
+}
+
+@keyframes arcane-drift {
+  0%,
+  100% {
+    opacity: 0.14;
+    transform: translate3d(0, 0, 0) scale(0.9);
+  }
+
+  35% {
+    opacity: 0.28;
+    transform: translate3d(2px, -4px, 0) scale(1.04);
+  }
+
+  65% {
+    opacity: 0.2;
+    transform: translate3d(-2px, -8px, 0) scale(1.1);
+  }
+}
+
+.arcane-orb {
+  position: absolute;
+  left: var(--orb-x, 76%);
+  top: var(--orb-y, 18%);
+  width: var(--orb-size, 10px);
+  height: var(--orb-size, 10px);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 32% 32%, rgba(255, 250, 236, 0.42), rgba(208, 173, 104, 0.18) 38%, rgba(208, 173, 104, 0.06) 58%, transparent 74%);
+  opacity: 0.14;
+  pointer-events: none;
+  filter: blur(0.3px);
+  z-index: 0;
+  animation: arcane-drift var(--orb-duration, 8.4s) ease-in-out infinite;
+  animation-delay: var(--orb-delay, 0s);
+}
+
+.arcane-orb--alt {
+  opacity: 0.1;
+  filter: blur(0.45px);
+}
+
 .footer-title {
   position: relative;
 }
@@ -503,6 +579,11 @@ textarea:focus-visible {
 
   .page-hero {
     padding-top: 5.3rem;
+    padding-bottom: 0.9rem;
+  }
+
+  .page-hero + .section {
+    padding-top: 0.25rem;
   }
 
   .hero-actions .btn,
@@ -661,8 +742,17 @@ textarea:focus-visible {
   .page-hero h1,
   .page-hero .lead,
   .page-hero .hero-actions,
+  .home-hero .eyebrow,
+  .home-hero h1,
+  .home-hero .lead,
+  .home-hero .hero-actions,
   .home-hero .badge-row,
-  .page-hero .mission-card {
+  .page-hero .mission-card,
+  .home-hero .mission-card {
+    animation: none !important;
+  }
+
+  .arcane-orb {
     animation: none !important;
   }
 }
