@@ -23,20 +23,17 @@ class ContactController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (filled((string) $request->input('company_website', ''))) {
+            return back()->with('status', 'Recebemos sua mensagem e retornaremos em breve.');
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email:rfc,dns', 'max:160'],
             'whatsapp' => ['required', 'string', 'max:30'],
             'subject' => ['required', 'string', Rule::in(self::SUBJECT_OPTIONS)],
             'message' => ['required', 'string', 'max:2000'],
-            'company_website' => ['nullable', 'max:0'],
         ]);
-
-        if (! empty($validated['company_website'] ?? null)) {
-            return back()->with('status', 'Recebemos sua mensagem e retornaremos em breve.');
-        }
-
-        unset($validated['company_website']);
 
         $inbox = (string) env('CONTACT_INBOX_ADDRESS', env('MAIL_FROM_ADDRESS', 'contato@voltrune.com'));
 
