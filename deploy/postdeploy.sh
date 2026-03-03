@@ -23,6 +23,30 @@ flock -n 9 || {
 
 cd "$APP_DIR"
 
+CURRENT_BRANCH="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+UPSTREAM_REF=""
+
+if [ -n "$CURRENT_BRANCH" ]; then
+  UPSTREAM_REF="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+fi
+
+if [ -n "$UPSTREAM_REF" ]; then
+  echo "[git] fetch $UPSTREAM_REF"
+  git fetch --prune --quiet
+
+  LOCAL_BEFORE="$(git rev-parse HEAD)"
+  REMOTE_HEAD="$(git rev-parse "$UPSTREAM_REF" 2>/dev/null || true)"
+
+  if [ -n "$REMOTE_HEAD" ] && [ "$LOCAL_BEFORE" != "$REMOTE_HEAD" ]; then
+    echo "[git] fast-forward $LOCAL_BEFORE -> $REMOTE_HEAD"
+    git merge --ff-only "$UPSTREAM_REF"
+  else
+    echo "[git] already up to date ($LOCAL_BEFORE)"
+  fi
+else
+  echo "[git] no upstream branch configured, skipping fetch"
+fi
+
 CUR="$(git rev-parse HEAD)"
 PREV=""
 [ -f "$LAST_FILE" ] && PREV="$(cat "$LAST_FILE" || true)"
