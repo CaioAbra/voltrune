@@ -11,7 +11,7 @@ class VigilanteLeadController extends Controller
     public function store(Request $request): RedirectResponse
     {
         if (filled((string) $request->input('company_website', ''))) {
-            return back()->with('vigilante_status', 'Interesse registrado. Avisaremos quando abrir.');
+            return back()->with('vigilante_status', 'Interesse registrado. Avisaremos quando a abertura estiver pronta.');
         }
 
         $validated = $request->validate([
@@ -28,7 +28,6 @@ class VigilanteLeadController extends Controller
             'received_at' => now()->toIso8601String(),
         ]);
 
-        return back()->with('vigilante_status', 'Interesse registrado. Você será avisado quando o Vigilante abrir.');
+        return back()->with('vigilante_status', 'Interesse registrado. Voce sera avisado quando o Vigilante abrir.');
     }
 }
-

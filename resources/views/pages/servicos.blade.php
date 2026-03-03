@@ -53,8 +53,8 @@
 <section class="section page-hero">
     <div class="container narrow">
         <p class="eyebrow">Servicos Voltrune</p>
-        <h1>Um esquadrao completo para construir, vender e escalar no digital.</h1>
-        <p class="lead">Cada entrega inclui tracking completo com GA4, Meta Pixel, eventos e tags para tomar decisao com dados reais.</p>
+        <h1>Uma estrutura completa para construir, vender e escalar com criterio.</h1>
+        <p class="lead">Cada frente nasce com rastreamento confiavel para que decisao, verba e evolucao sejam guiadas por dado real.</p>
     </div>
 </section>
 
@@ -63,32 +63,32 @@
         <article>
             <h2>Websites e Landings</h2>
             <h3>SEO, performance e design orientado a conversao</h3>
-            <p>Criamos paginas rapidas, com estrutura semantica, copy estrategica e funis pensados para gerar contato e venda.</p>
+            <p>Criamos paginas rapidas, com estrutura semantica, narrativa comercial e funis pensados para gerar contato qualificado.</p>
         </article>
 
         <article>
             <h2>Apps e Dashboards</h2>
             <h3>Processos internos e automacoes sob medida</h3>
-            <p>Desenvolvemos sistemas web para centralizar dados, reduzir trabalho manual e acelerar operacoes comerciais.</p>
+            <p>Desenvolvemos sistemas web para centralizar informacao, reduzir retrabalho e dar escala a operacoes criticas.</p>
         </article>
 
         <article>
             <h2>Trafego Pago e Midia</h2>
             <h3>Setup, criativos e otimizacao para ROI</h3>
-            <p>Planejamos campanhas em Meta e Google, com segmentacao, testes e leitura de desempenho com rastreamento confiavel.</p>
+            <p>Estruturamos campanhas em Meta e Google com segmentacao, teste e leitura de desempenho baseada em rastreamento confiavel.</p>
         </article>
 
         <article>
             <h2>Marca, banner e logo</h2>
             <h3>Identidade premium para gerar confianca imediata</h3>
-            <p>Construimos sistemas visuais com coerencia estrategica para reforcar posicionamento e aumentar percepcao de valor.</p>
+            <p>Construimos sistemas visuais com coerencia estrategica para sustentar posicionamento e elevar percepcao de valor.</p>
         </article>
 
         <article>
             <h2>Hospedagem e manutencao</h2>
             <h3>Infraestrutura e continuidade sem gargalos</h3>
-            <p>Cuidamos de hospedagem, monitoramento, atualizacoes e ajustes tecnicos recorrentes para manter seu projeto estavel.</p>
-            <a class="btn" href="{{ route('portal') }}">Contratar Hospedagem</a>
+            <p>Cuidamos de hospedagem, monitoramento, atualizacoes e ajustes tecnicos recorrentes para manter sua operacao estavel.</p>
+            <a class="btn" href="{{ route('portal') }}">Ver hospedagem</a>
         </article>
     </div>
 </section>
@@ -103,7 +103,7 @@
             </summary>
             <div class="faq-answer">
                 <div class="faq-answer-inner">
-                    <p>Sim. Estruturamos estrategia para empresas, profissionais liberais, startups e operacoes de e-commerce.</p>
+                    <p>Sim. Ajustamos a execucao para empresas, especialistas, startups e operacoes com maturidade comercial distinta.</p>
                 </div>
             </div>
         </details>
@@ -114,7 +114,7 @@
             </summary>
             <div class="faq-answer">
                 <div class="faq-answer-inner">
-                    <p>Configuramos GA4, Pixel, eventos, tags e metas para acompanhar funil completo.</p>
+                    <p>Configuramos GA4, Pixel, eventos, tags e metas para acompanhar o funil do clique ate a conversao.</p>
                 </div>
             </div>
         </details>
@@ -147,7 +147,7 @@
             </summary>
             <div class="faq-answer">
                 <div class="faq-answer-inner">
-                    <p>Sim. Montamos uma trilha de entregas priorizando impacto comercial.</p>
+                    <p>Sim. Podemos fatiar a execucao em etapas, priorizando o que gera impacto mais cedo.</p>
                 </div>
             </div>
         </details>
@@ -156,6 +156,6 @@
 
 <div class="mobile-sticky-cta" data-sticky-cta>
     <a href="{{ env('WHATSAPP_URL', 'https://wa.me/5511998479359') }}" target="_blank" rel="noopener">WhatsApp</a>
-    <a href="{{ route('contato') }}">Contato</a>
+    <a href="{{ route('contato') }}">Briefing</a>
 </div>
 @endsection
