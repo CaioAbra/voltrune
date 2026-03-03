@@ -12,5 +12,8 @@
   --danger: #ffb3a7;
   --radius: 18px;
   --shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
+  --shadow-strong: 0 24px 42px rgba(0, 0, 0, 0.42);
+  --ease-out-arc: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ritual: cubic-bezier(0.16, 1, 0.3, 1);
   --container: 1120px;
 }

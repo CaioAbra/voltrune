@@ -1,7 +1,9 @@
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   gap: 0.4rem;
   border-radius: 999px;
   border: 1px solid rgba(208, 173, 104, 0.4);
@@ -9,19 +11,67 @@
   color: #1a1208;
   padding: 0.72rem 1.1rem;
   font-weight: 700;
-  transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+  overflow: hidden;
+  box-shadow:
+    0 9px 18px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 248, 227, 0.28);
+  transition:
+    transform 180ms var(--ease-ritual),
+    box-shadow 180ms var(--ease-ritual),
+    filter 180ms ease,
+    border-color 180ms ease;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 18%, rgba(255, 248, 227, 0.26) 46%, transparent 72%);
+  transform: translateX(-120%);
+  transition: transform 320ms var(--ease-out-arc);
+  pointer-events: none;
 }
 
 .btn:hover,
 .btn:focus-visible {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(208, 173, 104, 0.2);
-  filter: brightness(1.03);
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 26px rgba(0, 0, 0, 0.3),
+    0 0 16px rgba(208, 173, 104, 0.16);
+  filter: brightness(1.04);
+}
+
+.btn:hover::before,
+.btn:focus-visible::before {
+  transform: translateX(120%);
+}
+
+.btn:active {
+  transform: translateY(0);
+  filter: brightness(0.99);
+}
+
+.btn:disabled {
+  cursor: not-allowed;
 }
 
 .btn-ghost {
-  background: rgba(208, 173, 104, 0.08);
+  border-color: rgba(208, 173, 104, 0.26);
+  background:
+    linear-gradient(160deg, rgba(208, 173, 104, 0.08), rgba(208, 173, 104, 0.03)),
+    rgba(208, 173, 104, 0.04);
   color: var(--text);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 213, 0.03),
+    0 6px 14px rgba(0, 0, 0, 0.14);
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+  border-color: rgba(208, 173, 104, 0.42);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 213, 0.05),
+    0 12px 22px rgba(0, 0, 0, 0.2);
 }
 
 .btn-sm {

@@ -9,6 +9,25 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: 1.2rem;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 220ms var(--ease-ritual),
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.system-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 72px;
+  height: 72px;
+  border-top: 1px solid rgba(208, 173, 104, 0.34);
+  border-right: 1px solid rgba(208, 173, 104, 0.34);
+  border-top-right-radius: var(--radius);
+  pointer-events: none;
 }
 
 .system-card h2 {
@@ -29,6 +48,15 @@
 
 .system-card.is-live {
   border-color: rgba(208, 173, 104, 0.4);
+}
+
+.system-card:hover,
+.system-card:focus-within {
+  transform: translateY(-3px);
+  border-color: rgba(208, 173, 104, 0.34);
+  box-shadow:
+    0 22px 34px rgba(0, 0, 0, 0.38),
+    0 0 18px rgba(208, 173, 104, 0.06);
 }
 
 @media (min-width: 920px) {

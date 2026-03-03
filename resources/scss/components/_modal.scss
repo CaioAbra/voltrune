@@ -34,7 +34,26 @@
   z-index: 1;
   opacity: 0;
   transform: translateY(10px) scale(0.985);
-  transition: transform 240ms ease, opacity 220ms ease;
+  box-shadow:
+    0 24px 40px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 241, 209, 0.06);
+  overflow: hidden;
+  transition: transform 240ms var(--ease-out-arc), opacity 220ms ease;
+}
+
+.modal-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 1.2rem;
+  width: 120px;
+  height: 36px;
+  background: radial-gradient(circle at center, rgba(208, 173, 104, 0.16), transparent 72%);
+  pointer-events: none;
+}
+
+.modal-panel > *:not(.modal-close) {
+  position: relative;
+  z-index: 1;
 }
 
 .modal.is-open .modal-backdrop {
@@ -73,7 +92,7 @@
   color: var(--accent);
   border-color: rgba(208, 173, 104, 0.55);
   background: rgba(208, 173, 104, 0.1);
-  transform: scale(1.04);
+  transform: scale(1.04) rotate(6deg);
 }
 
 .modal-close:hover .material-symbols-rounded,
