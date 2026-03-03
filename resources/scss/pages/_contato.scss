@@ -25,55 +25,6 @@
 
 .contact-form button {
   margin-top: 0.3rem;
-  position: relative;
-  cursor: pointer;
-  transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    filter 180ms ease,
-    opacity 180ms ease;
-}
-
-.contact-form button:hover,
-.contact-form button:focus-visible {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 12px 26px rgba(208, 173, 104, 0.24);
-}
-
-.contact-form.is-submitting button {
-  pointer-events: none;
-  cursor: wait;
-  opacity: 0.88;
-  filter: saturate(0.9);
-  animation: contact-submit-pulse 1s ease-in-out infinite;
-}
-
-.contact-form.is-submitting button::after {
-  content: '';
-  width: 0.95rem;
-  height: 0.95rem;
-  margin-left: 0.55rem;
-  border-radius: 999px;
-  border: 2px solid rgba(26, 18, 8, 0.28);
-  border-top-color: #1a1208;
-  animation: contact-submit-spin 700ms linear infinite;
-}
-
-@keyframes contact-submit-pulse {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-1px);
-  }
-}
-
-@keyframes contact-submit-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 .custom-select {
@@ -83,14 +34,13 @@
 .custom-select__trigger {
   width: 100%;
   min-height: 3.05rem;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   gap: 0.9rem;
   border-radius: 12px;
   border: 1px solid rgba(208, 173, 104, 0.24);
-  background:
-    linear-gradient(145deg, rgba(32, 25, 19, 0.96), rgba(18, 14, 10, 0.98));
+  background: linear-gradient(145deg, rgba(32, 25, 19, 0.96), rgba(18, 14, 10, 0.98));
   color: var(--text);
   padding: 0.78rem 0.95rem;
   box-shadow:
@@ -100,6 +50,10 @@
     border-color 180ms ease,
     box-shadow 180ms ease,
     transform 180ms var(--ease-ritual);
+}
+
+.js .custom-select__trigger {
+  display: flex;
 }
 
 .custom-select__trigger:hover,
@@ -165,11 +119,12 @@
   padding: 0.45rem;
   border-radius: 14px;
   border: 1px solid rgba(208, 173, 104, 0.2);
-  background:
-    linear-gradient(165deg, rgba(34, 27, 20, 0.98), rgba(18, 14, 10, 0.99));
+  background: linear-gradient(165deg, rgba(34, 27, 20, 0.98), rgba(18, 14, 10, 0.99));
   box-shadow:
     0 20px 38px rgba(0, 0, 0, 0.34),
     inset 0 1px 0 rgba(255, 244, 213, 0.03);
+  transform-origin: top center;
+  animation: custom-select-panel-in 160ms var(--ease-out-arc);
 }
 
 .custom-select__panel[hidden] {
@@ -325,5 +280,17 @@
 @keyframes contact-submit-spin {
   to {
     transform: scale(1) rotate(360deg);
+  }
+}
+
+@keyframes custom-select-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }

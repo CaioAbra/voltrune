@@ -308,42 +308,231 @@ const initPhoneMask = () => {
   });
 };
 
-const initSubmitGuards = () => {
-  const forms = Array.from(document.querySelectorAll('form.contact-form'));
+const initSubmitLocks = () => {
+  const forms = Array.from(document.querySelectorAll('form[data-lock-submit]'));
   if (!forms.length) return;
 
-  forms.forEach((form) => {
-    const submitButton = form.querySelector('button[type="submit"]');
-    if (!submitButton) return;
+  const setSubmittingState = (form, isSubmitting) => {
+    const button = form.querySelector('[data-submit-button]');
+    const label = form.querySelector('[data-submit-label]');
 
-    const defaultLabel = submitButton.textContent;
+    form.dataset.isSubmitting = isSubmitting ? 'true' : 'false';
+    form.setAttribute('aria-busy', isSubmitting ? 'true' : 'false');
+
+    if (!button) return;
+
+    const defaultLabel = button.getAttribute('data-default-label') || button.textContent?.trim() || 'Enviar';
+    const loadingLabel = button.getAttribute('data-loading-label') || 'Enviando...';
+
+    button.disabled = isSubmitting;
+    button.classList.toggle('is-submitting', isSubmitting);
+
+    if (label) {
+      label.textContent = isSubmitting ? loadingLabel : defaultLabel;
+    }
+  };
+
+  forms.forEach((form) => {
+    setSubmittingState(form, false);
 
     form.addEventListener('submit', (event) => {
-      if (!form.checkValidity()) return;
-
-      if (form.dataset.submitting === 'true') {
+      if (form.dataset.isSubmitting === 'true') {
         event.preventDefault();
         return;
       }
 
-      form.dataset.submitting = 'true';
-      form.classList.add('is-submitting');
-      submitButton.disabled = true;
-      submitButton.setAttribute('aria-disabled', 'true');
-      submitButton.textContent = 'Enviando...';
+      setSubmittingState(form, true);
+    });
+  });
+
+  window.addEventListener('pageshow', () => {
+    forms.forEach((form) => setSubmittingState(form, false));
+  });
+};
+
+const initCustomSelects = () => {
+  const selects = Array.from(document.querySelectorAll('[data-custom-select]'));
+  if (!selects.length) return;
+
+  let activeSelect = null;
+
+  const closeSelect = (container) => {
+    const trigger = container.querySelector('[data-custom-select-trigger]');
+    const panel = container.querySelector('[data-custom-select-panel]');
+    if (!trigger || !panel) return;
+
+    container.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+    panel.hidden = true;
+
+    if (activeSelect === container) {
+      activeSelect = null;
+    }
+  };
+
+  const openSelect = (container) => {
+    const trigger = container.querySelector('[data-custom-select-trigger]');
+    const panel = container.querySelector('[data-custom-select-panel]');
+    if (!trigger || !panel) return;
+
+    if (activeSelect && activeSelect !== container) {
+      closeSelect(activeSelect);
+    }
+
+    container.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+    panel.hidden = false;
+    activeSelect = container;
+
+    const selectedOption = panel.querySelector('.custom-select__option.is-selected');
+    const fallbackOption = panel.querySelector('.custom-select__option');
+    const target = selectedOption || fallbackOption;
+
+    if (target instanceof HTMLElement) {
+      target.focus();
+    }
+  };
+
+  const syncSelectUi = (container) => {
+    const native = container.querySelector('[data-custom-select-native]');
+    const value = container.querySelector('[data-custom-select-value]');
+    const optionButtons = Array.from(container.querySelectorAll('[data-custom-select-option]'));
+
+    if (!native || !value) return;
+
+    const selectedOption = native.options[native.selectedIndex] || native.options[0];
+    const selectedText = selectedOption?.textContent?.trim() || 'Selecione um servico';
+    const isPlaceholder = !native.value;
+
+    value.textContent = selectedText;
+    value.classList.toggle('is-placeholder', isPlaceholder);
+
+    optionButtons.forEach((button) => {
+      const isSelected = button.getAttribute('data-value') === native.value;
+      button.classList.toggle('is-selected', isSelected);
+      button.setAttribute('aria-selected', String(isSelected));
+      button.tabIndex = isSelected ? 0 : -1;
+    });
+  };
+
+  selects.forEach((container, index) => {
+    const native = container.querySelector('[data-custom-select-native]');
+    const trigger = container.querySelector('[data-custom-select-trigger]');
+    const panel = container.querySelector('[data-custom-select-panel]');
+    const value = container.querySelector('[data-custom-select-value]');
+
+    if (!native || !trigger || !panel || !value) return;
+
+    const listboxId = `${native.id || `custom-select-${index}`}-listbox`;
+    trigger.setAttribute('aria-controls', listboxId);
+    panel.id = listboxId;
+    panel.setAttribute('role', 'listbox');
+
+    panel.innerHTML = '';
+
+    Array.from(native.options).forEach((option) => {
+      if (!option.value) return;
+
+      const optionButton = document.createElement('button');
+      optionButton.type = 'button';
+      optionButton.className = 'custom-select__option';
+      optionButton.textContent = option.textContent;
+      optionButton.setAttribute('role', 'option');
+      optionButton.setAttribute('data-custom-select-option', '');
+      optionButton.setAttribute('data-value', option.value);
+      optionButton.tabIndex = -1;
+
+      optionButton.addEventListener('click', () => {
+        native.value = option.value;
+        native.dispatchEvent(new Event('change', { bubbles: true }));
+        closeSelect(container);
+        trigger.focus();
+      });
+
+      optionButton.addEventListener('keydown', (event) => {
+        const options = Array.from(panel.querySelectorAll('[data-custom-select-option]'));
+        const currentIndex = options.findIndex((item) => item === optionButton);
+
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeSelect(container);
+          trigger.focus();
+          return;
+        }
+
+        if (event.key === 'Tab') {
+          closeSelect(container);
+          return;
+        }
+
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          optionButton.click();
+          return;
+        }
+
+        if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+
+        event.preventDefault();
+
+        let nextIndex = currentIndex;
+
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = options.length - 1;
+        if (event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % options.length;
+        if (event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + options.length) % options.length;
+
+        const nextOption = options[nextIndex];
+        if (nextOption instanceof HTMLElement) {
+          nextOption.focus();
+        }
+      });
+
+      panel.appendChild(optionButton);
     });
 
-    window.addEventListener(
-      'pageshow',
-      () => {
-        form.dataset.submitting = 'false';
-        form.classList.remove('is-submitting');
-        submitButton.disabled = false;
-        submitButton.removeAttribute('aria-disabled');
-        submitButton.textContent = defaultLabel;
-      },
-      { once: true },
-    );
+    syncSelectUi(container);
+    closeSelect(container);
+
+    trigger.addEventListener('click', () => {
+      if (container.classList.contains('is-open')) {
+        closeSelect(container);
+        return;
+      }
+
+      openSelect(container);
+    });
+
+    trigger.addEventListener('keydown', (event) => {
+      if (!['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) return;
+
+      event.preventDefault();
+      openSelect(container);
+    });
+
+    native.addEventListener('change', () => {
+      syncSelectUi(container);
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Node)) return;
+
+    selects.forEach((container) => {
+      if (container.contains(event.target)) return;
+      closeSelect(container);
+    });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !activeSelect) return;
+
+    const trigger = activeSelect.querySelector('[data-custom-select-trigger]');
+    closeSelect(activeSelect);
+
+    if (trigger instanceof HTMLElement) {
+      trigger.focus();
+    }
   });
 };
 
@@ -355,5 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initQuestReveal();
   initFaqAccordion();
   initPhoneMask();
-  initSubmitGuards();
+  initSubmitLocks();
+  initCustomSelects();
 });
