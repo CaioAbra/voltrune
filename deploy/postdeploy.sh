@@ -1,39 +1,161 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="$HOME/voltrune"
-BRANCH="main"
+APP_DIR="${APP_DIR:-$HOME/voltrune}"
 STATE_DIR="$APP_DIR/storage/app/deploy"
 LAST_FILE="$STATE_DIR/last_commit"
-LOCK="/tmp/voltrune_postdeploy.lock"
+LOCK_FILE="/tmp/voltrune_postdeploy.lock"
+LOG_FILE="$APP_DIR/storage/logs/deploy.log"
 
-mkdir -p "$STATE_DIR"
+mkdir -p "$STATE_DIR" "$(dirname "$LOG_FILE")"
+touch "$LOG_FILE"
 
-exec 9>"$LOCK"
-flock -n 9 || exit 0
+exec >>"$LOG_FILE" 2>&1
+
+echo "-----"
+echo "$(date '+%Y-%m-%d %H:%M:%S') start"
+
+exec 9>"$LOCK_FILE"
+flock -n 9 || {
+  echo "locked, exit"
+  exit 0
+}
 
 cd "$APP_DIR"
 
-# commit atual no servidor
 CUR="$(git rev-parse HEAD)"
-
-# commit anterior processado
 PREV=""
 [ -f "$LAST_FILE" ] && PREV="$(cat "$LAST_FILE" || true)"
 
-# não mudou? não faz nada
-[ "$CUR" = "$PREV" ] && exit 0
+if [ "$CUR" = "$PREV" ]; then
+  echo "no changes ($CUR)"
+  exit 0
+fi
 
-# ---- mudou: roda pós-deploy ----
+echo "new commit: ${PREV:-<none>} -> $CUR"
 
-# caches (produção)
-php artisan config:cache || true
-php artisan route:cache || true
-php artisan view:cache || true
+if [ -n "$PREV" ]; then
+  CHANGED="$(git diff --name-only "$PREV" "$CUR" || true)"
+else
+  CHANGED="$(git show --name-only --pretty='' "$CUR" || true)"
+fi
 
-# build frontend (precisa do manifest.json)
-npm ci --no-audit --no-fund
-npm run build
+echo "changed files:"
+if [ -n "$CHANGED" ]; then
+  echo "$CHANGED"
+else
+  echo "<none detected>"
+fi
 
-# marca que já processou esse commit
+changed_any() {
+  local pattern="$1"
+  printf '%s\n' "$CHANGED" | grep -E -q "$pattern"
+}
+
+has_file() {
+  [ -e "$1" ]
+}
+
+need_composer=0
+need_migrate=0
+need_config_cache=0
+need_route_cache=0
+need_view_cache=0
+need_npm=0
+need_build=0
+
+if ! has_file "vendor/autoload.php"; then
+  need_composer=1
+fi
+
+if ! has_file "public/build/manifest.json"; then
+  need_build=1
+fi
+
+if ! has_file "node_modules"; then
+  need_npm=1
+fi
+
+if changed_any '^(composer\.json|composer\.lock)$'; then
+  need_composer=1
+fi
+
+if changed_any '^(database/migrations/)'; then
+  need_migrate=1
+fi
+
+if changed_any '^(\.env|config/)'; then
+  need_config_cache=1
+fi
+
+if changed_any '^(routes/)'; then
+  need_route_cache=1
+fi
+
+if changed_any '^(resources/views/)'; then
+  need_view_cache=1
+fi
+
+if changed_any '^(package\.json|package-lock\.json)$'; then
+  need_npm=1
+fi
+
+if changed_any '^(package\.json|package-lock\.json|resources/(js|scss)/|vite\.config\.(js|ts)|postcss\.config\.(js|cjs)|tailwind\.config\.(js|cjs)|tsconfig\.json)'; then
+  need_build=1
+fi
+
+if [ "$need_composer" -eq 1 ]; then
+  echo "[composer] install"
+  composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
+else
+  echo "[composer] skip install"
+fi
+
+if [ "$need_migrate" -eq 1 ]; then
+  echo "[artisan] migrate --force"
+  php artisan migrate --force
+else
+  echo "[artisan] skip migrate"
+fi
+
+if [ "$need_config_cache" -eq 1 ]; then
+  echo "[artisan] config:clear && config:cache"
+  php artisan config:clear
+  php artisan config:cache
+else
+  echo "[artisan] skip config cache"
+fi
+
+if [ "$need_route_cache" -eq 1 ]; then
+  echo "[artisan] route:clear && route:cache"
+  php artisan route:clear
+  php artisan route:cache
+else
+  echo "[artisan] skip route cache"
+fi
+
+if [ "$need_view_cache" -eq 1 ]; then
+  echo "[artisan] view:clear && view:cache"
+  php artisan view:clear
+  php artisan view:cache
+else
+  echo "[artisan] skip view cache"
+fi
+
+if [ "$need_npm" -eq 1 ]; then
+  echo "[npm] ci"
+  npm ci --no-audit --no-fund
+else
+  echo "[npm] skip ci"
+fi
+
+if [ "$need_build" -eq 1 ]; then
+  echo "[npm] run build"
+  npm run build
+else
+  echo "[npm] skip build"
+fi
+
 echo "$CUR" > "$LAST_FILE"
+echo "done, saved last_commit=$CUR"
+echo "$(date '+%Y-%m-%d %H:%M:%S') end"
