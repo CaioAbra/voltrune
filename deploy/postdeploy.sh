@@ -56,6 +56,34 @@ has_file() {
   [ -e "$1" ]
 }
 
+ensure_node_toolchain() {
+  if command -v npm >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local nvm_dir="${NVM_DIR:-$HOME/.nvm}"
+
+  if [ -s "$nvm_dir/nvm.sh" ]; then
+    # Cron and non-login shells do not load the user's shell profile.
+    # Load nvm explicitly so npm/node are available during deploy.
+    # shellcheck disable=SC1090
+    . "$nvm_dir/nvm.sh"
+  fi
+
+  if command -v npm >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
+    return 0
+  fi
+
+  local current_node_bin
+  current_node_bin="$(find "$nvm_dir/versions/node" -mindepth 3 -maxdepth 3 -type d -name bin 2>/dev/null | sort | tail -n 1 || true)"
+
+  if [ -n "$current_node_bin" ]; then
+    export PATH="$current_node_bin:$PATH"
+  fi
+
+  command -v npm >/dev/null 2>&1 && command -v node >/dev/null 2>&1
+}
+
 need_composer=0
 need_migrate=0
 need_config_cache=0
@@ -143,6 +171,10 @@ else
 fi
 
 if [ "$need_npm" -eq 1 ]; then
+  if ! ensure_node_toolchain; then
+    echo "[npm] unavailable: node/npm not found in PATH or nvm"
+    exit 1
+  fi
   echo "[npm] ci"
   npm ci --no-audit --no-fund
 else
@@ -150,6 +182,10 @@ else
 fi
 
 if [ "$need_build" -eq 1 ]; then
+  if ! ensure_node_toolchain; then
+    echo "[npm] unavailable: node/npm not found in PATH or nvm"
+    exit 1
+  fi
   echo "[npm] run build"
   npm run build
 else
