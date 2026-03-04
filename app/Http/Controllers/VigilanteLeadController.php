@@ -28,6 +28,6 @@ class VigilanteLeadController extends Controller
             'received_at' => now()->toIso8601String(),
         ]);
 
-        return back()->with('vigilante_status', 'Interesse registrado. Voce sera avisado quando o Vigilante abrir.');
+        return back()->with('vigilante_status', 'Interesse registrado. Você será avisado quando o Vigilante abrir.');
     }
 }

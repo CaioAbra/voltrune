@@ -504,6 +504,10 @@ textarea:focus-visible {
   color: color-mix(in srgb, var(--muted) 78%, #fff 22%);
 }
 
+.footer-meta small span {
+  display: inline;
+}
+
 .tag-list {
   display: flex;
   flex-wrap: wrap;
@@ -655,6 +659,18 @@ textarea:focus-visible {
   .footer-meta small {
     display: block;
     line-height: 1.55;
+    max-width: 34ch;
+    margin-inline: auto;
+  }
+
+  .footer-meta small span {
+    display: block;
+  }
+
+  .footer-meta {
+    text-align: center;
+    padding-left: max(0.5rem, env(safe-area-inset-left));
+    padding-right: max(0.5rem, env(safe-area-inset-right));
   }
 }
 
