@@ -14,10 +14,10 @@ class ContactController extends Controller
     private const SUBJECT_OPTIONS = [
         'Websites e Landings',
         'Apps e Dashboards',
-        'Trafego Pago e Midia',
+        'Tráfego Pago e Mídia',
         'Marca, Banner e Logo',
-        'Hospedagem e Manutencao',
-        'Vigilante Juridico',
+        'Hospedagem e Manutenção',
+        'Vigilante Jurídico',
         'Outro',
     ];
 
@@ -47,7 +47,7 @@ class ContactController extends Controller
         try {
             Mail::raw(
                 implode(PHP_EOL, [
-                    'Nova mensagem pelo formulario da Voltrune',
+                    'Nova mensagem pelo formulário da Voltrune',
                     '',
                     'Nome: '.$validated['name'],
                     'Email: '.$validated['email'],
@@ -74,6 +74,6 @@ class ContactController extends Controller
             ]);
         }
 
-        return back()->with('status', 'Briefing recebido com sucesso. Sua missao entrou na fila de analise.');
+        return back()->with('status', 'Briefing recebido com sucesso. Sua missão entrou na fila de análise.');
     }
 }

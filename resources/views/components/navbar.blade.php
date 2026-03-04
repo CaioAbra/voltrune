@@ -1,6 +1,6 @@
 <header class="site-header" data-header>
     <div class="container nav-wrap">
-        <a class="brand" href="{{ route('home') }}" aria-label="Voltrune - inicio">
+        <a class="brand" href="{{ route('home') }}" aria-label="Voltrune - início">
             <span class="brand-rune" aria-hidden="true">
                 @if (file_exists(public_path('images/brand-rune.webp')))
                     <img src="{{ asset('images/brand-rune.webp') }}" alt="" width="32" height="32" loading="eager" decoding="async">
@@ -17,9 +17,9 @@
         </button>
 
         <nav id="main-nav" class="main-nav" data-menu>
-            <a href="{{ route('home') }}" @class(['nav-link', 'active' => request()->routeIs('home')])>Inicio</a>
-            <a href="{{ route('servicos') }}" @class(['nav-link', 'active' => request()->routeIs('servicos')])>Servicos</a>
-            <a href="{{ route('portfolio') }}" @class(['nav-link', 'active' => request()->routeIs('portfolio')])>Missoes</a>
+            <a href="{{ route('home') }}" @class(['nav-link', 'active' => request()->routeIs('home')])>Início</a>
+            <a href="{{ route('servicos') }}" @class(['nav-link', 'active' => request()->routeIs('servicos')])>Serviços</a>
+            <a href="{{ route('portfolio') }}" @class(['nav-link', 'active' => request()->routeIs('portfolio')])>Portfólio</a>
             <a href="{{ route('sistemas') }}" @class(['nav-link', 'active' => request()->routeIs('sistemas*') || request()->routeIs('vigilante')])>Sistemas</a>
             <a href="{{ route('contato') }}" class="nav-cta">Contato</a>
         </nav>

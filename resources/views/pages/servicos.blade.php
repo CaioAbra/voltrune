@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Servicos de desenvolvimento, SEO e midia')
-@section('meta_description', 'Conheca os servicos da Voltrune: websites, apps, trafego pago, branding, tracking, hospedagem e manutencao com foco comercial.')
+@section('title', 'Serviços de sites, apps, SEO e mídia')
+@section('meta_description', 'Conheça os serviços da Voltrune: sites, landing pages, apps, tráfego pago, branding, tracking, hospedagem e manutenção com foco comercial.')
 @section('canonical', route('servicos'))
 
 @php
@@ -25,10 +25,10 @@
         [
             '@context' => 'https://schema.org',
             '@type' => 'Service',
-            'name' => 'Trafego Pago e Midia',
+            'name' => 'Tráfego Pago e Mídia',
             'provider' => ['@type' => 'Organization', 'name' => 'Voltrune'],
             'areaServed' => 'BR',
-            'serviceType' => 'Gestao de midia digital',
+            'serviceType' => 'Gestão de mídia digital',
         ],
         [
             '@context' => 'https://schema.org',
@@ -52,9 +52,9 @@
 @section('content')
 <section class="section page-hero">
     <div class="container narrow">
-        <p class="eyebrow">Servicos Voltrune</p>
-        <h1>Uma estrutura completa para construir, vender e escalar com criterio.</h1>
-        <p class="lead">Cada frente nasce com rastreamento confiavel para que decisao, verba e evolucao sejam guiadas por dado real.</p>
+        <p class="eyebrow">Serviços da ordem Voltrune</p>
+        <h1>Uma estrutura completa para construir, vender e escalar com critério.</h1>
+        <p class="lead">Cada frente nasce com rastreamento confiável para que decisões, verba e evolução sejam guiadas por dados reais.</p>
     </div>
 </section>
 
@@ -62,32 +62,32 @@
     <div class="container narrow service-longform">
         <article>
             <h2>Websites e Landings</h2>
-            <h3>SEO, performance e design orientado a conversao</h3>
-            <p>Criamos paginas rapidas, com estrutura semantica, narrativa comercial e funis pensados para gerar contato qualificado.</p>
+            <h3>SEO, performance e design orientado à conversão</h3>
+            <p>Criamos páginas rápidas, com estrutura semântica, narrativa comercial e funis pensados para gerar demanda qualificada.</p>
         </article>
 
         <article>
             <h2>Apps e Dashboards</h2>
-            <h3>Processos internos e automacoes sob medida</h3>
-            <p>Desenvolvemos sistemas web para centralizar informacao, reduzir retrabalho e dar escala a operacoes criticas.</p>
+            <h3>Processos internos e automações sob medida</h3>
+            <p>Desenvolvemos sistemas web para centralizar informação, reduzir retrabalho e dar escala a operações críticas.</p>
         </article>
 
         <article>
-            <h2>Trafego Pago e Midia</h2>
-            <h3>Setup, criativos e otimizacao para ROI</h3>
-            <p>Estruturamos campanhas em Meta e Google com segmentacao, teste e leitura de desempenho baseada em rastreamento confiavel.</p>
+            <h2>Tráfego Pago e Mídia</h2>
+            <h3>Setup, criativos e otimização para ROI</h3>
+            <p>Estruturamos campanhas em Meta e Google com segmentação, testes e leitura de desempenho baseada em rastreamento confiável.</p>
         </article>
 
         <article>
             <h2>Marca, banner e logo</h2>
-            <h3>Identidade premium para gerar confianca imediata</h3>
-            <p>Construimos sistemas visuais com coerencia estrategica para sustentar posicionamento e elevar percepcao de valor.</p>
+            <h3>Identidade premium para gerar confiança imediata</h3>
+            <p>Construímos sistemas visuais com coerência estratégica para sustentar posicionamento e elevar percepção de valor.</p>
         </article>
 
         <article>
-            <h2>Hospedagem e manutencao</h2>
+            <h2>Hospedagem e manutenção</h2>
             <h3>Infraestrutura e continuidade sem gargalos</h3>
-            <p>Cuidamos de hospedagem, monitoramento, atualizacoes e ajustes tecnicos recorrentes para manter sua operacao estavel.</p>
+            <p>Cuidamos de hospedagem, monitoramento, atualizações e ajustes técnicos recorrentes para manter sua operação estável.</p>
             <a class="btn" href="{{ route('portal') }}">Ver hospedagem</a>
         </article>
     </div>
@@ -98,12 +98,12 @@
         <h2>Perguntas frequentes</h2>
         <details class="faq-item" open>
             <summary>
-                <span>Voce atende qualquer nicho?</span>
+                <span>A Voltrune atende qualquer nicho?</span>
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
                 <div class="faq-answer-inner">
-                    <p>Sim. Ajustamos a execucao para empresas, especialistas, startups e operacoes com maturidade comercial distinta.</p>
+                    <p>Sim. Ajustamos a execução para empresas, especialistas, startups e operações em diferentes níveis de maturidade comercial.</p>
                 </div>
             </div>
         </details>
@@ -114,24 +114,24 @@
             </summary>
             <div class="faq-answer">
                 <div class="faq-answer-inner">
-                    <p>Configuramos GA4, Pixel, eventos, tags e metas para acompanhar o funil do clique ate a conversao.</p>
+                    <p>Configuramos GA4, Pixel, eventos, tags e metas para acompanhar o funil completo, do clique até a conversão.</p>
                 </div>
             </div>
         </details>
         <details class="faq-item">
             <summary>
-                <span>O projeto ja inclui SEO?</span>
+                <span>O projeto já inclui SEO?</span>
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
                 <div class="faq-answer-inner">
-                    <p>Sim. SEO tecnico e on-page entram no escopo base de websites e landings.</p>
+                    <p>Sim. SEO técnico e on-page entram no escopo base de websites e landings.</p>
                 </div>
             </div>
         </details>
         <details class="faq-item">
             <summary>
-                <span>Qual o prazo medio?</span>
+                <span>Qual é o prazo médio?</span>
                 <span class="material-symbols-rounded faq-icon" aria-hidden="true">expand_more</span>
             </summary>
             <div class="faq-answer">
@@ -147,7 +147,7 @@
             </summary>
             <div class="faq-answer">
                 <div class="faq-answer-inner">
-                    <p>Sim. Podemos fatiar a execucao em etapas, priorizando o que gera impacto mais cedo.</p>
+                    <p>Sim. Podemos fatiar a execução em etapas, priorizando o que gera impacto mais cedo.</p>
                 </div>
             </div>
         </details>

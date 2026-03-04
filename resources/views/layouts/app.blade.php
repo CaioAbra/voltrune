@@ -6,10 +6,10 @@
     <meta name="theme-color" content="#15120f">
 
     @php
-        $baseTitle = 'Voltrune | Ordem de Artesaos Digitais';
+        $baseTitle = 'Voltrune | Sites, Apps e Tráfego Pago';
         $title = trim($__env->yieldContent('title'));
         $metaTitle = $title !== '' ? $title . ' | Voltrune' : $baseTitle;
-        $description = trim($__env->yieldContent('meta_description')) ?: 'Voltrune cria websites, apps e estrategias de midia com design premium, foco em performance e SEO para gerar vendas.';
+        $description = trim($__env->yieldContent('meta_description')) ?: 'A Voltrune cria sites, landing pages, apps e operações de mídia com foco em conversão, performance técnica e SEO.';
         $canonical = trim($__env->yieldContent('canonical')) ?: url()->current();
         $ogTitle = trim($__env->yieldContent('og_title')) ?: $metaTitle;
         $ogDescription = trim($__env->yieldContent('og_description')) ?: $description;

@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Contato')
-@section('meta_description', 'Solicite um orcamento com a Voltrune para websites, apps, midia, branding e hospedagem.')
+@section('title', 'Contato Voltrune | Solicitar proposta')
+@section('meta_description', 'Solicite uma proposta com a Voltrune para sites, apps, mídia, branding e hospedagem.')
 @section('canonical', route('contato'))
 
 @section('content')
 <section class="section page-hero">
     <div class="container narrow">
         <p class="eyebrow">Contato Voltrune</p>
-        <h1>Envie sua missao e receba um plano de execucao.</h1>
-        <p class="lead">Voce recebe retorno com clareza de escopo, prioridade comercial e proxima etapa bem definida.</p>
+        <h1>Envie sua missão e receba um plano de execução claro.</h1>
+        <p class="lead">Você recebe retorno com escopo objetivo, prioridade comercial e próxima etapa bem definida.</p>
     </div>
 </section>
 
@@ -44,14 +44,14 @@
             <label for="subject">Assunto</label>
             <div class="custom-select" data-custom-select>
                 <select id="subject" name="subject" required data-custom-select-native>
-                    <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Selecione um servico</option>
+                    <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Selecione um serviço</option>
                     @foreach ([
                         'Websites e Landings',
                         'Apps e Dashboards',
-                        'Trafego Pago e Midia',
+                        'Tráfego Pago e Mídia',
                         'Marca, Banner e Logo',
-                        'Hospedagem e Manutencao',
-                        'Vigilante Juridico',
+                        'Hospedagem e Manutenção',
+                        'Vigilante Jurídico',
                         'Outro',
                     ] as $serviceOption)
                         <option value="{{ $serviceOption }}" {{ old('subject') === $serviceOption ? 'selected' : '' }}>
@@ -66,7 +66,7 @@
                     aria-haspopup="listbox"
                     aria-expanded="false"
                 >
-                    <span class="custom-select__value" data-custom-select-value>Selecione um servico</span>
+                    <span class="custom-select__value" data-custom-select-value>Selecione um serviço</span>
                     <span class="custom-select__icon" aria-hidden="true"></span>
                 </button>
                 <div class="custom-select__panel" data-custom-select-panel hidden></div>

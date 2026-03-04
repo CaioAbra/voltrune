@@ -1,15 +1,15 @@
 @extends('layouts.app')
 
-@section('title', 'Vigilante Juridico em breve')
-@section('meta_description', 'Vigilante e o sistema da Voltrune para apoiar rotinas juridicas. Cadastre seu interesse para receber aviso de abertura.')
+@section('title', 'Vigilante Jurídico | Lista de interesse')
+@section('meta_description', 'Vigilante é o sistema da Voltrune para apoiar rotinas jurídicas. Cadastre seu interesse para receber o aviso de abertura.')
 @section('canonical', route('vigilante'))
 
 @section('content')
 <section class="section page-hero">
     <div class="container narrow">
         <p class="eyebrow">Projeto Vigilante</p>
-        <h1>Vigilante esta em preparacao para o setor juridico.</h1>
-        <p class="lead">Estamos finalizando um sistema para dar mais controle a rotinas e prazos juridicos. Em breve, o acesso principal sera em <strong>vigilante.voltrune.com</strong>.</p>
+        <h1>Vigilante está em preparação para o setor jurídico.</h1>
+        <p class="lead">Estamos finalizando um sistema para dar mais controle a rotinas e prazos jurídicos. Em breve, o acesso principal será em <strong>vigilante.voltrune.com</strong>.</p>
     </div>
 </section>
 
