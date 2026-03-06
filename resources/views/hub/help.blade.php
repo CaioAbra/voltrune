@@ -1,16 +1,23 @@
-@extends('hub.layout')
+﻿@extends('hub.layout')
 
-@section('title', 'Ajuda | Voltrune Hub')
+@section('title', 'Suporte | Voltrune Hub')
 
 @section('content')
-    <h1>Ajuda</h1>
+    <h1>Suporte ao cliente</h1>
 
     <div class="hub-card">
-        <h2>Como funciona o Hub</h2>
+        <h2>Como funciona o hub</h2>
         <p>
-            O Voltrune Hub centraliza o acesso aos sistemas da Voltrune em um único lugar.
-            Aqui você encontra seus produtos, atalhos de conta e recursos de suporte.
-            Novos módulos serão liberados gradualmente.
+            O Voltrune Hub é a área para clientes com licença ativa ou assinatura mensal.
+            Aqui, você acompanha aplicativos contratados, conta de acesso e próximas entregas.
         </p>
+    </div>
+
+    <div class="hub-card">
+        <h2>Precisa de atendimento?</h2>
+        <p>
+            Para suporte técnico, ajuste de plano ou liberação de usuário, fale com nossa equipe de atendimento.
+        </p>
+        <a href="{{ route('contato') }}" class="hub-btn">Abrir contato</a>
     </div>
 @endsection

@@ -11,11 +11,11 @@
         <header class="hub-topbar">
             <div class="hub-topbar__inner">
                 <a href="{{ route('hub.dashboard') }}" class="hub-brand">
-                    Voltrune Hub
+                    Voltrune Hub | Área do Cliente
                 </a>
 
                 <a href="{{ route('hub.login') }}" class="hub-btn">
-                    Sair
+                    Encerrar sessão
                 </a>
             </div>
         </header>
@@ -24,16 +24,16 @@
             <aside class="hub-sidebar">
                 <nav class="hub-nav">
                     <a href="{{ route('hub.dashboard') }}" class="hub-nav__link {{ request()->routeIs('hub.dashboard') ? 'is-active' : '' }}">
-                        Dashboard
+                        Visão geral
                     </a>
                     <a href="{{ route('hub.products') }}" class="hub-nav__link {{ request()->routeIs('hub.products') ? 'is-active' : '' }}">
-                        Sistemas
+                        Aplicativos contratados
                     </a>
                     <a href="{{ route('hub.account') }}" class="hub-nav__link {{ request()->routeIs('hub.account') ? 'is-active' : '' }}">
-                        Conta
+                        Assinatura e acesso
                     </a>
                     <a href="{{ route('hub.help') }}" class="hub-nav__link {{ request()->routeIs('hub.help') ? 'is-active' : '' }}">
-                        Ajuda
+                        Suporte
                     </a>
                 </nav>
             </aside>
