@@ -2,9 +2,18 @@
 
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\VigilanteLeadController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'pages.home')->name('home');
+Route::get('/', function (Request $request) {
+    $hubDomain = (string) env('HUB_DOMAIN', 'hub.voltrune.com');
+
+    if ($request->getHost() === $hubDomain) {
+        return redirect()->route('hub.dashboard');
+    }
+
+    return view('pages.home');
+})->name('home');
 Route::view('/servicos', 'pages.servicos')->name('servicos');
 Route::view('/portfolio', 'pages.portfolio')->name('portfolio');
 Route::view('/sistemas', 'pages.sistemas')->name('sistemas');
