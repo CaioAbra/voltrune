@@ -69,6 +69,7 @@
   position: absolute;
   top: 0.65rem;
   right: 0.65rem;
+  z-index: 3;
   display: grid;
   place-items: center;
   padding: 0;
@@ -76,9 +77,10 @@
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.02);
   color: var(--muted);
-  width: 2rem;
-  height: 2rem;
-  transition: transform 160ms ease, color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+  width: 2.25rem;
+  height: 2.25rem;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
 .modal-close .material-symbols-rounded {
@@ -92,12 +94,11 @@
   color: var(--accent);
   border-color: rgba(208, 173, 104, 0.55);
   background: rgba(208, 173, 104, 0.1);
-  transform: scale(1.04) rotate(6deg);
 }
 
 .modal-close:hover .material-symbols-rounded,
 .modal-close:focus-visible .material-symbols-rounded {
-  transform: rotate(90deg);
+  transform: scale(1.08) rotate(90deg);
 }
 
 body.modal-open {

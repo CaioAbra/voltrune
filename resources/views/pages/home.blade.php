@@ -128,27 +128,43 @@
     <p><strong>O que inclui:</strong> UX orientada à conversão, SEO técnico, performance, copy comercial e tracking com GA4, Pixel e eventos.</p>
     <p><strong>Para quem é:</strong> empresas, profissionais e equipes comerciais que precisam gerar demanda constante.</p>
     <p><strong>Prazo estimado:</strong> 15 a 35 dias.</p>
-    <a class="btn" href="{{ route('contato') }}">Solicitar proposta</a>
+    <form method="POST" action="{{ route('contato.prefill') }}">
+        @csrf
+        <input type="hidden" name="subject" value="Websites e Landings">
+        <button class="btn" type="submit">Solicitar proposta</button>
+    </form>
 </x-modal>
 
 <x-modal id="modal-apps" title="Apps e Dashboards">
     <p><strong>O que inclui:</strong> mapeamento de fluxo, desenvolvimento sob medida, painel administrativo e automações.</p>
     <p><strong>Para quem é:</strong> operações que sofrem com retrabalho, falta de visibilidade ou processos manuais.</p>
     <p><strong>Prazo estimado:</strong> 30 a 90 dias.</p>
-    <a class="btn" href="{{ route('contato') }}">Solicitar proposta</a>
+    <form method="POST" action="{{ route('contato.prefill') }}">
+        @csrf
+        <input type="hidden" name="subject" value="Apps e Dashboards">
+        <button class="btn" type="submit">Solicitar proposta</button>
+    </form>
 </x-modal>
 
 <x-modal id="modal-trafego" title="Tráfego Pago e Mídia">
     <p><strong>O que inclui:</strong> estratégia de canais, configuração de contas, criativos, testes e otimização orientada a ROI.</p>
     <p><strong>Para quem é:</strong> negócios que já validaram oferta e querem escala com previsibilidade.</p>
     <p><strong>Prazo estimado:</strong> setup em 7 a 12 dias e gestão mensal.</p>
-    <a class="btn" href="{{ route('contato') }}">Solicitar proposta</a>
+    <form method="POST" action="{{ route('contato.prefill') }}">
+        @csrf
+        <input type="hidden" name="subject" value="Tráfego Pago e Mídia">
+        <button class="btn" type="submit">Solicitar proposta</button>
+    </form>
 </x-modal>
 
 <x-modal id="modal-marca" title="Marca, Banner e Logo">
     <p><strong>O que inclui:</strong> posicionamento visual, logotipo, paleta, tipografia, kit de peças e manual rápido.</p>
     <p><strong>Para quem é:</strong> marcas novas ou reposicionamentos que precisam parecer premium e coerentes.</p>
     <p><strong>Prazo estimado:</strong> 10 a 25 dias.</p>
-    <a class="btn" href="{{ route('contato') }}">Solicitar proposta</a>
+    <form method="POST" action="{{ route('contato.prefill') }}">
+        @csrf
+        <input type="hidden" name="subject" value="Marca, Banner e Logo">
+        <button class="btn" type="submit">Solicitar proposta</button>
+    </form>
 </x-modal>
 @endsection

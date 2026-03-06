@@ -21,6 +21,17 @@ class ContactController extends Controller
         'Outro',
     ];
 
+    public function prefill(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'subject' => ['required', 'string', Rule::in(self::SUBJECT_OPTIONS)],
+        ]);
+
+        return redirect()
+            ->route('contato')
+            ->with('contact_subject_prefill', $validated['subject']);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         if (filled((string) $request->input('company_website', ''))) {

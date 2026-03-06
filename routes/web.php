@@ -14,6 +14,9 @@ Route::post('/contato', [ContactController::class, 'store'])
     ->middleware('throttle:6,1')
     ->name('contato.store');
 
+Route::post('/contato/prefill', [ContactController::class, 'prefill'])
+    ->name('contato.prefill');
+
 Route::get('/portal', function () {
     $portalUrl = trim((string) env('PORTAL_REDIRECT_URL', ''));
 
