@@ -5,6 +5,21 @@
 @section('canonical', route('contato'))
 
 @section('content')
+@php
+    $serviceOptions = [
+        'Websites e Landings',
+        'Apps e Dashboards',
+        'Tráfego Pago e Mídia',
+        'Marca, Banner e Logo',
+        'Hospedagem e Manutenção',
+        'Vigilante Jurídico',
+        'Outro',
+    ];
+
+    $prefilledSubject = session('contact_subject_prefill', '');
+    $initialSubject = in_array($prefilledSubject, $serviceOptions, true) ? $prefilledSubject : '';
+    $selectedSubject = old('subject', $initialSubject);
+@endphp
 <section class="section page-hero">
     <div class="container narrow">
         <p class="eyebrow">Contato Voltrune</p>
@@ -44,17 +59,9 @@
             <label for="subject">Assunto</label>
             <div class="custom-select" data-custom-select>
                 <select id="subject" name="subject" required data-custom-select-native>
-                    <option value="" disabled {{ old('subject') ? '' : 'selected' }}>Selecione um serviço</option>
-                    @foreach ([
-                        'Websites e Landings',
-                        'Apps e Dashboards',
-                        'Tráfego Pago e Mídia',
-                        'Marca, Banner e Logo',
-                        'Hospedagem e Manutenção',
-                        'Vigilante Jurídico',
-                        'Outro',
-                    ] as $serviceOption)
-                        <option value="{{ $serviceOption }}" {{ old('subject') === $serviceOption ? 'selected' : '' }}>
+                    <option value="" disabled {{ $selectedSubject ? '' : 'selected' }}>Selecione um serviço</option>
+                    @foreach ($serviceOptions as $serviceOption)
+                        <option value="{{ $serviceOption }}" {{ $selectedSubject === $serviceOption ? 'selected' : '' }}>
                             {{ $serviceOption }}
                         </option>
                     @endforeach

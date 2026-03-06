@@ -101,6 +101,10 @@ const initModals = () => {
     modal.querySelectorAll('[data-modal-close]').forEach((closeTrigger) => {
       closeTrigger.addEventListener('click', () => closeModal(modal));
     });
+
+    modal.querySelectorAll('a[href]').forEach((link) => {
+      link.addEventListener('click', () => closeModal(modal));
+    });
   });
 
   document.addEventListener('keydown', (event) => {
@@ -126,6 +130,16 @@ const initModals = () => {
       event.preventDefault();
       first.focus();
     }
+  });
+
+  window.addEventListener('pageshow', () => {
+    modals.forEach((modal) => {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+    });
+
+    body.classList.remove('modal-open');
+    activeModal = null;
   });
 };
 
