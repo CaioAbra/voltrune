@@ -135,6 +135,10 @@
   padding: 0.9rem;
 }
 
+.hub-main > .hub-card + .hub-card {
+  margin-top: 0.8rem;
+}
+
 .hub-card h3,
 .hub-card h2 {
   margin-bottom: 0.25rem;
