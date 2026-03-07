@@ -1,4 +1,4 @@
-﻿@extends('hub.layout')
+@extends('hub.layout')
 
 @section('title', 'Dashboard | Voltrune Hub')
 
@@ -31,5 +31,36 @@
                 <span class="hub-badge">Em breve</span>
             </article>
         </div>
+    </section>
+
+    <section>
+        <h2 class="hub-section-title">Assinatura e acesso</h2>
+
+        <div class="hub-grid hub-grid--billing">
+            <article class="hub-card">
+                <h3>Plano atual</h3>
+                <p>Founder / Beta</p>
+            </article>
+
+            <article class="hub-card">
+                <h3>Status da conta</h3>
+                <p>Ativa</p>
+            </article>
+
+            <article class="hub-card">
+                <h3>Forma de contratação</h3>
+                <p>Manual</p>
+            </article>
+
+            <article class="hub-card">
+                <h3>Renovação</h3>
+                <p>Gerenciada pela equipe Voltrune</p>
+            </article>
+        </div>
+
+        <p class="hub-note">
+            Neste momento, alguns acessos são liberados manualmente pela equipe Voltrune. Em breve,
+            alguns sistemas também poderão ser contratados diretamente pela plataforma.
+        </p>
     </section>
 @endsection

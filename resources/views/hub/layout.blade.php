@@ -27,10 +27,13 @@
                         Visão geral
                     </a>
                     <a href="{{ route('hub.products') }}" class="hub-nav__link {{ request()->routeIs('hub.products') ? 'is-active' : '' }}">
-                        Aplicativos contratados
+                        Sistemas
                     </a>
                     <a href="{{ route('hub.account') }}" class="hub-nav__link {{ request()->routeIs('hub.account') ? 'is-active' : '' }}">
-                        Assinatura e acesso
+                        Conta e acesso
+                    </a>
+                    <a href="{{ route('hub.billing') }}" class="hub-nav__link {{ request()->routeIs('hub.billing') ? 'is-active' : '' }}">
+                        Billing / Assinatura
                     </a>
                     <a href="{{ route('hub.help') }}" class="hub-nav__link {{ request()->routeIs('hub.help') ? 'is-active' : '' }}">
                         Suporte
