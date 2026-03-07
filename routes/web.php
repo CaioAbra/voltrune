@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function (Request $request) {
     $hubDomain = (string) env('HUB_DOMAIN', 'hub.voltrune.com');
 
-    if ($request->getHost() === $hubDomain) {
+    if (! app()->environment('local') && $request->getHost() === $hubDomain) {
         return redirect()->route('hub.dashboard');
     }
 
