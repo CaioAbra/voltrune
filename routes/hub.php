@@ -18,6 +18,10 @@ Route::get('/account', function () {
     return view('hub.account');
 })->name('hub.account');
 
+Route::get('/billing', function () {
+    return view('hub.billing');
+})->name('hub.billing');
+
 Route::get('/help', function () {
     return view('hub.help');
 })->name('hub.help');
