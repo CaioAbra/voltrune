@@ -1,4 +1,4 @@
-@extends('hub.layout')
+﻿@extends('hub.layout')
 
 @section('title', 'Billing e Assinatura | Voltrune Hub')
 
@@ -37,3 +37,4 @@
         </div>
     </section>
 @endsection
+
