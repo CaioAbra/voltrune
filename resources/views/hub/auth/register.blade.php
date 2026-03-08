@@ -1,22 +1,44 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redefinir Senha | Voltrune Hub</title>
+    <title>Criar Conta | Voltrune Hub</title>
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body>
     <main class="hub-auth">
         <div class="hub-auth-card">
-            <h1>Redefinir senha</h1>
-            <p>Defina uma nova senha para restabelecer o acesso ao ambiente de cliente.</p>
+            <h1>Criar conta no Voltrune Hub</h1>
+            <p>Seu cadastro será analisado pela equipe Voltrune antes da ativação.</p>
 
-            <form class="hub-auth-form" action="#" method="get">
+            @if ($errors->any())
+                <div class="hub-alert hub-alert--danger">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
+            <form class="hub-auth-form" action="{{ route('hub.register.submit') }}" method="post">
+                @csrf
                 <div>
-                    <label for="password" class="hub-auth-label">Nova senha</label>
+                    <label for="name" class="hub-auth-label">Seu nome</label>
+                    <input id="name" name="name" type="text" value="{{ old('name') }}" class="hub-auth-input" required />
+                </div>
+
+                <div>
+                    <label for="company_name" class="hub-auth-label">Nome da empresa</label>
+                    <input id="company_name" name="company_name" type="text" value="{{ old('company_name') }}" class="hub-auth-input" required />
+                </div>
+
+                <div>
+                    <label for="email" class="hub-auth-label">E-mail</label>
+                    <input id="email" name="email" type="email" value="{{ old('email') }}" class="hub-auth-input" required />
+                </div>
+
+                <div>
+                    <label for="password" class="hub-auth-label">Senha</label>
                     <div class="hub-password-field" data-password-toggle>
-                        <input id="password" name="password" type="password" placeholder="********" class="hub-auth-input" data-password-input />
+                        <input id="password" name="password" type="password" class="hub-auth-input" data-password-input required />
                         <button type="button" class="hub-password-toggle" data-password-trigger aria-label="Mostrar senha" aria-pressed="false">
                             <svg class="hub-password-toggle__icon hub-password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12s-3.8 6.5-10.5 6.5S1.5 12 1.5 12z"></path>
@@ -32,9 +54,9 @@
                 </div>
 
                 <div>
-                    <label for="password_confirmation" class="hub-auth-label">Confirmar nova senha</label>
+                    <label for="password_confirmation" class="hub-auth-label">Confirmar senha</label>
                     <div class="hub-password-field" data-password-toggle>
-                        <input id="password_confirmation" name="password_confirmation" type="password" placeholder="********" class="hub-auth-input" data-password-input />
+                        <input id="password_confirmation" name="password_confirmation" type="password" class="hub-auth-input" data-password-input required />
                         <button type="button" class="hub-password-toggle" data-password-trigger aria-label="Mostrar senha" aria-pressed="false">
                             <svg class="hub-password-toggle__icon hub-password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12s-3.8 6.5-10.5 6.5S1.5 12 1.5 12z"></path>
@@ -49,13 +71,12 @@
                     </div>
                 </div>
 
-                <button type="submit" class="hub-btn">
-                    Salvar nova senha
-                </button>
+                <button type="submit" class="hub-btn">Criar conta</button>
             </form>
 
-            <div class="hub-auth-links">
-                <a href="{{ route('hub.login') }}">Voltar para o login</a>
+            <div class="hub-auth-assist">
+                <span>Já tem acesso?</span>
+                <a href="{{ route('hub.login') }}">Entrar no hub</a>
             </div>
         </div>
     </main>

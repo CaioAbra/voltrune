@@ -7,6 +7,10 @@
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body>
+    @php
+        $isHubAdmin = \App\Support\HubAdminAccess::isAdmin(auth()->user());
+    @endphp
+
     <div class="hub-shell">
         <header class="hub-topbar">
             <div class="hub-topbar__inner">
@@ -14,9 +18,14 @@
                     Voltrune Hub | Área do Cliente
                 </a>
 
-                <a href="{{ route('hub.login') }}" class="hub-btn">
-                    Encerrar sessão
-                </a>
+                @if (auth()->check())
+                    <form action="{{ route('hub.logout') }}" method="post">
+                        @csrf
+                        <button type="submit" class="hub-btn">Encerrar sessão</button>
+                    </form>
+                @else
+                    <a href="{{ route('hub.login') }}" class="hub-btn">Entrar</a>
+                @endif
             </div>
         </header>
 
@@ -38,6 +47,11 @@
                     <a href="{{ route('hub.help') }}" class="hub-nav__link {{ request()->routeIs('hub.help') ? 'is-active' : '' }}">
                         Suporte
                     </a>
+                    @if ($isHubAdmin)
+                        <a href="{{ route('hub.admin.dashboard') }}" class="hub-nav__link {{ request()->routeIs('hub.admin.*') ? 'is-active' : '' }}">
+                            Painel Interno
+                        </a>
+                    @endif
                 </nav>
             </aside>
 

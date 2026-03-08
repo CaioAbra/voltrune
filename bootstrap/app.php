@@ -22,8 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         },
     )
+    ->withCommands()
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'hub.admin' => \App\Http\Middleware\EnsureHubAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

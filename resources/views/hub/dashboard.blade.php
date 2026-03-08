@@ -9,27 +9,57 @@
         ou assinatura mensal vigente.
     </p>
 
+    @if ($companyStatus !== 'active')
+        <section class="hub-card hub-alert hub-alert--warning">
+            @if ($companyStatus === 'suspended')
+                <h2 class="hub-section-title">Conta suspensa</h2>
+                <p>Sua conta está suspensa. Entre em contato com a equipe Voltrune.</p>
+            @else
+                <h2 class="hub-section-title">Conta aguardando ativação</h2>
+                <p>Sua conta foi criada e está aguardando ativação pela equipe Voltrune.</p>
+            @endif
+            <div class="hub-actions">
+                <a href="{{ route('contato') }}" class="hub-btn">Falar com a Voltrune</a>
+                <a href="{{ route('hub.activation-pending') }}" class="hub-btn">Ver detalhes</a>
+            </div>
+        </section>
+    @endif
+
+    @if ($financialStatus === 'overdue')
+        <section class="hub-card hub-alert hub-alert--danger">
+            <h2 class="hub-section-title">Aviso financeiro</h2>
+            <p>Identificamos pendência financeira na sua conta. Entre em contato com a equipe Voltrune.</p>
+        </section>
+    @endif
+
     <section>
         <h2 class="hub-section-title">Aplicativos da sua assinatura</h2>
 
+        @php
+            $catalog = [
+                'solar' => 'Simulação e orçamento para operações de energia solar.',
+                'vigilante' => 'Automação de fluxos para escritórios jurídicos.',
+                'agro' => 'Análise técnica e recomendação orientada a cultivo.',
+            ];
+        @endphp
+
         <div class="hub-grid">
-            <article class="hub-card">
-                <h3>Solar</h3>
-                <p>Simulação e orçamento para operações de energia solar.</p>
-                <span class="hub-badge">Em breve</span>
-            </article>
-
-            <article class="hub-card">
-                <h3>Vigilante</h3>
-                <p>Automação de fluxos para escritórios jurídicos.</p>
-                <span class="hub-badge">Em breve</span>
-            </article>
-
-            <article class="hub-card">
-                <h3>Agro</h3>
-                <p>Análise técnica e recomendação orientada a cultivo.</p>
-                <span class="hub-badge">Em breve</span>
-            </article>
+            @foreach ($catalog as $productKey => $description)
+                @php
+                    $isAccessible = (bool) ($productAccess[$productKey] ?? false);
+                    $productLabel = $productLabels[$productKey] ?? strtoupper($productKey);
+                @endphp
+                <article class="hub-card">
+                    <h3>{{ $productLabel }}</h3>
+                    <p>{{ $description }}</p>
+                    @if ($isAccessible)
+                        <span class="hub-badge">Acesso liberado</span>
+                    @else
+                        <span class="hub-badge">{{ $companyStatus === 'suspended' ? 'Suspenso' : 'Bloqueado/Indisponível' }}</span>
+                        <button type="button" disabled class="hub-btn-disabled">{{ $companyStatus === 'suspended' ? 'Conta suspensa' : 'Aguardando liberação manual' }}</button>
+                    @endif
+                </article>
+            @endforeach
         </div>
     </section>
 
@@ -44,7 +74,7 @@
 
             <article class="hub-card">
                 <h3>Status da conta</h3>
-                <p>Ativa</p>
+                <p>{{ strtoupper($companyStatus) }}</p>
             </article>
 
             <article class="hub-card">

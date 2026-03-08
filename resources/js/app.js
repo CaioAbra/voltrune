@@ -572,6 +572,32 @@ const initCustomSelects = () => {
   });
 };
 
+const initPasswordToggles = () => {
+  const fields = Array.from(document.querySelectorAll('[data-password-toggle]'));
+  if (!fields.length) return;
+
+  const applyState = (input, trigger, visible) => {
+    input.type = visible ? 'text' : 'password';
+    trigger.setAttribute('aria-pressed', String(visible));
+    trigger.setAttribute('aria-label', visible ? 'Ocultar senha' : 'Mostrar senha');
+    trigger.classList.toggle('is-visible', visible);
+  };
+
+  fields.forEach((field) => {
+    const input = field.querySelector('[data-password-input]');
+    const trigger = field.querySelector('[data-password-trigger]');
+    if (!(input instanceof HTMLInputElement) || !(trigger instanceof HTMLButtonElement)) return;
+
+    applyState(input, trigger, false);
+
+    trigger.addEventListener('click', () => {
+      const isVisible = input.type === 'text';
+      applyState(input, trigger, !isVisible);
+      input.focus({ preventScroll: true });
+    });
+  });
+};
+
 const initArcaneAccents = () => {
   const targets = Array.from(
     document.querySelectorAll('.service-card, .mission-card, .hosting-box, .system-card, .quest-card, .faq-item'),
@@ -621,5 +647,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initPhoneMask();
   initSubmitLocks();
   initCustomSelects();
+  initPasswordToggles();
   initArcaneAccents();
 });
