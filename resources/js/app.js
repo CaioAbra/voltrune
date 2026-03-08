@@ -637,6 +637,251 @@ const initArcaneAccents = () => {
   });
 };
 
+const initErrorEasterEggs = () => {
+  const shell = document.querySelector('[data-error-shell]');
+  if (!shell) return;
+
+  const triggers = Array.from(shell.querySelectorAll('[data-error-egg-trigger]'));
+  if (!triggers.length) return;
+
+  const closeAll = () => {
+    triggers.forEach((trigger) => {
+      if (!(trigger instanceof HTMLElement)) return;
+      const panelId = trigger.getAttribute('data-error-egg-target');
+      const panel = panelId ? document.getElementById(panelId) : null;
+      trigger.setAttribute('aria-expanded', 'false');
+      if (panel) panel.hidden = true;
+    });
+  };
+
+  triggers.forEach((trigger) => {
+    trigger.addEventListener('click', () => {
+      const panelId = trigger.getAttribute('data-error-egg-target');
+      const panel = panelId ? document.getElementById(panelId) : null;
+      if (!panel) return;
+
+      const isOpen = trigger.getAttribute('aria-expanded') === 'true';
+      closeAll();
+
+      if (!isOpen) {
+        trigger.setAttribute('aria-expanded', 'true');
+        panel.hidden = false;
+      }
+    });
+  });
+
+  const shyEggs = Array.from(shell.querySelectorAll('[data-error-egg-shy]'));
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const cubicBezierPoint = (p0, p1, p2, p3, t) => {
+    const u = 1 - t;
+    const tt = t * t;
+    const uu = u * u;
+    const uuu = uu * u;
+    const ttt = tt * t;
+
+    return {
+      x: (uuu * p0.x) + (3 * uu * t * p1.x) + (3 * u * tt * p2.x) + (ttt * p3.x),
+      y: (uuu * p0.y) + (3 * uu * t * p1.y) + (3 * u * tt * p2.y) + (ttt * p3.y),
+    };
+  };
+
+  const animateBezier = (egg, controls, duration, mode) => new Promise((resolve) => {
+    const startTime = performance.now();
+
+    const step = (now) => {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = (t < 0.5)
+        ? 4 * t * t * t
+        : 1 - ((-2 * t + 2) ** 3) / 2;
+
+      const point = cubicBezierPoint(controls.p0, controls.p1, controls.p2, controls.p3, eased);
+
+      if (mode === 'flee') {
+        const scale = 1 - (0.28 * eased);
+        const rotate = -8 * eased;
+        egg.style.opacity = String(1 - (0.96 * eased));
+        egg.style.transform = `translate3d(${point.x}px, ${point.y}px, 0) scale(${scale}) rotate(${rotate}deg)`;
+      } else {
+        const back = 1 - eased;
+        const scale = 1 - (0.28 * back) + (0.04 * Math.sin(eased * Math.PI));
+        const rotate = -8 * back;
+        egg.style.opacity = String(Math.min(1, 0.1 + (0.9 * eased)));
+        egg.style.transform = `translate3d(${point.x}px, ${point.y}px, 0) scale(${scale}) rotate(${rotate}deg)`;
+      }
+
+      if (t < 1) {
+        window.requestAnimationFrame(step);
+        return;
+      }
+
+      resolve();
+    };
+
+    window.requestAnimationFrame(step);
+  });
+
+  const runShyEscape = (egg) => {
+    if (reduceMotion) {
+      egg.classList.add('is-hidden');
+      window.setTimeout(() => {
+        egg.classList.remove('is-hidden');
+      }, 1200);
+      return;
+    }
+
+    const fleeDuration = 860;
+    const returnDuration = 560;
+    const hideDuration = 2300;
+
+    const fleeRoutes = (() => {
+      if (egg.classList.contains('error-egg--north')) {
+        return [
+          { x: -108, y: 34, c1x: -30, c1y: -18, c2x: -80, c2y: 12 },
+          { x: 94, y: 38, c1x: 34, c1y: -16, c2x: 76, c2y: 14 },
+          { x: -76, y: 62, c1x: -26, c1y: -10, c2x: -66, c2y: 32 },
+        ];
+      }
+
+      if (egg.classList.contains('error-egg--west')) {
+        return [
+          { x: 104, y: -28, c1x: 24, c1y: -18, c2x: 84, c2y: -28 },
+          { x: 116, y: 24, c1x: 22, c1y: 8, c2x: 84, c2y: 26 },
+          { x: 88, y: -50, c1x: 20, c1y: -16, c2x: 64, c2y: -58 },
+        ];
+      }
+
+      if (egg.classList.contains('error-egg--east')) {
+        return [
+          { x: -106, y: -22, c1x: -26, c1y: -16, c2x: -80, c2y: -26 },
+          { x: -96, y: 26, c1x: -24, c1y: 8, c2x: -78, c2y: 24 },
+          { x: -120, y: -44, c1x: -28, c1y: -12, c2x: -92, c2y: -52 },
+        ];
+      }
+
+      return [
+        { x: -90, y: 24, c1x: -28, c1y: -12, c2x: -66, c2y: 16 },
+        { x: 90, y: -24, c1x: 28, c1y: -12, c2x: 66, c2y: -16 },
+      ];
+    })();
+
+    const routeIndex = Number(egg.getAttribute('data-flee-route-index') || 0);
+    const route = fleeRoutes[routeIndex % fleeRoutes.length];
+    egg.setAttribute('data-flee-route-index', String(routeIndex + 1));
+    egg.classList.remove('is-armed');
+    egg.classList.add('is-fleeing');
+
+    const fleeControls = {
+      p0: { x: 0, y: 0 },
+      p1: { x: route.c1x, y: route.c1y },
+      p2: { x: route.c2x, y: route.c2y },
+      p3: { x: route.x, y: route.y },
+    };
+
+    const returnControls = {
+      p0: { x: route.x, y: route.y },
+      p1: { x: route.c2x * 0.32, y: route.c2y * 0.32 },
+      p2: { x: route.c1x * 0.18, y: route.c1y * 0.18 },
+      p3: { x: 0, y: 0 },
+    };
+
+    animateBezier(egg, fleeControls, fleeDuration, 'flee')
+      .then(() => {
+        egg.classList.remove('is-fleeing');
+        egg.classList.add('is-hidden');
+        egg.style.transform = `translate3d(${route.x}px, ${route.y}px, 0) scale(0.72) rotate(-8deg)`;
+        egg.style.opacity = '0';
+
+        return new Promise((resolve) => {
+          window.setTimeout(resolve, hideDuration);
+        });
+      })
+      .then(() => {
+        egg.classList.remove('is-hidden');
+        egg.classList.add('is-returning');
+        return animateBezier(egg, returnControls, returnDuration, 'return');
+      })
+      .then(() => {
+        egg.classList.remove('is-returning');
+        egg.style.opacity = '';
+        egg.style.transform = '';
+      });
+  };
+
+  shyEggs.forEach((egg) => {
+    const trigger = egg.querySelector('[data-error-egg-trigger]');
+    if (!(trigger instanceof HTMLButtonElement)) return;
+
+    const canRunShyMode = () => window.matchMedia('(min-width: 1281px)').matches;
+
+    let holdTimer = null;
+    let armed = false;
+    let suppressClick = false;
+
+    const clearHold = () => {
+      if (holdTimer) {
+        window.clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+      egg.classList.remove('is-pressing');
+      if (!armed) {
+        egg.classList.remove('is-armed');
+      }
+    };
+
+    trigger.addEventListener('pointerdown', (event) => {
+      if (!canRunShyMode()) return;
+      if (event.button !== 0) return;
+      armed = false;
+      egg.classList.add('is-pressing');
+
+      holdTimer = window.setTimeout(() => {
+        armed = true;
+        egg.classList.add('is-armed');
+      }, 430);
+    });
+
+    trigger.addEventListener('pointerup', () => {
+      if (!canRunShyMode()) return;
+      clearHold();
+
+      if (!armed) return;
+
+      suppressClick = true;
+      closeAll();
+      runShyEscape(egg);
+      armed = false;
+
+      window.setTimeout(() => {
+        suppressClick = false;
+      }, 180);
+    });
+
+    trigger.addEventListener('pointerleave', clearHold);
+    trigger.addEventListener('pointercancel', clearHold);
+
+    trigger.addEventListener('click', (event) => {
+      if (!suppressClick) return;
+      event.preventDefault();
+      event.stopPropagation();
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Node)) return;
+    if (triggers.some((trigger) => trigger.contains(event.target))) return;
+    if ((event.target instanceof HTMLElement) && event.target.closest('.error-egg__panel')) return;
+    closeAll();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    closeAll();
+  });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileMenu();
   initSmoothScroll();
@@ -648,5 +893,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initSubmitLocks();
   initCustomSelects();
   initPasswordToggles();
+  initErrorEasterEggs();
   initArcaneAccents();
 });
