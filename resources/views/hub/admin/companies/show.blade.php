@@ -13,10 +13,62 @@
             'overdue' => 'Em atraso',
             'canceled' => 'Cancelado',
         ];
+        $companyStatusLabels = [
+            'pending' => 'Pendente',
+            'active' => 'Ativa',
+            'suspended' => 'Suspensa',
+        ];
+        $financialStatus = $latestBilling?->financial_status ?? 'pending';
+        $activeAccessCount = collect($accessByProduct)->filter(fn ($access) => ($access?->access_status ?? 'inactive') === 'active')->count();
+        $contractedCount = collect($contractsByProduct)->filter(fn ($contract) => $contract !== null)->count();
+        $hasActiveAccess = $activeAccessCount > 0;
     @endphp
 
     <h1>Centro operacional do cliente</h1>
-    <p>Gestão de dados cadastrais, contratação, cobrança manual e liberação de acessos.</p>
+    <p>Gestão de dados cadastrais, contratação, cobrança manual e liberacao de acessos.</p>
+
+    <section class="hub-card hub-admin-status-strip">
+        <article>
+            <p class="hub-kpi-card__label">Status da empresa</p>
+            <p>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status, 'label' => $companyStatusLabels[$company->status] ?? strtoupper($company->status)])</p>
+        </article>
+        <article>
+            <p class="hub-kpi-card__label">Status financeiro</p>
+            <p>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $financialStatus, 'label' => $financialStatusLabels[$financialStatus] ?? strtoupper($financialStatus)])</p>
+        </article>
+        <article>
+            <p class="hub-kpi-card__label">Contratações registradas</p>
+            <p class="hub-status-number">{{ $contractedCount }}</p>
+        </article>
+        <article>
+            <p class="hub-kpi-card__label">Acessos ativos</p>
+            <p class="hub-status-number">{{ $activeAccessCount }}</p>
+        </article>
+    </section>
+
+    @if ($company->status === 'pending')
+        <div class="hub-alert hub-alert--warning">
+            Cliente com conta pendente. Revisar onboarding e ativação para liberar operação normal.
+        </div>
+    @endif
+
+    @if ($company->status === 'suspended')
+        <div class="hub-alert hub-alert--danger">
+            Conta suspensa. Priorizar regularização antes de novas liberações.
+        </div>
+    @endif
+
+    @if ($financialStatus === 'overdue')
+        <div class="hub-alert hub-alert--danger">
+            Cobrança em atraso. Priorizar atualização do bloco de cobrança manual.
+        </div>
+    @endif
+
+    @if (! $hasActiveAccess)
+        <div class="hub-alert hub-alert--warning">
+            Nenhum acesso ativo no momento. Validar contratação e liberar pelo menos um sistema.
+        </div>
+    @endif
 
     @if ($errors->any())
         <div class="hub-alert hub-alert--danger">{{ $errors->first() }}</div>
@@ -27,7 +79,7 @@
     @endif
 
     <section class="hub-card hub-admin-block">
-        <h2>BLOCO 1 - Dados do cliente</h2>
+        <h2>Dados do cliente</h2>
 
         <div class="hub-admin-summary-grid">
             <article class="hub-card hub-card--subtle">
@@ -37,14 +89,15 @@
             </article>
 
             <article class="hub-card hub-card--subtle">
-                <h3>Status da conta</h3>
-                <p>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status])</p>
-            </article>
-
-            <article class="hub-card hub-card--subtle">
                 <h3>Responsável principal</h3>
                 <p><strong>{{ $owner?->name ?? 'Não definido' }}</strong></p>
                 <p class="hub-note">{{ $owner?->email ?? '-' }}</p>
+            </article>
+
+            <article class="hub-card hub-card--subtle">
+                <h3>Resumo operacional</h3>
+                <p class="hub-note">Usuários vinculados: {{ $visibleUsers->count() }}</p>
+                <p class="hub-note">Produtos ativos: {{ $activeAccessCount }}</p>
             </article>
         </div>
 
@@ -68,7 +121,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4">Nenhum usuário de cliente para exibir.</td>
+                            <td colspan="4">Nenhum usuario de cliente para exibir.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -98,12 +151,15 @@
     </section>
 
     <section class="hub-card hub-admin-block">
-        <h2>BLOCO 2 - Contratação</h2>
+        <h2>Contratação</h2>
         <div class="hub-admin-product-grid">
             @foreach ($productLabels as $key => $label)
                 @php $contract = $contractsByProduct[$key] ?? null; @endphp
                 <article class="hub-card hub-card--subtle">
                     <h3>{{ $label }}</h3>
+                    @if (! $contract)
+                        <p class="hub-table__sub">Sem contratação registrada.</p>
+                    @endif
                     <form method="post" action="{{ route('hub.admin.companies.contracts.upsert', ['company' => $company, 'productKey' => $key]) }}" class="hub-auth-form">
                         @csrf
                         @method('PATCH')
@@ -143,8 +199,8 @@
     </section>
 
     <section class="hub-card hub-admin-block">
-        <h2>BLOCO 3 - Cobrança manual</h2>
-        <p class="hub-note">Status atual: @include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $latestBilling?->financial_status ?? 'pending', 'label' => $financialStatusLabels[$latestBilling?->financial_status ?? 'pending'] ?? strtoupper($latestBilling?->financial_status ?? 'pending')])</p>
+        <h2>Cobrança manual</h2>
+        <p class="hub-note">Status atual: @include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $financialStatus, 'label' => $financialStatusLabels[$financialStatus] ?? strtoupper($financialStatus)])</p>
 
         <form method="post" action="{{ route('hub.admin.companies.billing.store', $company) }}" class="hub-auth-form">
             @csrf
@@ -200,7 +256,7 @@
     </section>
 
     <section class="hub-card hub-admin-block">
-        <h2>BLOCO 4 - Liberação de acessos</h2>
+        <h2>Liberação de acessos</h2>
         <div class="hub-admin-access-grid">
             @foreach ($productLabels as $key => $label)
                 @php $access = $accessByProduct[$key] ?? null; @endphp

@@ -65,6 +65,24 @@
   color: #d7c295;
 }
 
+.hub-link-secondary {
+  display: inline-flex;
+  align-items: center;
+  color: #bca47a;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.35rem;
+  border-radius: 8px;
+  transition: color 180ms ease, background-color 180ms ease;
+}
+
+.hub-link-secondary:hover,
+.hub-link-secondary:focus-visible {
+  color: #dec79f;
+  background: rgba(208, 173, 104, 0.08);
+}
+
 .hub-layout {
   width: min(var(--container), calc(100% - 1.25rem));
   margin: 1.1rem auto 1.6rem;
@@ -322,6 +340,53 @@
   white-space: nowrap;
 }
 
+.hub-row--needs-attention {
+  background: rgba(88, 66, 24, 0.18);
+}
+
+.hub-row--critical {
+  background: rgba(94, 31, 31, 0.23);
+}
+
+.hub-row-flags {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+}
+
+.hub-flag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.14rem 0.46rem;
+  border: 1px solid rgba(208, 173, 104, 0.32);
+  color: #ead8b1;
+  background: rgba(208, 173, 104, 0.12);
+}
+
+.hub-flag--warning {
+  border-color: rgba(248, 216, 127, 0.48);
+  background: rgba(82, 62, 23, 0.52);
+  color: #ffefc8;
+}
+
+.hub-flag--danger {
+  border-color: rgba(234, 110, 110, 0.56);
+  background: rgba(114, 33, 33, 0.5);
+  color: #ffdede;
+}
+
+.hub-flag--muted {
+  border-color: rgba(193, 182, 159, 0.32);
+  background: rgba(193, 182, 159, 0.12);
+  color: rgba(239, 229, 208, 0.85);
+}
+
 .hub-table-actions {
   display: flex;
   gap: 0.4rem;
@@ -369,6 +434,19 @@
   display: grid;
   gap: 0.75rem;
   grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.hub-admin-status-strip {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.hub-status-number {
+  margin: 0;
+  color: #f4e4c2;
+  font-size: 1.35rem;
+  font-weight: 700;
 }
 
 .hub-auth {
@@ -727,6 +805,10 @@ textarea.hub-auth-input {
 
   .hub-admin-summary-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hub-admin-status-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .hub-admin-product-grid,

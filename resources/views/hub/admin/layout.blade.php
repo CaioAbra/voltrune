@@ -15,7 +15,7 @@
                 </a>
 
                 <div class="hub-actions">
-                    <a href="{{ route('hub.dashboard') }}" class="hub-btn hub-btn--subtle">Hub do cliente</a>
+                    <a href="{{ route('hub.dashboard') }}" class="hub-link-secondary">Hub do cliente</a>
                     <form action="{{ route('hub.logout') }}" method="post">
                         @csrf
                         <button type="submit" class="hub-btn">Encerrar sessão</button>

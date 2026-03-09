@@ -12,6 +12,11 @@
             'overdue' => 'Em atraso',
             'canceled' => 'Cancelado',
         ];
+        $companyStatusLabels = [
+            'pending' => 'Pendente',
+            'active' => 'Ativa',
+            'suspended' => 'Suspensa',
+        ];
         $titles = [
             'clients' => 'Operação de clientes',
             'contracts' => 'Contratações',
@@ -156,6 +161,7 @@
                             $visibleUsers = $company->users->reject(fn ($user) => $adminEmails->contains(strtolower($user->email)));
                             $owner = $visibleUsers->firstWhere('pivot.is_owner', true) ?? $visibleUsers->first();
                             $billing = $company->billingRecords->first();
+                            $financialStatus = $billing?->financial_status ?? 'pending';
                             $contracts = $company->contracts ?? collect();
                             $productAccesses = $company->productAccesses ?? collect();
                             $activeProducts = $productAccesses->where('access_status', 'active')->pluck('product_key')->all();
@@ -164,6 +170,8 @@
                             $inactiveProductLabels = collect($inactiveProducts)->map(fn ($key) => $productLabels[$key] ?? strtoupper($key));
                             $billingCycle = $contracts->pluck('billing_cycle')->filter()->countBy()->sortDesc()->keys()->first();
                             $totalNegotiated = $contracts->sum(fn ($contract) => (float) ($contract->negotiated_value ?? 0));
+                            $rowNeedsAttention = $company->status === 'pending' || $financialStatus === 'pending' || $activeProductLabels->isEmpty();
+                            $rowIsCritical = $company->status === 'suspended' || $financialStatus === 'overdue';
                         @endphp
 
                         @if ($focus === 'contracts')
@@ -186,7 +194,7 @@
                                     <strong>{{ $company->name }}</strong>
                                     <div class="hub-table__sub">{{ $company->slug }}</div>
                                 </td>
-                                <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $billing?->financial_status ?? 'pending', 'label' => $financialStatusLabels[$billing?->financial_status ?? 'pending'] ?? strtoupper($billing?->financial_status ?? 'pending')])</td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $financialStatus, 'label' => $financialStatusLabels[$financialStatus] ?? strtoupper($financialStatus)])</td>
                                 <td>{{ $billing?->payment_method ? strtoupper($billing->payment_method) : 'Não definido' }}</td>
                                 <td>{{ optional($billing?->last_payment_date)->format('d/m/Y') ?? '-' }}</td>
                                 <td>{{ optional($billing?->next_billing_date)->format('d/m/Y') ?? '-' }}</td>
@@ -200,7 +208,7 @@
                                     <strong>{{ $company->name }}</strong>
                                     <div class="hub-table__sub">{{ $company->slug }}</div>
                                 </td>
-                                <td>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status])</td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status, 'label' => $companyStatusLabels[$company->status] ?? strtoupper($company->status)])</td>
                                 <td>
                                     @if ($activeProductLabels->isEmpty())
                                         <span class="hub-table__sub">Nenhum</span>
@@ -229,15 +237,37 @@
                                 </td>
                             </tr>
                         @else
-                            <tr>
+                            <tr @class([
+                                'hub-row--needs-attention' => $rowNeedsAttention && ! $rowIsCritical,
+                                'hub-row--critical' => $rowIsCritical,
+                            ])>
                                 <td>
                                     <strong>{{ $company->name }}</strong>
                                     <div class="hub-table__sub">{{ $company->slug }}</div>
+                                    <div class="hub-row-flags">
+                                        @if ($company->status === 'pending')
+                                            <span class="hub-flag hub-flag--warning">Conta pendente</span>
+                                        @endif
+                                        @if ($company->status === 'suspended')
+                                            <span class="hub-flag hub-flag--danger">Conta suspensa</span>
+                                        @endif
+                                        @if ($financialStatus === 'overdue')
+                                            <span class="hub-flag hub-flag--danger">Cobrança em atraso</span>
+                                        @elseif ($financialStatus === 'pending')
+                                            <span class="hub-flag hub-flag--warning">Cobrança pendente</span>
+                                        @endif
+                                        @if ($activeProductLabels->isEmpty())
+                                            <span class="hub-flag hub-flag--muted">Sem produto liberado</span>
+                                        @endif
+                                    </div>
                                 </td>
-                                <td>{{ $owner?->name ?? 'Não definido' }}</td>
+                                <td>
+                                    {{ $owner?->name ?? 'Não definido' }}
+                                    <div class="hub-table__sub">{{ $visibleUsers->count() }} usuário(s)</div>
+                                </td>
                                 <td>{{ $owner?->email ?? '-' }}</td>
-                                <td>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status])</td>
-                                <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $billing?->financial_status ?? 'pending', 'label' => $financialStatusLabels[$billing?->financial_status ?? 'pending'] ?? strtoupper($billing?->financial_status ?? 'pending')])</td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status, 'label' => $companyStatusLabels[$company->status] ?? strtoupper($company->status)])</td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $financialStatus, 'label' => $financialStatusLabels[$financialStatus] ?? strtoupper($financialStatus)])</td>
                                 <td>
                                     @if ($activeProductLabels->isEmpty())
                                         <span class="hub-table__sub">Nenhum</span>
