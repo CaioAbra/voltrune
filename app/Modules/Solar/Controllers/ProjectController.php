@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Solar\Services\SolarNavigationService;
 use Illuminate\View\View;
 
-class SimulationController extends Controller
+class ProjectController extends Controller
 {
     public function __construct(
         private readonly SolarNavigationService $navigation,
@@ -15,9 +15,9 @@ class SimulationController extends Controller
 
     public function index(): View
     {
-        return view('solar.simulations.index', [
-            'pageTitle' => 'Simulacoes',
-            'pageDescription' => 'Espaco do produto para estruturar simulacoes tecnicas e comparativos comerciais.',
+        return view('solar.projects.index', [
+            'pageTitle' => 'Projetos',
+            'pageDescription' => 'Area reservada para organizar cada operacao solar por cliente, endereco e consumo.',
             'navigationItems' => $this->navigation->items(),
         ]);
     }

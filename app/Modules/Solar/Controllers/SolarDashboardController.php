@@ -17,6 +17,7 @@ class SolarDashboardController extends Controller
     {
         return view('solar.dashboard', [
             'pageTitle' => 'Dashboard Solar',
+            'pageDescription' => 'Acompanhe o fluxo comercial e operacional do produto Solar dentro da Voltrune.',
             'navigationItems' => $this->navigation->items(),
         ]);
     }

@@ -5,6 +5,12 @@
 @section('solar-content')
     <section class="hub-grid">
         <article class="hub-card">
+            <h2>Projetos</h2>
+            <p>Organize as instalacoes solares por cliente, endereco e contexto da operacao.</p>
+            <a href="{{ route('solar.projects.index') }}" class="hub-btn">Abrir projetos</a>
+        </article>
+
+        <article class="hub-card">
             <h2>Clientes</h2>
             <p>Base inicial para cadastro e gestao comercial dos clientes do Solar.</p>
             <a href="{{ route('solar.customers.index') }}" class="hub-btn">Abrir clientes</a>

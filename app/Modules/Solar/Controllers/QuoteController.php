@@ -17,6 +17,7 @@ class QuoteController extends Controller
     {
         return view('solar.quotes.index', [
             'pageTitle' => 'Orcamentos',
+            'pageDescription' => 'Ambiente do Solar para consolidar propostas, itens e fechamento comercial.',
             'navigationItems' => $this->navigation->items(),
         ]);
     }

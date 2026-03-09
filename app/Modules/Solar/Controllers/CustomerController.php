@@ -96,6 +96,7 @@ class CustomerController extends Controller
     {
         return array_merge([
             'pageTitle' => $pageTitle,
+            'pageDescription' => 'Gerencie a base de clientes do produto Solar sem sair do contexto operacional do SaaS.',
             'navigationItems' => $this->navigation->items(),
         ], $data);
     }
