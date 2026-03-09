@@ -54,6 +54,11 @@
                     <p>{{ $description }}</p>
                     @if ($isAccessible)
                         <span class="hub-badge">Acesso liberado</span>
+                        @if ($productKey === 'solar')
+                            <div class="hub-actions">
+                                <a href="{{ route('solar.dashboard') }}" class="hub-btn">Acessar Solar</a>
+                            </div>
+                        @endif
                     @else
                         <span class="hub-badge">{{ $companyStatus === 'suspended' ? 'Suspenso' : 'Bloqueado/Indisponível' }}</span>
                         <button type="button" disabled class="hub-btn-disabled">{{ $companyStatus === 'suspended' ? 'Conta suspensa' : 'Aguardando liberação manual' }}</button>

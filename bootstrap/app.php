@@ -14,6 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function (): void {
             if (env('APP_ENV') === 'local') {
                 Route::middleware('web')
+                    ->group(base_path('routes/solar.php'));
+            } else {
+                Route::middleware('web')
+                    ->domain(env('HUB_DOMAIN', 'hub.voltrune.com'))
+                    ->group(base_path('routes/solar.php'));
+            }
+
+            if (env('APP_ENV') === 'local') {
+                Route::middleware('web')
                     ->prefix('hub')
                     ->group(base_path('routes/hub.php'));
             } else {
