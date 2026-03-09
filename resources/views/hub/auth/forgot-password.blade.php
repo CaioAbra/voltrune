@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -10,12 +10,30 @@
     <main class="hub-auth">
         <div class="hub-auth-card">
             <h1>Recuperar acesso</h1>
-            <p>Informe seu e-mail para receber o link de redefinição de senha.</p>
+            <p>Informe seu e-mail para receber o link de redefinicao de senha.</p>
 
-            <form class="hub-auth-form" action="#" method="get">
+            @if (session('status'))
+                <div class="hub-alert hub-alert--success">{{ session('status') }}</div>
+            @endif
+
+            @if ($errors->any())
+                <div class="hub-alert hub-alert--danger">{{ $errors->first() }}</div>
+            @endif
+
+            <form class="hub-auth-form" action="{{ route('hub.password.email') }}" method="post">
+                @csrf
                 <div>
                     <label for="email" class="hub-auth-label">E-mail de acesso</label>
-                    <input id="email" name="email" type="email" placeholder="voce@empresa.com" class="hub-auth-input" />
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value="{{ old('email') }}"
+                        placeholder="voce@empresa.com"
+                        class="hub-auth-input"
+                        required
+                        autofocus
+                    />
                 </div>
 
                 <button type="submit" class="hub-btn">
@@ -30,3 +48,4 @@
     </main>
 </body>
 </html>
+

@@ -31,19 +31,40 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', 'exists:hub_mysql.users,email'],
             'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors([
-                'email' => 'Credenciais inválidas.',
+                'email' => 'Credenciais invalidas.',
             ])->onlyInput('email');
         }
 
         $request->session()->regenerate();
+        $user = $request->user();
 
-        $defaultRoute = HubAdminAccess::isAdmin(Auth::user())
+        if (! $user) {
+            return redirect()->route('hub.login');
+        }
+
+        $company = $this->resolveCurrentCompany($user);
+
+        if (! $company && ! HubAdminAccess::isAdmin($user)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Conta sem empresa vinculada. Fale com a equipe Voltrune.',
+            ])->onlyInput('email');
+        }
+
+        if (! HubAdminAccess::isAdmin($user) && $company?->status !== 'active') {
+            return redirect()->route('hub.activation-pending');
+        }
+
+        $defaultRoute = HubAdminAccess::isAdmin($user)
             ? 'hub.admin.dashboard'
             : 'hub.dashboard';
 
@@ -98,7 +119,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route('hub.activation-pending')
-            ->with('status', 'Conta criada com sucesso. Aguarde a ativação da equipe Voltrune.');
+            ->with('status', 'Conta criada com sucesso. Aguarde a ativacao da equipe Voltrune.');
     }
 
     public function logout(Request $request): RedirectResponse
@@ -149,5 +170,12 @@ class AuthController extends Controller
         }
 
         return $slug;
+    }
+
+    private function resolveCurrentCompany(User $user): ?Company
+    {
+        return $user->companies()
+            ->orderByDesc('company_user.is_owner')
+            ->first();
     }
 }
