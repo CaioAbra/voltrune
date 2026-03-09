@@ -115,6 +115,7 @@ need_route_cache=0
 need_view_cache=0
 need_npm=0
 need_build=0
+need_optimize_clear=0
 
 if ! has_file "vendor/autoload.php"; then
   need_composer=1
@@ -138,22 +139,31 @@ fi
 
 if changed_any '^(\.env|config/)'; then
   need_config_cache=1
+  need_optimize_clear=1
 fi
 
 if changed_any '^(routes/)'; then
   need_route_cache=1
+  need_optimize_clear=1
 fi
 
 if changed_any '^(resources/views/)'; then
   need_view_cache=1
+  need_optimize_clear=1
 fi
 
 if changed_any '^(package\.json|package-lock\.json)$'; then
   need_npm=1
 fi
 
-if changed_any '^(package\.json|package-lock\.json|resources/(js|scss)/|vite\.config\.(js|ts)|postcss\.config\.(js|cjs)|tailwind\.config\.(js|cjs)|tsconfig\.json)'; then
+if changed_any '^(package\.json|package-lock\.json|resources/(js|scss|css)/|vite\.config\.(js|ts)|postcss\.config\.(js|cjs)|tailwind\.config\.(js|cjs)|tsconfig\.json)'; then
   need_build=1
+  need_view_cache=1
+  need_optimize_clear=1
+fi
+
+if [ "$need_build" -eq 1 ]; then
+  need_optimize_clear=1
 fi
 
 if [ "$need_composer" -eq 1 ]; then
@@ -168,6 +178,13 @@ if [ "$need_migrate" -eq 1 ]; then
   php artisan migrate --force
 else
   echo "[artisan] skip migrate"
+fi
+
+if [ "$need_optimize_clear" -eq 1 ]; then
+  echo "[artisan] optimize:clear"
+  php artisan optimize:clear
+else
+  echo "[artisan] skip optimize clear"
 fi
 
 if [ "$need_config_cache" -eq 1 ]; then
@@ -186,14 +203,6 @@ else
   echo "[artisan] skip route cache"
 fi
 
-if [ "$need_view_cache" -eq 1 ]; then
-  echo "[artisan] view:clear && view:cache"
-  php artisan view:clear
-  php artisan view:cache
-else
-  echo "[artisan] skip view cache"
-fi
-
 if [ "$need_npm" -eq 1 ]; then
   if ! ensure_node_toolchain; then
     echo "[npm] unavailable: node/npm not found in PATH or nvm"
@@ -210,10 +219,20 @@ if [ "$need_build" -eq 1 ]; then
     echo "[npm] unavailable: node/npm not found in PATH or nvm"
     exit 1
   fi
+  echo "[npm] clean public/build"
+  rm -rf public/build
   echo "[npm] run build"
   npm run build
 else
   echo "[npm] skip build"
+fi
+
+if [ "$need_view_cache" -eq 1 ]; then
+  echo "[artisan] view:clear && view:cache"
+  php artisan view:clear
+  php artisan view:cache
+else
+  echo "[artisan] skip view cache"
 fi
 
 echo "$CUR" > "$LAST_FILE"
