@@ -2,6 +2,7 @@
 
 namespace App\Modules\Solar\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 class SolarQuoteItem extends Model
@@ -15,9 +16,27 @@ class SolarQuoteItem extends Model
      */
     protected $fillable = [
         'solar_quote_id',
+        'name',
         'description',
         'quantity',
         'unit_price',
         'total_price',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'decimal:2',
+            'unit_price' => 'decimal:2',
+            'total_price' => 'decimal:2',
+        ];
+    }
+
+    public function quote(): BelongsTo
+    {
+        return $this->belongsTo(SolarQuote::class, 'solar_quote_id');
+    }
 }
