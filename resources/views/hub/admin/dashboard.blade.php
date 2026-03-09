@@ -1,45 +1,50 @@
 @extends('hub.admin.layout')
 
-@section('title', 'Painel Interno Voltrune')
+@section('title', 'Painel Interno Voltrune | Dashboard')
 
 @section('content')
     <h1>Painel Interno Voltrune</h1>
-    <p>Operação de clientes SaaS e controle de contratação e cobrança manual.</p>
+    <p>Operação de clientes SaaS com foco em contratações, cobrança manual e liberação de acessos.</p>
 
-    <div class="hub-grid hub-grid--billing">
-        <article class="hub-card">
-            <h2>Empresas pendentes</h2>
-            <p><strong>{{ $companyMetrics['pending'] }}</strong></p>
+    <section class="hub-admin-kpis">
+        <article class="hub-card hub-kpi-card">
+            <p class="hub-kpi-card__label">Empresas pendentes</p>
+            <p class="hub-kpi-card__value">{{ $companyMetrics['pending'] }}</p>
+            <a href="{{ route('hub.admin.companies.index', ['company_status' => 'pending']) }}" class="hub-btn hub-btn--subtle">Ver pendentes</a>
         </article>
 
-        <article class="hub-card">
-            <h2>Empresas ativas</h2>
-            <p><strong>{{ $companyMetrics['active'] }}</strong></p>
+        <article class="hub-card hub-kpi-card">
+            <p class="hub-kpi-card__label">Empresas ativas</p>
+            <p class="hub-kpi-card__value">{{ $companyMetrics['active'] }}</p>
+            <a href="{{ route('hub.admin.companies.index', ['company_status' => 'active']) }}" class="hub-btn hub-btn--subtle">Ver ativas</a>
         </article>
 
-        <article class="hub-card">
-            <h2>Empresas suspensas</h2>
-            <p><strong>{{ $companyMetrics['suspended'] }}</strong></p>
+        <article class="hub-card hub-kpi-card">
+            <p class="hub-kpi-card__label">Empresas suspensas</p>
+            <p class="hub-kpi-card__value">{{ $companyMetrics['suspended'] }}</p>
+            <a href="{{ route('hub.admin.companies.index', ['company_status' => 'suspended']) }}" class="hub-btn hub-btn--subtle">Ver suspensas</a>
         </article>
 
-        <article class="hub-card">
-            <h2>Financeiro pendente</h2>
-            <p><strong>{{ $financialMetrics['pending'] }}</strong></p>
+        <article class="hub-card hub-kpi-card">
+            <p class="hub-kpi-card__label">Cobrança pendente</p>
+            <p class="hub-kpi-card__value">{{ $financialMetrics['pending'] }}</p>
+            <a href="{{ route('hub.admin.billing.index', ['financial_status' => 'pending']) }}" class="hub-btn hub-btn--subtle">Ver cobranças pendentes</a>
         </article>
 
-        <article class="hub-card">
-            <h2>Financeiro em atraso</h2>
-            <p><strong>{{ $financialMetrics['overdue'] }}</strong></p>
+        <article class="hub-card hub-kpi-card">
+            <p class="hub-kpi-card__label">Cobrança em atraso</p>
+            <p class="hub-kpi-card__value">{{ $financialMetrics['overdue'] }}</p>
+            <a href="{{ route('hub.admin.billing.index', ['financial_status' => 'overdue']) }}" class="hub-btn hub-btn--subtle">Ver cobranças em atraso</a>
         </article>
-    </div>
+    </section>
 
-    <div class="hub-card">
+    <section class="hub-card">
         <h2>Atalhos operacionais</h2>
         <div class="hub-actions">
-            <a href="{{ route('hub.admin.companies.index') }}" class="hub-btn">Carteira de clientes</a>
-            <a href="{{ route('hub.admin.contracts.index') }}" class="hub-btn">Contratações</a>
-            <a href="{{ route('hub.admin.billing.index') }}" class="hub-btn">Cobranças</a>
-            <a href="{{ route('hub.admin.access.index') }}" class="hub-btn">Acessos</a>
+            <a href="{{ route('hub.admin.companies.index', ['company_status' => 'pending']) }}" class="hub-btn">Ver clientes pendentes</a>
+            <a href="{{ route('hub.admin.billing.index', ['financial_status' => 'pending']) }}" class="hub-btn">Ver cobranças pendentes</a>
+            <a href="{{ route('hub.admin.access.index', ['access_state' => 'active']) }}" class="hub-btn">Ver clientes com acesso liberado</a>
+            <a href="{{ route('hub.admin.companies.index') }}" class="hub-btn hub-btn--subtle">Carteira completa</a>
         </div>
-    </div>
+    </section>
 @endsection

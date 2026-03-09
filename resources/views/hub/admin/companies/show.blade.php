@@ -1,6 +1,6 @@
 @extends('hub.admin.layout')
 
-@section('title', 'Admin | Operação da Empresa')
+@section('title', 'Painel Interno Voltrune | Operação da empresa')
 
 @section('content')
     @php
@@ -15,7 +15,8 @@
         ];
     @endphp
 
-    <h1>Painel operacional do cliente</h1>
+    <h1>Centro operacional do cliente</h1>
+    <p>Gestão de dados cadastrais, contratação, cobrança manual e liberação de acessos.</p>
 
     @if ($errors->any())
         <div class="hub-alert hub-alert--danger">{{ $errors->first() }}</div>
@@ -25,12 +26,27 @@
         <div class="hub-alert hub-alert--success">{{ session('status') }}</div>
     @endif
 
-    <div class="hub-card">
+    <section class="hub-card hub-admin-block">
         <h2>BLOCO 1 - Dados do cliente</h2>
-        <p><strong>Empresa:</strong> {{ $company->name }}</p>
-        <p><strong>Slug:</strong> {{ $company->slug }}</p>
-        <p><strong>Status da conta:</strong> <span class="hub-badge">{{ strtoupper($company->status) }}</span></p>
-        <p><strong>Responsável principal:</strong> {{ $owner?->name ?? 'Não definido' }} ({{ $owner?->email ?? '-' }})</p>
+
+        <div class="hub-admin-summary-grid">
+            <article class="hub-card hub-card--subtle">
+                <h3>Empresa</h3>
+                <p><strong>{{ $company->name }}</strong></p>
+                <p class="hub-note">Slug: {{ $company->slug }}</p>
+            </article>
+
+            <article class="hub-card hub-card--subtle">
+                <h3>Status da conta</h3>
+                <p>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status])</p>
+            </article>
+
+            <article class="hub-card hub-card--subtle">
+                <h3>Responsável principal</h3>
+                <p><strong>{{ $owner?->name ?? 'Não definido' }}</strong></p>
+                <p class="hub-note">{{ $owner?->email ?? '-' }}</p>
+            </article>
+        </div>
 
         <div class="hub-table-wrap">
             <table class="hub-table">
@@ -38,8 +54,8 @@
                     <tr>
                         <th>Usuário</th>
                         <th>E-mail</th>
-                        <th>Role</th>
-                        <th>Owner</th>
+                        <th>Função</th>
+                        <th>Responsável</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,13 +86,7 @@
                             <option value="{{ $status }}" @selected($company->status === $status)>{{ strtoupper($status) }}</option>
                         @endforeach
                     </select>
-                    <button
-                        type="button"
-                        class="custom-select__trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
+                    <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
                         <span class="custom-select__value" data-custom-select-value>{{ strtoupper($company->status) }}</span>
                         <span class="custom-select__icon" aria-hidden="true"></span>
                     </button>
@@ -85,59 +95,57 @@
             </div>
             <button type="submit" class="hub-btn">Salvar status</button>
         </form>
-    </div>
+    </section>
 
-    <div class="hub-card">
+    <section class="hub-card hub-admin-block">
         <h2>BLOCO 2 - Contratação</h2>
-        @foreach ($productLabels as $key => $label)
-            @php $contract = $contractsByProduct[$key] ?? null; @endphp
-            <div class="hub-card">
-                <h3>{{ $label }}</h3>
-                <form method="post" action="{{ route('hub.admin.companies.contracts.upsert', ['company' => $company, 'productKey' => $key]) }}" class="hub-auth-form">
-                    @csrf
-                    @method('PATCH')
-                    <div>
-                        <label class="hub-auth-label" for="plan_name_{{ $key }}">Plano</label>
-                        <input id="plan_name_{{ $key }}" class="hub-auth-input" type="text" name="plan_name" value="{{ $contract?->plan_name }}">
-                    </div>
-                    <div>
-                        <label class="hub-auth-label" for="billing_cycle_{{ $key }}">Ciclo de cobrança</label>
-                        <div class="custom-select" data-custom-select>
-                            <select id="billing_cycle_{{ $key }}" name="billing_cycle" class="hub-auth-input" data-custom-select-native>
-                                <option value="">Não definido</option>
-                                @foreach ($allowedBillingCycles as $cycle)
-                                    <option value="{{ $cycle }}" @selected(($contract?->billing_cycle ?? '') === $cycle)>{{ strtoupper($cycle) }}</option>
-                                @endforeach
-                            </select>
-                            <button
-                                type="button"
-                                class="custom-select__trigger"
-                                data-custom-select-trigger
-                                aria-haspopup="listbox"
-                                aria-expanded="false"
-                            >
-                                <span class="custom-select__value" data-custom-select-value>{{ strtoupper($contract?->billing_cycle ?? 'Não definido') }}</span>
-                                <span class="custom-select__icon" aria-hidden="true"></span>
-                            </button>
-                            <div class="custom-select__panel" data-custom-select-panel hidden></div>
+        <div class="hub-admin-product-grid">
+            @foreach ($productLabels as $key => $label)
+                @php $contract = $contractsByProduct[$key] ?? null; @endphp
+                <article class="hub-card hub-card--subtle">
+                    <h3>{{ $label }}</h3>
+                    <form method="post" action="{{ route('hub.admin.companies.contracts.upsert', ['company' => $company, 'productKey' => $key]) }}" class="hub-auth-form">
+                        @csrf
+                        @method('PATCH')
+                        <div>
+                            <label class="hub-auth-label" for="plan_name_{{ $key }}">Plano</label>
+                            <input id="plan_name_{{ $key }}" class="hub-auth-input" type="text" name="plan_name" value="{{ $contract?->plan_name }}">
                         </div>
-                    </div>
-                    <div>
-                        <label class="hub-auth-label" for="negotiated_value_{{ $key }}">Valor negociado</label>
-                        <input id="negotiated_value_{{ $key }}" class="hub-auth-input" type="number" name="negotiated_value" min="0" step="0.01" value="{{ $contract?->negotiated_value }}">
-                    </div>
-                    <div>
-                        <label class="hub-auth-label" for="commercial_notes_{{ $key }}">Observações comerciais</label>
-                        <textarea id="commercial_notes_{{ $key }}" class="hub-auth-input" name="commercial_notes" rows="3">{{ $contract?->commercial_notes }}</textarea>
-                    </div>
-                    <button type="submit" class="hub-btn">Salvar contratação {{ $label }}</button>
-                </form>
-            </div>
-        @endforeach
-    </div>
+                        <div>
+                            <label class="hub-auth-label" for="billing_cycle_{{ $key }}">Ciclo de cobrança</label>
+                            <div class="custom-select" data-custom-select>
+                                <select id="billing_cycle_{{ $key }}" name="billing_cycle" class="hub-auth-input" data-custom-select-native>
+                                    <option value="">Não definido</option>
+                                    @foreach ($allowedBillingCycles as $cycle)
+                                        <option value="{{ $cycle }}" @selected(($contract?->billing_cycle ?? '') === $cycle)>{{ strtoupper($cycle) }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="custom-select__value" data-custom-select-value>{{ strtoupper($contract?->billing_cycle ?? 'Não definido') }}</span>
+                                    <span class="custom-select__icon" aria-hidden="true"></span>
+                                </button>
+                                <div class="custom-select__panel" data-custom-select-panel hidden></div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="hub-auth-label" for="negotiated_value_{{ $key }}">Valor negociado</label>
+                            <input id="negotiated_value_{{ $key }}" class="hub-auth-input" type="number" name="negotiated_value" min="0" step="0.01" value="{{ $contract?->negotiated_value }}">
+                        </div>
+                        <div>
+                            <label class="hub-auth-label" for="commercial_notes_{{ $key }}">Observações comerciais</label>
+                            <textarea id="commercial_notes_{{ $key }}" class="hub-auth-input" name="commercial_notes" rows="3">{{ $contract?->commercial_notes }}</textarea>
+                        </div>
+                        <button type="submit" class="hub-btn">Salvar contratação {{ $label }}</button>
+                    </form>
+                </article>
+            @endforeach
+        </div>
+    </section>
 
-    <div class="hub-card">
+    <section class="hub-card hub-admin-block">
         <h2>BLOCO 3 - Cobrança manual</h2>
+        <p class="hub-note">Status atual: @include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $latestBilling?->financial_status ?? 'pending', 'label' => $financialStatusLabels[$latestBilling?->financial_status ?? 'pending'] ?? strtoupper($latestBilling?->financial_status ?? 'pending')])</p>
+
         <form method="post" action="{{ route('hub.admin.companies.billing.store', $company) }}" class="hub-auth-form">
             @csrf
             <div>
@@ -148,13 +156,7 @@
                             <option value="{{ $status }}" @selected(($latestBilling?->financial_status ?? 'pending') === $status)>{{ $financialStatusLabels[$status] ?? strtoupper($status) }}</option>
                         @endforeach
                     </select>
-                    <button
-                        type="button"
-                        class="custom-select__trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
+                    <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
                         <span class="custom-select__value" data-custom-select-value>{{ $financialStatusLabels[$latestBilling?->financial_status ?? 'pending'] ?? strtoupper($latestBilling?->financial_status ?? 'pending') }}</span>
                         <span class="custom-select__icon" aria-hidden="true"></span>
                     </button>
@@ -170,13 +172,7 @@
                             <option value="{{ $method }}" @selected(($latestBilling?->payment_method ?? '') === $method)>{{ strtoupper($method) }}</option>
                         @endforeach
                     </select>
-                    <button
-                        type="button"
-                        class="custom-select__trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
+                    <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
                         <span class="custom-select__value" data-custom-select-value>{{ strtoupper($latestBilling?->payment_method ?? 'Não definido') }}</span>
                         <span class="custom-select__icon" aria-hidden="true"></span>
                     </button>
@@ -201,39 +197,39 @@
             </div>
             <button type="submit" class="hub-btn">Registrar cobrança</button>
         </form>
-    </div>
+    </section>
 
-    <div class="hub-card">
-        <h2>BLOCO 4 - Liberação de acesso</h2>
-        @foreach ($productLabels as $key => $label)
-            @php $access = $accessByProduct[$key] ?? null; @endphp
-            <form method="post" action="{{ route('hub.admin.companies.access.upsert', ['company' => $company, 'productKey' => $key]) }}" class="hub-auth-form">
-                @csrf
-                @method('PATCH')
-                <div>
-                    <label class="hub-auth-label" for="access_{{ $key }}">{{ $label }}</label>
-                    <div class="custom-select" data-custom-select>
-                        <select id="access_{{ $key }}" class="hub-auth-input" name="access_status" data-custom-select-native>
-                            <option value="inactive" @selected(($access?->access_status ?? 'inactive') === 'inactive')>INATIVO</option>
-                            <option value="active" @selected(($access?->access_status ?? '') === 'active')>ATIVO</option>
-                        </select>
-                        <button
-                            type="button"
-                            class="custom-select__trigger"
-                            data-custom-select-trigger
-                            aria-haspopup="listbox"
-                            aria-expanded="false"
-                        >
-                            <span class="custom-select__value" data-custom-select-value>{{ strtoupper($access?->access_status ?? 'inactive') }}</span>
-                            <span class="custom-select__icon" aria-hidden="true"></span>
-                        </button>
-                        <div class="custom-select__panel" data-custom-select-panel hidden></div>
-                    </div>
-                </div>
-                <button type="submit" class="hub-btn">Salvar acesso {{ $label }}</button>
-            </form>
-        @endforeach
-    </div>
+    <section class="hub-card hub-admin-block">
+        <h2>BLOCO 4 - Liberação de acessos</h2>
+        <div class="hub-admin-access-grid">
+            @foreach ($productLabels as $key => $label)
+                @php $access = $accessByProduct[$key] ?? null; @endphp
+                <article class="hub-card hub-card--subtle">
+                    <h3>{{ $label }}</h3>
+                    <p>@include('hub.admin.partials.status-badge', ['type' => 'access', 'value' => $access?->access_status ?? 'inactive', 'label' => strtoupper($access?->access_status ?? 'inactive')])</p>
+                    <form method="post" action="{{ route('hub.admin.companies.access.upsert', ['company' => $company, 'productKey' => $key]) }}" class="hub-auth-form">
+                        @csrf
+                        @method('PATCH')
+                        <div>
+                            <label class="hub-auth-label" for="access_{{ $key }}">Status de acesso</label>
+                            <div class="custom-select" data-custom-select>
+                                <select id="access_{{ $key }}" class="hub-auth-input" name="access_status" data-custom-select-native>
+                                    <option value="inactive" @selected(($access?->access_status ?? 'inactive') === 'inactive')>INATIVO</option>
+                                    <option value="active" @selected(($access?->access_status ?? '') === 'active')>ATIVO</option>
+                                </select>
+                                <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
+                                    <span class="custom-select__value" data-custom-select-value>{{ strtoupper($access?->access_status ?? 'inactive') }}</span>
+                                    <span class="custom-select__icon" aria-hidden="true"></span>
+                                </button>
+                                <div class="custom-select__panel" data-custom-select-panel hidden></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="hub-btn">Salvar acesso {{ $label }}</button>
+                    </form>
+                </article>
+            @endforeach
+        </div>
+    </section>
 
     <div class="hub-actions">
         <a href="{{ route('hub.admin.companies.index') }}" class="hub-btn">Voltar para clientes</a>

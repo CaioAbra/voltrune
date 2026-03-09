@@ -1,6 +1,6 @@
 @extends('hub.admin.layout')
 
-@section('title', 'Admin | Clientes')
+@section('title', 'Painel Interno Voltrune | Operação de clientes')
 
 @section('content')
     @php
@@ -14,27 +14,34 @@
         ];
         $titles = [
             'clients' => 'Operação de clientes',
-            'contracts' => 'Operação de contratações',
-            'billing' => 'Operação de cobranças',
-            'access' => 'Operação de acessos',
+            'contracts' => 'Contratações',
+            'billing' => 'Cobrança manual',
+            'access' => 'Liberação de acessos',
         ];
         $descriptions = [
-            'clients' => 'Visão geral da carteira com responsável, status de conta e status financeiro.',
+            'clients' => 'Visão operacional da carteira com status de conta, financeiro e produtos liberados.',
             'contracts' => 'Acompanhe produto contratado, plano, ciclo e valor negociado por cliente.',
-            'billing' => 'Monitore situação financeira, forma de pagamento e próximos vencimentos.',
-            'access' => 'Controle quais plataformas estão ativas/inativas para cada cliente.',
+            'billing' => 'Monitore situação financeira, forma de pagamento e próximas cobranças.',
+            'access' => 'Controle quais plataformas estão ativas ou inativas para cada cliente.',
+        ];
+        $routeByFocus = [
+            'clients' => 'hub.admin.companies.index',
+            'contracts' => 'hub.admin.contracts.index',
+            'billing' => 'hub.admin.billing.index',
+            'access' => 'hub.admin.access.index',
         ];
     @endphp
+
     <h1>{{ $titles[$focus] ?? 'Operação de clientes' }}</h1>
-    <p>{{ $descriptions[$focus] ?? 'Carteira operacional para acompanhar cadastro, contratação, cobrança manual e liberação de acesso.' }}</p>
+    <p>{{ $descriptions[$focus] ?? 'Carteira operacional da Voltrune.' }}</p>
 
     @if (session('status'))
         <div class="hub-alert hub-alert--success">{{ session('status') }}</div>
     @endif
 
-    <div class="hub-card">
+    <section class="hub-card">
         <h2>Filtros operacionais</h2>
-        <form method="get" action="{{ route('hub.admin.companies.index') }}" class="hub-filter-grid">
+        <form method="get" action="{{ route($routeByFocus[$focus] ?? 'hub.admin.companies.index') }}" class="hub-filter-grid">
             <div>
                 <label for="company_status" class="hub-auth-label">Status da conta</label>
                 <div class="custom-select" data-custom-select>
@@ -44,13 +51,7 @@
                             <option value="{{ $status }}" @selected(($filters['company_status'] ?? '') === $status)>{{ strtoupper($status) }}</option>
                         @endforeach
                     </select>
-                    <button
-                        type="button"
-                        class="custom-select__trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
+                    <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
                         <span class="custom-select__value" data-custom-select-value>Todos</span>
                         <span class="custom-select__icon" aria-hidden="true"></span>
                     </button>
@@ -67,13 +68,7 @@
                             <option value="{{ $status }}" @selected(($filters['financial_status'] ?? '') === $status)>{{ $financialStatusLabels[$status] ?? strtoupper($status) }}</option>
                         @endforeach
                     </select>
-                    <button
-                        type="button"
-                        class="custom-select__trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
+                    <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
                         <span class="custom-select__value" data-custom-select-value>Todos</span>
                         <span class="custom-select__icon" aria-hidden="true"></span>
                     </button>
@@ -90,13 +85,7 @@
                             <option value="{{ $key }}" @selected(($filters['product_key'] ?? '') === $key)>{{ $label }}</option>
                         @endforeach
                     </select>
-                    <button
-                        type="button"
-                        class="custom-select__trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
+                    <button type="button" class="custom-select__trigger" data-custom-select-trigger aria-haspopup="listbox" aria-expanded="false">
                         <span class="custom-select__value" data-custom-select-value>Todos</span>
                         <span class="custom-select__icon" aria-hidden="true"></span>
                     </button>
@@ -104,17 +93,22 @@
                 </div>
             </div>
 
+            @if ($focus === 'access')
+                <input type="hidden" name="access_state" value="{{ $filters['access_state'] ?? '' }}">
+            @endif
+
             <div class="hub-filter-actions">
                 <button type="submit" class="hub-btn">Filtrar</button>
-                <a href="{{ route('hub.admin.companies.index') }}" class="hub-btn">Limpar</a>
+                <a href="{{ route($routeByFocus[$focus] ?? 'hub.admin.companies.index') }}" class="hub-btn">Limpar</a>
             </div>
         </form>
-    </div>
+    </section>
 
-    <div class="hub-card">
+    <section class="hub-card">
         <h2>Carteira de clientes</h2>
+
         <div class="hub-table-wrap">
-            <table class="hub-table">
+            <table class="hub-table hub-table--operational">
                 <thead>
                     @if ($focus === 'contracts')
                         <tr>
@@ -146,10 +140,11 @@
                     @else
                         <tr>
                             <th>Empresa</th>
-                            <th>Responsável</th>
-                            <th>Email</th>
+                            <th>Responsável principal</th>
+                            <th>E-mail</th>
                             <th>Status da conta</th>
                             <th>Status financeiro</th>
+                            <th>Produtos liberados</th>
                             <th>Data de cadastro</th>
                             <th>Ações</th>
                         </tr>
@@ -165,12 +160,18 @@
                             $productAccesses = $company->productAccesses ?? collect();
                             $activeProducts = $productAccesses->where('access_status', 'active')->pluck('product_key')->all();
                             $inactiveProducts = $productAccesses->where('access_status', 'inactive')->pluck('product_key')->all();
+                            $activeProductLabels = collect($activeProducts)->map(fn ($key) => $productLabels[$key] ?? strtoupper($key));
+                            $inactiveProductLabels = collect($inactiveProducts)->map(fn ($key) => $productLabels[$key] ?? strtoupper($key));
                             $billingCycle = $contracts->pluck('billing_cycle')->filter()->countBy()->sortDesc()->keys()->first();
                             $totalNegotiated = $contracts->sum(fn ($contract) => (float) ($contract->negotiated_value ?? 0));
                         @endphp
+
                         @if ($focus === 'contracts')
                             <tr>
-                                <td>{{ $company->name }}</td>
+                                <td>
+                                    <strong>{{ $company->name }}</strong>
+                                    <div class="hub-table__sub">{{ $company->slug }}</div>
+                                </td>
                                 <td>{{ $owner?->name ?? 'Não definido' }}</td>
                                 <td>{{ $contracts->count() > 0 ? $contracts->pluck('product_key')->map(fn ($key) => strtoupper($key))->implode(', ') : 'Nenhum' }}</td>
                                 <td>{{ $billingCycle ? strtoupper($billingCycle) : 'Não definido' }}</td>
@@ -181,8 +182,11 @@
                             </tr>
                         @elseif ($focus === 'billing')
                             <tr>
-                                <td>{{ $company->name }}</td>
-                                <td><span class="hub-badge">{{ $financialStatusLabels[$billing?->financial_status ?? 'pending'] ?? strtoupper($billing?->financial_status ?? 'pending') }}</span></td>
+                                <td>
+                                    <strong>{{ $company->name }}</strong>
+                                    <div class="hub-table__sub">{{ $company->slug }}</div>
+                                </td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $billing?->financial_status ?? 'pending', 'label' => $financialStatusLabels[$billing?->financial_status ?? 'pending'] ?? strtoupper($billing?->financial_status ?? 'pending')])</td>
                                 <td>{{ $billing?->payment_method ? strtoupper($billing->payment_method) : 'Não definido' }}</td>
                                 <td>{{ optional($billing?->last_payment_date)->format('d/m/Y') ?? '-' }}</td>
                                 <td>{{ optional($billing?->next_billing_date)->format('d/m/Y') ?? '-' }}</td>
@@ -192,10 +196,33 @@
                             </tr>
                         @elseif ($focus === 'access')
                             <tr>
-                                <td>{{ $company->name }}</td>
-                                <td><span class="hub-badge">{{ strtoupper($company->status) }}</span></td>
-                                <td>{{ count($activeProducts) > 0 ? strtoupper(implode(', ', $activeProducts)) : 'Nenhum' }}</td>
-                                <td>{{ count($inactiveProducts) > 0 ? strtoupper(implode(', ', $inactiveProducts)) : 'Nenhum' }}</td>
+                                <td>
+                                    <strong>{{ $company->name }}</strong>
+                                    <div class="hub-table__sub">{{ $company->slug }}</div>
+                                </td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status])</td>
+                                <td>
+                                    @if ($activeProductLabels->isEmpty())
+                                        <span class="hub-table__sub">Nenhum</span>
+                                    @else
+                                        <div class="hub-inline-badges">
+                                            @foreach ($activeProductLabels as $label)
+                                                @include('hub.admin.partials.status-badge', ['type' => 'access', 'value' => 'active', 'label' => $label])
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($inactiveProductLabels->isEmpty())
+                                        <span class="hub-table__sub">Nenhum</span>
+                                    @else
+                                        <div class="hub-inline-badges">
+                                            @foreach ($inactiveProductLabels as $label)
+                                                @include('hub.admin.partials.status-badge', ['type' => 'access', 'value' => 'inactive', 'label' => $label])
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </td>
                                 <td>{{ $owner?->name ?? 'Não definido' }}</td>
                                 <td class="hub-table-actions">
                                     <a href="{{ route('hub.admin.companies.show', $company) }}" class="hub-btn">Operar</a>
@@ -203,11 +230,25 @@
                             </tr>
                         @else
                             <tr>
-                                <td>{{ $company->name }}</td>
+                                <td>
+                                    <strong>{{ $company->name }}</strong>
+                                    <div class="hub-table__sub">{{ $company->slug }}</div>
+                                </td>
                                 <td>{{ $owner?->name ?? 'Não definido' }}</td>
                                 <td>{{ $owner?->email ?? '-' }}</td>
-                                <td><span class="hub-badge">{{ strtoupper($company->status) }}</span></td>
-                                <td><span class="hub-badge">{{ $financialStatusLabels[$billing?->financial_status ?? 'pending'] ?? strtoupper($billing?->financial_status ?? 'pending') }}</span></td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status])</td>
+                                <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $billing?->financial_status ?? 'pending', 'label' => $financialStatusLabels[$billing?->financial_status ?? 'pending'] ?? strtoupper($billing?->financial_status ?? 'pending')])</td>
+                                <td>
+                                    @if ($activeProductLabels->isEmpty())
+                                        <span class="hub-table__sub">Nenhum</span>
+                                    @else
+                                        <div class="hub-inline-badges">
+                                            @foreach ($activeProductLabels as $label)
+                                                @include('hub.admin.partials.status-badge', ['type' => 'access', 'value' => 'active', 'label' => $label])
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </td>
                                 <td>{{ optional($company->created_at)->format('d/m/Y H:i') }}</td>
                                 <td class="hub-table-actions">
                                     <a href="{{ route('hub.admin.companies.show', $company) }}" class="hub-btn">Operar</a>
@@ -228,11 +269,11 @@
                         @endif
                     @empty
                         <tr>
-                            <td colspan="7">Nenhuma empresa encontrada.</td>
+                            <td colspan="8">Nenhuma empresa encontrada para os filtros selecionados.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-    </div>
+    </section>
 @endsection

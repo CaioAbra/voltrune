@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hub;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
+use App\Support\HubAdminAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,11 @@ class AuthController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('hub.dashboard');
+            $defaultRoute = HubAdminAccess::isAdmin(Auth::user())
+                ? 'hub.admin.dashboard'
+                : 'hub.dashboard';
+
+            return redirect()->route($defaultRoute);
         }
 
         return view('hub.auth.login');
@@ -38,13 +43,21 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('hub.dashboard'));
+        $defaultRoute = HubAdminAccess::isAdmin(Auth::user())
+            ? 'hub.admin.dashboard'
+            : 'hub.dashboard';
+
+        return redirect()->intended(route($defaultRoute));
     }
 
     public function showRegister(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('hub.dashboard');
+            $defaultRoute = HubAdminAccess::isAdmin(Auth::user())
+                ? 'hub.admin.dashboard'
+                : 'hub.dashboard';
+
+            return redirect()->route($defaultRoute);
         }
 
         return view('hub.auth.register');
