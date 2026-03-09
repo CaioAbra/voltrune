@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hub;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
+use App\Support\HubAdminAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,11 @@ class AuthController extends Controller
     public function showLogin(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('hub.dashboard');
+            $defaultRoute = HubAdminAccess::isAdmin(Auth::user())
+                ? 'hub.admin.dashboard'
+                : 'hub.dashboard';
+
+            return redirect()->route($defaultRoute);
         }
 
         return view('hub.auth.login');
@@ -26,25 +31,54 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email', 'exists:hub_mysql.users,email'],
             'password' => ['required', 'string'],
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors([
-                'email' => 'Credenciais inválidas.',
+                'email' => 'Credenciais invalidas.',
             ])->onlyInput('email');
         }
 
         $request->session()->regenerate();
+        $user = $request->user();
 
-        return redirect()->intended(route('hub.dashboard'));
+        if (! $user) {
+            return redirect()->route('hub.login');
+        }
+
+        $company = $this->resolveCurrentCompany($user);
+
+        if (! $company && ! HubAdminAccess::isAdmin($user)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors([
+                'email' => 'Conta sem empresa vinculada. Fale com a equipe Voltrune.',
+            ])->onlyInput('email');
+        }
+
+        if (! HubAdminAccess::isAdmin($user) && $company?->status !== 'active') {
+            return redirect()->route('hub.activation-pending');
+        }
+
+        $defaultRoute = HubAdminAccess::isAdmin($user)
+            ? 'hub.admin.dashboard'
+            : 'hub.dashboard';
+
+        return redirect()->intended(route($defaultRoute));
     }
 
     public function showRegister(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('hub.dashboard');
+            $defaultRoute = HubAdminAccess::isAdmin(Auth::user())
+                ? 'hub.admin.dashboard'
+                : 'hub.dashboard';
+
+            return redirect()->route($defaultRoute);
         }
 
         return view('hub.auth.register');
@@ -85,7 +119,7 @@ class AuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route('hub.activation-pending')
-            ->with('status', 'Conta criada com sucesso. Aguarde a ativação da equipe Voltrune.');
+            ->with('status', 'Conta criada com sucesso. Aguarde a ativacao da equipe Voltrune.');
     }
 
     public function logout(Request $request): RedirectResponse
@@ -136,5 +170,12 @@ class AuthController extends Controller
         }
 
         return $slug;
+    }
+
+    private function resolveCurrentCompany(User $user): ?Company
+    {
+        return $user->companies()
+            ->orderByDesc('company_user.is_owner')
+            ->first();
     }
 }

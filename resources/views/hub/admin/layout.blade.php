@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Voltrune Hub Admin')</title>
+    <title>@yield('title', 'Painel Interno Voltrune')</title>
     @vite(['resources/scss/app.scss', 'resources/js/app.js'])
 </head>
 <body>
-    <div class="hub-shell">
+    <div class="hub-shell hub-admin-shell">
         <header class="hub-topbar">
             <div class="hub-topbar__inner">
                 <a href="{{ route('hub.admin.dashboard') }}" class="hub-brand">
-                    Voltrune Hub | Backoffice Interno
+                    Painel Interno Voltrune
                 </a>
 
                 <div class="hub-actions">
-                    <a href="{{ route('hub.dashboard') }}" class="hub-btn">Ver Área do Cliente</a>
+                    <a href="{{ route('hub.dashboard') }}" class="hub-link-secondary">Hub do cliente</a>
                     <form action="{{ route('hub.logout') }}" method="post">
                         @csrf
                         <button type="submit" class="hub-btn">Encerrar sessão</button>
@@ -34,7 +34,7 @@
                         Clientes
                     </a>
                     <a href="{{ route('hub.admin.contracts.index') }}" class="hub-nav__link {{ request()->routeIs('hub.admin.contracts.index') ? 'is-active' : '' }}">
-                        Contratação
+                        Contratações
                     </a>
                     <a href="{{ route('hub.admin.billing.index') }}" class="hub-nav__link {{ request()->routeIs('hub.admin.billing.index') ? 'is-active' : '' }}">
                         Cobrança
@@ -43,7 +43,7 @@
                         Acessos
                     </a>
                     <a href="{{ route('hub.admin.account.edit') }}" class="hub-nav__link {{ request()->routeIs('hub.admin.account.*') ? 'is-active' : '' }}">
-                        Minha conta
+                        Conta
                     </a>
                 </nav>
             </aside>

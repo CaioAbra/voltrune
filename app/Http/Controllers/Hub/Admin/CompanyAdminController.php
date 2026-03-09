@@ -40,6 +40,7 @@ class CompanyAdminController extends Controller
         $companyStatus = request('company_status');
         $financialStatus = request('financial_status');
         $productKey = request('product_key');
+        $accessState = request('access_state');
 
         $companies = HubAdminAccess::applyClientCompaniesFilter(
             Company::query()
@@ -72,6 +73,11 @@ class CompanyAdminController extends Controller
                     $accessQuery->where('product_key', $key)->where('access_status', 'active');
                 });
             })
+            ->when($accessState === 'active', function ($query): void {
+                $query->whereHas('productAccesses', function ($accessQuery): void {
+                    $accessQuery->where('access_status', 'active');
+                });
+            })
             ->latest()
         )->get();
 
@@ -84,6 +90,7 @@ class CompanyAdminController extends Controller
                 'company_status' => $companyStatus,
                 'financial_status' => $financialStatus,
                 'product_key' => $productKey,
+                'access_state' => $accessState,
             ],
             'focus' => $focus,
         ]);

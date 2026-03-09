@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -10,13 +10,42 @@
     <main class="hub-auth">
         <div class="hub-auth-card">
             <h1>Redefinir senha</h1>
-            <p>Defina uma nova senha para restabelecer o acesso ao ambiente de cliente.</p>
+            <p>Defina uma nova senha para restabelecer o acesso ao ambiente do Hub.</p>
 
-            <form class="hub-auth-form" action="#" method="get">
+            @if ($errors->any())
+                <div class="hub-alert hub-alert--danger">{{ $errors->first() }}</div>
+            @endif
+
+            <form class="hub-auth-form" action="{{ route('hub.password.update') }}" method="post">
+                @csrf
+                <input type="hidden" name="token" value="{{ $token }}">
+
+                <div>
+                    <label for="email" class="hub-auth-label">E-mail de acesso</label>
+                    <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value="{{ old('email', $email) }}"
+                        placeholder="voce@empresa.com"
+                        class="hub-auth-input"
+                        required
+                        autofocus
+                    />
+                </div>
+
                 <div>
                     <label for="password" class="hub-auth-label">Nova senha</label>
                     <div class="hub-password-field" data-password-toggle>
-                        <input id="password" name="password" type="password" placeholder="********" class="hub-auth-input" data-password-input />
+                        <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="********"
+                            class="hub-auth-input"
+                            data-password-input
+                            required
+                        />
                         <button type="button" class="hub-password-toggle" data-password-trigger aria-label="Mostrar senha" aria-pressed="false">
                             <svg class="hub-password-toggle__icon hub-password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12s-3.8 6.5-10.5 6.5S1.5 12 1.5 12z"></path>
@@ -34,7 +63,15 @@
                 <div>
                     <label for="password_confirmation" class="hub-auth-label">Confirmar nova senha</label>
                     <div class="hub-password-field" data-password-toggle>
-                        <input id="password_confirmation" name="password_confirmation" type="password" placeholder="********" class="hub-auth-input" data-password-input />
+                        <input
+                            id="password_confirmation"
+                            name="password_confirmation"
+                            type="password"
+                            placeholder="********"
+                            class="hub-auth-input"
+                            data-password-input
+                            required
+                        />
                         <button type="button" class="hub-password-toggle" data-password-trigger aria-label="Mostrar senha" aria-pressed="false">
                             <svg class="hub-password-toggle__icon hub-password-toggle__icon--show" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M1.5 12s3.8-6.5 10.5-6.5S22.5 12 22.5 12s-3.8 6.5-10.5 6.5S1.5 12 1.5 12z"></path>
@@ -61,3 +98,4 @@
     </main>
 </body>
 </html>
+

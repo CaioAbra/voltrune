@@ -50,6 +50,7 @@ class HubAdminSeeder extends Seeder
                 ]
             );
 
+            $company->name = $companyName;
             $company->status = $companyStatus;
             $company->save();
 
