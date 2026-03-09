@@ -21,7 +21,7 @@ class ForgotPasswordController extends Controller
             'email' => ['required', 'email'],
         ]);
 
-        $status = Password::broker('users')->sendResetLink($credentials);
+        $status = Password::broker('hub_users')->sendResetLink($credentials);
 
         if ($status === Password::RESET_LINK_SENT) {
             return back()->with('status', __($status));
@@ -32,4 +32,3 @@ class ForgotPasswordController extends Controller
         ]);
     }
 }
-

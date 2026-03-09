@@ -29,7 +29,7 @@ class ResetPasswordController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $status = Password::broker('users')->reset(
+        $status = Password::broker('hub_users')->reset(
             $validated,
             function ($user, string $password): void {
                 $user->forceFill([
@@ -50,4 +50,3 @@ class ResetPasswordController extends Controller
             ->withErrors(['email' => __($status)]);
     }
 }
-
