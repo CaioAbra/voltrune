@@ -46,7 +46,11 @@
                 <p class="hub-note">Disponibilidade gerenciada manualmente pela equipe Voltrune</p>
                 @if ($isAccessible)
                     <span class="hub-badge">Acesso liberado</span>
-                    <button type="button" class="hub-btn" title="Liberado">Acessível</button>
+                    @if ($productKey === 'solar')
+                        <a href="{{ route('solar.dashboard') }}" class="hub-btn" title="Liberado">Acessar Solar</a>
+                    @else
+                        <button type="button" class="hub-btn" title="Liberado">Acessível</button>
+                    @endif
                 @else
                     <button type="button" disabled class="hub-btn-disabled" title="Bloqueado">
                         {{ $companyStatus === 'suspended' ? 'Conta suspensa' : 'Bloqueado ou indisponível' }}

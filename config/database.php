@@ -82,6 +82,25 @@ return [
             ]) : [],
         ],
 
+        'solar_mysql' => [
+            'driver' => 'mysql',
+            'host' => env('SOLAR_DB_HOST'),
+            'port' => env('SOLAR_DB_PORT'),
+            'database' => env('SOLAR_DB_DATABASE'),
+            'username' => env('SOLAR_DB_USERNAME'),
+            'password' => env('SOLAR_DB_PASSWORD'),
+            'unix_socket' => '',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
