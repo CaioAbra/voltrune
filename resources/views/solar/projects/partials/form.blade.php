@@ -186,7 +186,11 @@
     </div>
 </div>
 
-<div class="hub-card hub-card--subtle solar-sizing-panel" data-sizing-form>
+<div
+    class="hub-card hub-card--subtle solar-sizing-panel"
+    data-sizing-form
+    data-pricing-per-kwp="{{ old('company_price_per_kwp', $companySetting?->price_per_kwp) }}"
+>
     <h3>Sistema sugerido</h3>
     <p class="hub-note">O sistema aplica um pre-dimensionamento automatico com base no consumo mensal. O instalador pode ajustar tudo manualmente antes de salvar.</p>
     @php
@@ -213,6 +217,35 @@
     <p class="solar-sizing-panel__note" data-sizing-note>Preencha o consumo mensal para gerar a sugestao automatica.</p>
 </div>
 
+<div class="hub-card hub-card--subtle solar-pricing-panel">
+    <h3>Pre-orcamento comercial</h3>
+    <p class="hub-note">Base inicial para transformar o dimensionamento em resposta comercial rapida. O valor segue editavel antes de salvar.</p>
+
+    <div class="solar-sizing-panel__highlights solar-pricing-panel__highlights">
+        <article class="solar-sizing-chip">
+            <span class="solar-sizing-chip__label">Preco por kWp</span>
+            <strong class="solar-sizing-chip__value" data-pricing-preview="rate">
+                {{ $companySetting?->price_per_kwp ? 'R$ ' . number_format((float) $companySetting->price_per_kwp, 2, ',', '.') : 'Nao configurado' }}
+            </strong>
+        </article>
+
+        <article class="solar-sizing-chip">
+            <span class="solar-sizing-chip__label">Preco sugerido</span>
+            <strong class="solar-sizing-chip__value" data-pricing-preview="total">
+                {{ old('suggested_price', $project->suggested_price) ? 'R$ ' . number_format((float) old('suggested_price', $project->suggested_price), 2, ',', '.') : 'Aguardando dimensionamento' }}
+            </strong>
+        </article>
+    </div>
+
+    <p class="solar-sizing-panel__note solar-pricing-panel__note" data-pricing-note>
+        @if ($companySetting?->price_per_kwp)
+            O preco sugerido sera recalculado automaticamente quando a potencia do sistema mudar.
+        @else
+            Configure o preco por kWp em /solar/settings para ativar o pre-orcamento automatico.
+        @endif
+    </p>
+</div>
+
 <div class="hub-grid hub-grid--billing">
     <div>
         <label for="system_power_kwp" class="hub-auth-label">Potencia do sistema (kWp)</label>
@@ -224,7 +257,7 @@
 
     <div>
         <label for="module_power" class="hub-auth-label">Potencia do modulo (W)</label>
-        <input id="module_power" name="module_power" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_power', $project->module_power ?: 550) }}" data-sizing-module-power>
+        <input id="module_power" name="module_power" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_power', $project->module_power ?: ($companySetting?->default_module_power ?: 550)) }}" data-sizing-module-power>
         @error('module_power')
             <p class="hub-note">{{ $message }}</p>
         @enderror
@@ -255,6 +288,24 @@
     @error('inverter_model')
         <p class="hub-note">{{ $message }}</p>
     @enderror
+</div>
+
+<div class="hub-grid hub-grid--billing">
+    <div>
+        <label for="suggested_price" class="hub-auth-label">Preco sugerido (R$)</label>
+        <input id="suggested_price" name="suggested_price" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('suggested_price', $project->suggested_price) }}" data-pricing-suggested-price>
+        @error('suggested_price')
+            <p class="hub-note">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <div>
+        <label for="pricing_notes" class="hub-auth-label">Observacoes comerciais</label>
+        <input id="pricing_notes" name="pricing_notes" type="text" class="hub-auth-input" value="{{ old('pricing_notes', $project->pricing_notes) }}">
+        @error('pricing_notes')
+            <p class="hub-note">{{ $message }}</p>
+        @enderror
+    </div>
 </div>
 
 <div>

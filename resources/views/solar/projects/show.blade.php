@@ -71,6 +71,35 @@
             <p><strong>Modelo do inversor:</strong> {{ $project->inverter_model ?: '-' }}</p>
         </article>
 
+        <article class="hub-card hub-card--subtle solar-pricing-panel solar-project-show__card">
+            <h2>Pre-orcamento comercial</h2>
+            <div class="solar-sizing-panel__highlights solar-pricing-panel__highlights">
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Preco por kWp</span>
+                    <strong class="solar-sizing-chip__value">
+                        {{ $companySetting?->price_per_kwp ? 'R$ ' . number_format((float) $companySetting->price_per_kwp, 2, ',', '.') : 'Nao configurado' }}
+                    </strong>
+                </article>
+
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Preco sugerido</span>
+                    <strong class="solar-sizing-chip__value">
+                        {{ $project->suggested_price ? 'R$ ' . number_format((float) $project->suggested_price, 2, ',', '.') : ($suggestedCommercialPrice ? 'R$ ' . number_format((float) $suggestedCommercialPrice, 2, ',', '.') : '-') }}
+                    </strong>
+                </article>
+            </div>
+
+            @if ($companySetting?->price_per_kwp)
+                <p class="hub-note">Preco inicial calculado pela regra simples: potencia do sistema x preco por kWp da empresa.</p>
+            @else
+                <p class="hub-note">Defina o preco por kWp em <strong>/solar/settings</strong> para ativar o pre-orcamento automatico.</p>
+            @endif
+
+            @if ($project->pricing_notes)
+                <p><strong>Observacoes comerciais:</strong> {{ $project->pricing_notes }}</p>
+            @endif
+        </article>
+
         @if ($project->notes)
             <article class="hub-card hub-card--subtle solar-project-show__card">
                 <h2>Observacoes</h2>

@@ -44,6 +44,20 @@ class SolarSizingService
         return round($powerKwp * 130, 2);
     }
 
+    public function estimateSuggestedPrice(
+        float|int|string|null $systemPowerKwp,
+        float|int|string|null $pricePerKwp,
+    ): ?float {
+        $powerKwp = $systemPowerKwp !== null && $systemPowerKwp !== '' ? (float) $systemPowerKwp : 0.0;
+        $price = $pricePerKwp !== null && $pricePerKwp !== '' ? (float) $pricePerKwp : 0.0;
+
+        if ($powerKwp <= 0 || $price <= 0) {
+            return null;
+        }
+
+        return round($powerKwp * $price, 2);
+    }
+
     /**
      * @param array<string, mixed> $data
      * @return array<string, mixed>
@@ -77,6 +91,13 @@ class SolarSizingService
 
         if (! isset($data['estimated_generation_kwh']) || $data['estimated_generation_kwh'] === null || $data['estimated_generation_kwh'] === '') {
             $data['estimated_generation_kwh'] = $this->estimateGenerationKwh($data['system_power_kwp'] ?? null);
+        }
+
+        if (! isset($data['suggested_price']) || $data['suggested_price'] === null || $data['suggested_price'] === '') {
+            $data['suggested_price'] = $this->estimateSuggestedPrice(
+                $data['system_power_kwp'] ?? null,
+                $setting?->price_per_kwp,
+            );
         }
 
         return $data;

@@ -71,9 +71,14 @@ class ProjectController extends Controller
         return view('solar.projects.show', $this->viewData('Projeto solar', [
             'company' => $company,
             'project' => $projectRecord,
+            'companySetting' => $this->companySetting($company),
             'estimatedRequiredPowerKwp' => $this->sizing->estimateRequiredPowerKwp($projectRecord->monthly_consumption_kwh),
             'suggestedModuleQuantity' => $this->sizing->estimateModuleQuantity($projectRecord->system_power_kwp, $projectRecord->module_power),
             'suggestedGenerationKwh' => $this->sizing->estimateGenerationKwh($projectRecord->system_power_kwp),
+            'suggestedCommercialPrice' => $this->sizing->estimateSuggestedPrice(
+                $projectRecord->system_power_kwp,
+                $this->companySetting($company)?->price_per_kwp,
+            ),
         ]));
     }
 
@@ -190,6 +195,8 @@ class ProjectController extends Controller
             'module_quantity' => ['nullable', 'integer', 'min:1'],
             'inverter_model' => ['nullable', 'string', 'max:255'],
             'estimated_generation_kwh' => ['nullable', 'numeric', 'min:0'],
+            'suggested_price' => ['nullable', 'numeric', 'min:0'],
+            'pricing_notes' => ['nullable', 'string'],
             'property_type' => ['nullable', 'string', 'max:255'],
             'utility_company' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
@@ -237,6 +244,7 @@ class ProjectController extends Controller
             ? trim((string) $data['connection_type'])
             : null;
         $data['inverter_model'] = isset($data['inverter_model']) ? trim((string) $data['inverter_model']) : null;
+        $data['pricing_notes'] = isset($data['pricing_notes']) ? trim((string) $data['pricing_notes']) : null;
         $data['energy_utility_id'] = isset($data['energy_utility_id']) && $data['energy_utility_id'] !== ''
             ? (int) $data['energy_utility_id']
             : null;

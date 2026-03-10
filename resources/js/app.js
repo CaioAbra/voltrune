@@ -761,12 +761,18 @@ const initSolarSizingForm = () => {
     const note = section.querySelector('[data-sizing-note]');
     const systemPreview = section.querySelector('[data-sizing-preview="system-power"]');
     const modulePreview = section.querySelector('[data-sizing-preview="module-power"]');
+    const pricingRatePreview = root.querySelector('[data-pricing-preview="rate"]');
+    const pricingTotalPreview = root.querySelector('[data-pricing-preview="total"]');
+    const pricingNote = root.querySelector('[data-pricing-note]');
+    const suggestedPriceInput = root.querySelector('[data-pricing-suggested-price]');
+    const pricingPerKwp = Number(section.getAttribute('data-pricing-per-kwp')?.replace(',', '.') || 0);
 
     if (!(monthlyInput instanceof HTMLInputElement)) return;
     if (!(modulePowerInput instanceof HTMLInputElement)) return;
     if (!(systemPowerInput instanceof HTMLInputElement)) return;
     if (!(moduleQuantityInput instanceof HTMLInputElement)) return;
     if (!(generationInput instanceof HTMLInputElement)) return;
+    if (!(suggestedPriceInput instanceof HTMLInputElement)) return;
 
     const readNumber = (input) => {
       if (!(input instanceof HTMLInputElement)) return null;
@@ -780,11 +786,24 @@ const initSolarSizingForm = () => {
       input.value = decimals === 0 ? String(Math.round(value)) : value.toFixed(decimals);
     };
 
+    const formatCurrency = (value) => `R$ ${value.toFixed(2).replace('.', ',')}`;
+
+    const applyPricingFromPower = () => {
+      const currentPower = readNumber(systemPowerInput);
+
+      if (pricingPerKwp > 0 && currentPower && currentPower > 0) {
+        writeNumber(suggestedPriceInput, roundTo(currentPower * pricingPerKwp, 2), 2);
+      }
+
+      updatePreview();
+    };
+
     const updatePreview = () => {
       const currentPower = readNumber(systemPowerInput);
       const currentModulePower = readNumber(modulePowerInput);
       const currentModules = readNumber(moduleQuantityInput);
       const currentGeneration = readNumber(generationInput);
+      const currentSuggestedPrice = readNumber(suggestedPriceInput);
 
       if (systemPreview instanceof HTMLElement) {
         systemPreview.textContent = currentPower && currentPower > 0
@@ -798,11 +817,33 @@ const initSolarSizingForm = () => {
           : '550 W';
       }
 
+      if (pricingRatePreview instanceof HTMLElement) {
+        pricingRatePreview.textContent = pricingPerKwp > 0
+          ? formatCurrency(pricingPerKwp)
+          : 'Nao configurado';
+      }
+
+      if (pricingTotalPreview instanceof HTMLElement) {
+        pricingTotalPreview.textContent = currentSuggestedPrice && currentSuggestedPrice > 0
+          ? formatCurrency(currentSuggestedPrice)
+          : 'Aguardando dimensionamento';
+      }
+
       if (note instanceof HTMLElement) {
         if (currentPower && currentModules && currentGeneration) {
           note.textContent = `Sugestao ativa: ${currentPower.toFixed(2).replace('.', ',')} kWp, ${Math.round(currentModules)} modulos e ${currentGeneration.toFixed(2).replace('.', ',')} kWh estimados.`;
         } else {
           note.textContent = 'Preencha o consumo mensal para gerar a sugestao automatica.';
+        }
+      }
+
+      if (pricingNote instanceof HTMLElement) {
+        if (pricingPerKwp <= 0) {
+          pricingNote.textContent = 'Configure o preco por kWp em /solar/settings para ativar o pre-orcamento automatico.';
+        } else if (currentSuggestedPrice && currentSuggestedPrice > 0) {
+          pricingNote.textContent = `Pre-orcamento ativo: ${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema.`;
+        } else {
+          pricingNote.textContent = 'Informe o consumo mensal para gerar o pre-orcamento automatico.';
         }
       }
     };
@@ -832,6 +873,10 @@ const initSolarSizingForm = () => {
         writeNumber(generationInput, suggestedGeneration, 2);
       }
 
+      if (pricingPerKwp > 0) {
+        writeNumber(suggestedPriceInput, roundTo(suggestedPower * pricingPerKwp, 2), 2);
+      }
+
       updatePreview();
     };
 
@@ -839,9 +884,10 @@ const initSolarSizingForm = () => {
 
     monthlyInput.addEventListener('input', () => applySizing());
     modulePowerInput.addEventListener('input', () => applySizing());
-    systemPowerInput.addEventListener('input', updatePreview);
+    systemPowerInput.addEventListener('input', applyPricingFromPower);
     moduleQuantityInput.addEventListener('input', updatePreview);
     generationInput.addEventListener('input', updatePreview);
+    suggestedPriceInput.addEventListener('input', updatePreview);
   });
 };
 
