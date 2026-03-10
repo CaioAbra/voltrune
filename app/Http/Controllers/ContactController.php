@@ -17,7 +17,9 @@ class ContactController extends Controller
         'Tráfego Pago e Mídia',
         'Marca, Banner e Logo',
         'Hospedagem e Manutenção',
+        'Voltrune Solar',
         'Vigilante Jurídico',
+        'Fila de Novos Lançamentos',
         'Outro',
     ];
 

@@ -39,6 +39,79 @@
             'serviceType' => 'Branding e design',
         ],
     ];
+
+    $services = [
+        [
+            'id' => 'websites',
+            'eyebrow' => 'Aquisição e presença digital',
+            'title' => 'Websites e Landings',
+            'subtitle' => 'SEO, performance e design orientado à conversão',
+            'description' => 'Criamos páginas rápidas, com estrutura semântica, narrativa comercial e funis pensados para gerar demanda qualificada.',
+            'fit' => 'Ideal para validar oferta, captar leads e melhorar presença comercial.',
+            'points' => [
+                'Arquitetura com foco em clareza, velocidade e indexação.',
+                'Copy e UX desenhadas para reduzir atrito na tomada de decisão.',
+                'Tracking com GA4, Pixel e eventos desde a publicação.',
+            ],
+            'subject' => 'Websites e Landings',
+        ],
+        [
+            'id' => 'apps',
+            'eyebrow' => 'Operação e eficiência',
+            'title' => 'Apps e Dashboards',
+            'subtitle' => 'Processos internos e automações sob medida',
+            'description' => 'Desenvolvemos sistemas web para centralizar informação, reduzir retrabalho e dar escala a operações críticas.',
+            'fit' => 'Ideal para equipes com gargalos manuais, retrabalho ou pouca visibilidade.',
+            'points' => [
+                'Mapeamento de fluxo, permissões e regras da operação real.',
+                'Painéis e rotinas que simplificam acompanhamento e execução.',
+                'Base pronta para evoluções futuras sem depender de remendos.',
+            ],
+            'subject' => 'Apps e Dashboards',
+        ],
+        [
+            'id' => 'trafego',
+            'eyebrow' => 'Escala e previsibilidade',
+            'title' => 'Tráfego Pago e Mídia',
+            'subtitle' => 'Setup, criativos e otimização para ROI',
+            'description' => 'Estruturamos campanhas em Meta e Google com segmentação, testes e leitura de desempenho baseada em rastreamento confiável.',
+            'fit' => 'Ideal para operações que já vendem e querem crescer com mais consistência.',
+            'points' => [
+                'Setup técnico de contas, eventos e públicos prioritários.',
+                'Criativos e testes pensados para aprendizado rápido.',
+                'Leitura semanal de CAC, qualidade do lead e retorno.',
+            ],
+            'subject' => 'Tráfego Pago e Mídia',
+        ],
+        [
+            'id' => 'marca',
+            'eyebrow' => 'Percepção e autoridade',
+            'title' => 'Marca, banner e logo',
+            'subtitle' => 'Identidade premium para gerar confiança imediata',
+            'description' => 'Construímos sistemas visuais com coerência estratégica para sustentar posicionamento e elevar percepção de valor.',
+            'fit' => 'Ideal para reposicionamento, lançamento ou ajuste de percepção de mercado.',
+            'points' => [
+                'Direção visual alinhada ao perfil de cliente e ticket desejado.',
+                'Aplicações que mantêm consistência entre site, mídia e materiais.',
+                'Entrega prática para uso comercial sem depender de improviso.',
+            ],
+            'subject' => 'Marca, Banner e Logo',
+        ],
+        [
+            'id' => 'hospedagem',
+            'eyebrow' => 'Continuidade e estabilidade',
+            'title' => 'Hospedagem e manutenção',
+            'subtitle' => 'Infraestrutura e continuidade sem gargalos',
+            'description' => 'Cuidamos de hospedagem, monitoramento, atualizações e ajustes técnicos recorrentes para manter sua operação estável.',
+            'fit' => 'Ideal para quem precisa de sustentação técnica sem absorver isso internamente.',
+            'points' => [
+                'Ambiente preparado para performance, segurança e disponibilidade.',
+                'Monitoramento, correções recorrentes e continuidade operacional.',
+                'Base organizada para novas campanhas, páginas e integrações.',
+            ],
+            'subject' => 'Hospedagem e Manutenção',
+        ],
+    ];
 @endphp
 
 @push('structured-data')
@@ -55,41 +128,124 @@
         <p class="eyebrow">Serviços da ordem Voltrune</p>
         <h1>Uma estrutura completa para construir, vender e escalar com critério.</h1>
         <p class="lead">Cada frente nasce com rastreamento confiável para que decisões, verba e evolução sejam guiadas por dados reais.</p>
+        <div class="hero-actions">
+            <a class="btn" href="{{ route('contato') }}">Solicitar briefing</a>
+            <a class="btn btn-ghost" href="#mapa-servicos">Ver mapa de serviços</a>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container narrow">
+        <div class="service-overview" id="mapa-servicos" aria-label="Mapa de serviços">
+            @foreach ($services as $service)
+                <a class="service-overview-card" href="#{{ $service['id'] }}">
+                    <span class="service-overview-card__eyebrow">{{ $service['eyebrow'] }}</span>
+                    <strong>{{ $service['title'] }}</strong>
+                    <span>{{ $service['subtitle'] }}</span>
+                </a>
+            @endforeach
+        </div>
     </div>
 </section>
 
 <section class="section">
     <div class="container narrow service-longform">
-        <article>
-            <h2>Websites e Landings</h2>
-            <h3>SEO, performance e design orientado à conversão</h3>
-            <p>Criamos páginas rápidas, com estrutura semântica, narrativa comercial e funis pensados para gerar demanda qualificada.</p>
-        </article>
+        @foreach ($services as $service)
+            <article id="{{ $service['id'] }}">
+                <div class="service-entry-head">
+                    <div>
+                        <p class="service-kicker">{{ $service['eyebrow'] }}</p>
+                        <h2>{{ $service['title'] }}</h2>
+                        <h3>{{ $service['subtitle'] }}</h3>
+                    </div>
+                    <p class="service-fit">{{ $service['fit'] }}</p>
+                </div>
 
-        <article>
-            <h2>Apps e Dashboards</h2>
-            <h3>Processos internos e automações sob medida</h3>
-            <p>Desenvolvemos sistemas web para centralizar informação, reduzir retrabalho e dar escala a operações críticas.</p>
-        </article>
+                <p>{{ $service['description'] }}</p>
 
-        <article>
-            <h2>Tráfego Pago e Mídia</h2>
-            <h3>Setup, criativos e otimização para ROI</h3>
-            <p>Estruturamos campanhas em Meta e Google com segmentação, testes e leitura de desempenho baseada em rastreamento confiável.</p>
-        </article>
+                <ul class="service-points">
+                    @foreach ($service['points'] as $point)
+                        <li>{{ $point }}</li>
+                    @endforeach
+                </ul>
 
-        <article>
-            <h2>Marca, banner e logo</h2>
-            <h3>Identidade premium para gerar confiança imediata</h3>
-            <p>Construímos sistemas visuais com coerência estratégica para sustentar posicionamento e elevar percepção de valor.</p>
-        </article>
+                <div class="service-entry-actions">
+                    @if ($service['id'] === 'hospedagem')
+                        <a class="btn" href="{{ route('portal') }}">Ver hospedagem</a>
+                    @else
+                        <form method="POST" action="{{ route('contato.prefill') }}">
+                            @csrf
+                            <input type="hidden" name="subject" value="{{ $service['subject'] }}">
+                            <button class="btn" type="submit">Solicitar proposta</button>
+                        </form>
+                    @endif
 
-        <article>
-            <h2>Hospedagem e manutenção</h2>
-            <h3>Infraestrutura e continuidade sem gargalos</h3>
-            <p>Cuidamos de hospedagem, monitoramento, atualizações e ajustes técnicos recorrentes para manter sua operação estável.</p>
-            <a class="btn" href="{{ route('portal') }}">Ver hospedagem</a>
-        </article>
+                    <a class="text-link" href="{{ route('contato') }}">Falar com a Voltrune</a>
+                </div>
+            </article>
+        @endforeach
+    </div>
+</section>
+
+<section class="section section-alt">
+    <div class="container narrow service-cta-panel">
+        <div>
+            <p class="eyebrow">Escolha com clareza</p>
+            <h2>Se a dúvida é por onde começar, a Voltrune ajuda a priorizar.</h2>
+            <p>Organizamos o escopo por impacto, prazo e dependências para você não contratar frentes desconectadas nem pular etapas críticas.</p>
+        </div>
+        <div class="service-cta-panel__actions">
+            <a class="btn" href="{{ env('WHATSAPP_URL', 'https://wa.me/5511998479359') }}" target="_blank" rel="noopener">Chamar no WhatsApp</a>
+            <a class="btn btn-ghost" href="{{ route('contato') }}">Enviar briefing</a>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <p class="eyebrow">Produtos próprios</p>
+                <h2>Além dos serviços, a Voltrune também evolui sistemas com foco setorial.</h2>
+            </div>
+            <a class="text-link" href="{{ route('sistemas') }}">Ver linha de sistemas</a>
+        </div>
+
+        <div class="systems-grid">
+            <article class="system-card is-live">
+                <span class="system-badge">Solar</span>
+                <h3>Voltrune Solar</h3>
+                <p>Fluxo SaaS para gestão comercial e operacional de energia solar, com clientes, projetos, simulações e orçamento na mesma base.</p>
+                <div class="system-card__actions">
+                    <form method="POST" action="{{ route('contato.prefill') }}">
+                        @csrf
+                        <input type="hidden" name="subject" value="Voltrune Solar">
+                        <button class="btn" type="submit">Falar sobre o Solar</button>
+                    </form>
+                    <a class="btn btn-ghost" href="{{ route('sistemas') }}">Ver sistemas</a>
+                </div>
+            </article>
+
+            <article class="system-card">
+                <span class="system-badge">Vigilante</span>
+                <h3>Vigilante Jurídico</h3>
+                <p>Sistema em preparação para rotinas jurídicas, com foco em controle, organização operacional e menos atrito no acompanhamento de prazos.</p>
+                <div class="system-card__actions">
+                    <a class="btn" href="{{ route('vigilante') }}">Conhecer o Vigilante</a>
+                    <a class="btn btn-ghost" href="{{ route('sistemas') }}">Ver sistemas</a>
+                </div>
+            </article>
+        </div>
+
+        <div class="launch-queue-inline">
+            <p>Também pode entrar na fila de novos lançamentos para acompanhar as próximas frentes da Voltrune.</p>
+            <form method="POST" action="{{ route('contato.prefill') }}">
+                @csrf
+                <input type="hidden" name="subject" value="Fila de Novos Lançamentos">
+                <button class="btn btn-ghost" type="submit">Entrar na fila de lançamentos</button>
+            </form>
+        </div>
     </div>
 </section>
 

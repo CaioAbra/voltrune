@@ -34,6 +34,29 @@
   margin-bottom: 0.3rem;
 }
 
+.system-card form {
+  margin: 0;
+}
+
+.system-card__actions,
+.launch-queue-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.system-card__actions form,
+.launch-queue-panel__actions form {
+  display: flex;
+}
+
+.system-card__actions .btn,
+.launch-queue-panel__actions .btn {
+  min-width: 0;
+}
+
 .system-badge {
   display: inline-flex;
   margin-bottom: 0.9rem;
@@ -59,8 +82,43 @@
     0 0 18px rgba(208, 173, 104, 0.06);
 }
 
+.launch-queue-panel {
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.35rem;
+  border: 1px solid rgba(208, 173, 104, 0.18);
+  border-radius: calc(var(--radius) + 2px);
+  background:
+    linear-gradient(145deg, rgba(47, 38, 28, 0.92), rgba(27, 21, 16, 0.96)),
+    linear-gradient(180deg, rgba(208, 173, 104, 0.04), transparent);
+  box-shadow: var(--shadow);
+}
+
+.launch-queue-panel p:last-child {
+  margin-bottom: 0;
+}
+
 @media (min-width: 920px) {
   .systems-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .launch-queue-panel {
+    grid-template-columns: minmax(0, 1.35fr) auto;
+  }
+}
+
+@media (max-width: 859px) {
+  .system-card__actions,
+  .launch-queue-panel__actions {
+    display: grid;
+  }
+
+  .system-card__actions form,
+  .launch-queue-panel__actions form,
+  .system-card__actions .btn,
+  .launch-queue-panel__actions .btn {
+    width: 100%;
   }
 }
