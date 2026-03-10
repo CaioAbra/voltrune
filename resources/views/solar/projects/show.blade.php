@@ -48,13 +48,27 @@
             </article>
         </div>
 
-        <article class="hub-card hub-card--subtle">
+        <article class="hub-card hub-card--subtle solar-sizing-panel">
             <h2>Sistema sugerido</h2>
-            <p><strong>Potencia do sistema:</strong> {{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : '-' }}</p>
+            <div class="solar-sizing-panel__highlights">
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Potencia do sistema</span>
+                    <strong class="solar-sizing-chip__value">{{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : '-' }}</strong>
+                </article>
+
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Modulos</span>
+                    <strong class="solar-sizing-chip__value">{{ $project->module_quantity ?: ($suggestedModuleQuantity ?: '-') }}</strong>
+                </article>
+
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Geracao estimada</span>
+                    <strong class="solar-sizing-chip__value">{{ $project->estimated_generation_kwh ? number_format((float) $project->estimated_generation_kwh, 2, ',', '.') . ' kWh' : ($suggestedGenerationKwh ? number_format($suggestedGenerationKwh, 2, ',', '.') . ' kWh' : '-') }}</strong>
+                </article>
+            </div>
+
             <p><strong>Potencia do modulo:</strong> {{ $project->module_power ? number_format((int) $project->module_power, 0, ',', '.') . ' W' : '-' }}</p>
-            <p><strong>Quantidade de modulos:</strong> {{ $project->module_quantity ?: ($suggestedModuleQuantity ?: '-') }}</p>
             <p><strong>Modelo do inversor:</strong> {{ $project->inverter_model ?: '-' }}</p>
-            <p><strong>Geracao estimada:</strong> {{ $project->estimated_generation_kwh ? number_format((float) $project->estimated_generation_kwh, 2, ',', '.') . ' kWh' : ($suggestedGenerationKwh ? number_format($suggestedGenerationKwh, 2, ',', '.') . ' kWh' : '-') }}</p>
         </article>
 
         @if ($project->notes)

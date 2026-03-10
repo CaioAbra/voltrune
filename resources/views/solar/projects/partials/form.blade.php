@@ -155,7 +155,7 @@
 <div class="hub-grid hub-grid--billing">
     <div>
         <label for="monthly_consumption_kwh" class="hub-auth-label">Consumo mensal (kWh)</label>
-        <input id="monthly_consumption_kwh" name="monthly_consumption_kwh" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('monthly_consumption_kwh', $project->monthly_consumption_kwh) }}">
+        <input id="monthly_consumption_kwh" name="monthly_consumption_kwh" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('monthly_consumption_kwh', $project->monthly_consumption_kwh) }}" data-sizing-monthly>
         @error('monthly_consumption_kwh')
             <p class="hub-note">{{ $message }}</p>
         @enderror
@@ -170,15 +170,34 @@
     </div>
 </div>
 
-<div class="hub-card hub-card--subtle">
+<div class="hub-card hub-card--subtle solar-sizing-panel" data-sizing-form>
     <h3>Sistema sugerido</h3>
-    <p class="hub-note">O sistema aplica um dimensionamento inicial com base no consumo mensal. O instalador pode ajustar os campos manualmente.</p>
+    <p class="hub-note">O sistema aplica um pre-dimensionamento automatico com base no consumo mensal. O instalador pode ajustar tudo manualmente antes de salvar.</p>
+
+    <div class="solar-sizing-panel__highlights">
+        <article class="solar-sizing-chip">
+            <span class="solar-sizing-chip__label">Regra base</span>
+            <strong class="solar-sizing-chip__value" data-sizing-preview="formula">Consumo / 130</strong>
+        </article>
+
+        <article class="solar-sizing-chip">
+            <span class="solar-sizing-chip__label">Modulo padrao</span>
+            <strong class="solar-sizing-chip__value" data-sizing-preview="module-power">550 W</strong>
+        </article>
+
+        <article class="solar-sizing-chip">
+            <span class="solar-sizing-chip__label">Potencia sugerida</span>
+            <strong class="solar-sizing-chip__value" data-sizing-preview="system-power">Aguardando consumo</strong>
+        </article>
+    </div>
+
+    <p class="solar-sizing-panel__note" data-sizing-note>Preencha o consumo mensal para gerar a sugestao automatica.</p>
 </div>
 
 <div class="hub-grid hub-grid--billing">
     <div>
         <label for="system_power_kwp" class="hub-auth-label">Potencia do sistema (kWp)</label>
-        <input id="system_power_kwp" name="system_power_kwp" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('system_power_kwp', $project->system_power_kwp) }}">
+        <input id="system_power_kwp" name="system_power_kwp" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('system_power_kwp', $project->system_power_kwp) }}" data-sizing-system-power>
         @error('system_power_kwp')
             <p class="hub-note">{{ $message }}</p>
         @enderror
@@ -186,7 +205,7 @@
 
     <div>
         <label for="module_power" class="hub-auth-label">Potencia do modulo (W)</label>
-        <input id="module_power" name="module_power" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_power', $project->module_power ?: 550) }}">
+        <input id="module_power" name="module_power" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_power', $project->module_power ?: 550) }}" data-sizing-module-power>
         @error('module_power')
             <p class="hub-note">{{ $message }}</p>
         @enderror
@@ -196,7 +215,7 @@
 <div class="hub-grid hub-grid--billing">
     <div>
         <label for="module_quantity" class="hub-auth-label">Quantidade de modulos</label>
-        <input id="module_quantity" name="module_quantity" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_quantity', $project->module_quantity) }}">
+        <input id="module_quantity" name="module_quantity" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_quantity', $project->module_quantity) }}" data-sizing-module-quantity>
         @error('module_quantity')
             <p class="hub-note">{{ $message }}</p>
         @enderror
@@ -204,7 +223,7 @@
 
     <div>
         <label for="estimated_generation_kwh" class="hub-auth-label">Geracao estimada (kWh)</label>
-        <input id="estimated_generation_kwh" name="estimated_generation_kwh" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('estimated_generation_kwh', $project->estimated_generation_kwh) }}">
+        <input id="estimated_generation_kwh" name="estimated_generation_kwh" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('estimated_generation_kwh', $project->estimated_generation_kwh) }}" data-sizing-generation>
         @error('estimated_generation_kwh')
             <p class="hub-note">{{ $message }}</p>
         @enderror

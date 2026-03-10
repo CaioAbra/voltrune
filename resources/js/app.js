@@ -737,6 +737,111 @@ const initZipCodeLookup = () => {
   });
 };
 
+const initSolarSizingForm = () => {
+  const sections = Array.from(document.querySelectorAll('[data-sizing-form]'));
+  if (!sections.length) return;
+
+  const roundTo = (value, decimals = 2) => {
+    const factor = 10 ** decimals;
+    return Math.round(value * factor) / factor;
+  };
+
+  sections.forEach((section) => {
+    const root = section.parentElement;
+    if (!root) return;
+
+    const monthlyInput = root.querySelector('[data-sizing-monthly]');
+    const modulePowerInput = root.querySelector('[data-sizing-module-power]');
+    const systemPowerInput = root.querySelector('[data-sizing-system-power]');
+    const moduleQuantityInput = root.querySelector('[data-sizing-module-quantity]');
+    const generationInput = root.querySelector('[data-sizing-generation]');
+    const note = section.querySelector('[data-sizing-note]');
+    const systemPreview = section.querySelector('[data-sizing-preview="system-power"]');
+    const modulePreview = section.querySelector('[data-sizing-preview="module-power"]');
+
+    if (!(monthlyInput instanceof HTMLInputElement)) return;
+    if (!(modulePowerInput instanceof HTMLInputElement)) return;
+    if (!(systemPowerInput instanceof HTMLInputElement)) return;
+    if (!(moduleQuantityInput instanceof HTMLInputElement)) return;
+    if (!(generationInput instanceof HTMLInputElement)) return;
+
+    const readNumber = (input) => {
+      if (!(input instanceof HTMLInputElement)) return null;
+      if (input.value.trim() === '') return null;
+      const parsed = Number(input.value.replace(',', '.'));
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    const writeNumber = (input, value, decimals = 2) => {
+      if (!(input instanceof HTMLInputElement) || value === null || !Number.isFinite(value)) return;
+      input.value = decimals === 0 ? String(Math.round(value)) : value.toFixed(decimals);
+    };
+
+    const updatePreview = () => {
+      const currentPower = readNumber(systemPowerInput);
+      const currentModulePower = readNumber(modulePowerInput);
+      const currentModules = readNumber(moduleQuantityInput);
+      const currentGeneration = readNumber(generationInput);
+
+      if (systemPreview instanceof HTMLElement) {
+        systemPreview.textContent = currentPower && currentPower > 0
+          ? `${currentPower.toFixed(2).replace('.', ',')} kWp`
+          : 'Aguardando consumo';
+      }
+
+      if (modulePreview instanceof HTMLElement) {
+        modulePreview.textContent = currentModulePower && currentModulePower > 0
+          ? `${Math.round(currentModulePower)} W`
+          : '550 W';
+      }
+
+      if (note instanceof HTMLElement) {
+        if (currentPower && currentModules && currentGeneration) {
+          note.textContent = `Sugestao ativa: ${currentPower.toFixed(2).replace('.', ',')} kWp, ${Math.round(currentModules)} modulos e ${currentGeneration.toFixed(2).replace('.', ',')} kWh estimados.`;
+        } else {
+          note.textContent = 'Preencha o consumo mensal para gerar a sugestao automatica.';
+        }
+      }
+    };
+
+    const applySizing = ({ onlyEmpty = false } = {}) => {
+      const monthlyConsumption = readNumber(monthlyInput);
+      const modulePower = readNumber(modulePowerInput) ?? 550;
+
+      if (monthlyConsumption === null || monthlyConsumption <= 0 || modulePower <= 0) {
+        updatePreview();
+        return;
+      }
+
+      const suggestedPower = roundTo(monthlyConsumption / 130, 2);
+      const suggestedModules = Math.ceil((suggestedPower * 1000) / modulePower);
+      const suggestedGeneration = roundTo(monthlyConsumption, 2);
+
+      if (!onlyEmpty || systemPowerInput.value.trim() === '') {
+        writeNumber(systemPowerInput, suggestedPower, 2);
+      }
+
+      if (!onlyEmpty || moduleQuantityInput.value.trim() === '') {
+        writeNumber(moduleQuantityInput, suggestedModules, 0);
+      }
+
+      if (!onlyEmpty || generationInput.value.trim() === '') {
+        writeNumber(generationInput, suggestedGeneration, 2);
+      }
+
+      updatePreview();
+    };
+
+    applySizing({ onlyEmpty: true });
+
+    monthlyInput.addEventListener('input', () => applySizing());
+    modulePowerInput.addEventListener('input', () => applySizing());
+    systemPowerInput.addEventListener('input', updatePreview);
+    moduleQuantityInput.addEventListener('input', updatePreview);
+    generationInput.addEventListener('input', updatePreview);
+  });
+};
+
 const initArcaneAccents = () => {
   const targets = Array.from(
     document.querySelectorAll('.service-card, .mission-card, .hosting-box, .system-card, .quest-card, .faq-item'),
@@ -1034,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initPasswordToggles();
   initFlashAlerts();
   initZipCodeLookup();
+  initSolarSizingForm();
   initErrorEasterEggs();
   initArcaneAccents();
 });
