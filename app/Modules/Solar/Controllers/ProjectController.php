@@ -5,6 +5,7 @@ namespace App\Modules\Solar\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Modules\Solar\Models\EnergyUtility;
+use App\Modules\Solar\Models\SolarCompanySetting;
 use App\Modules\Solar\Models\SolarCustomer;
 use App\Modules\Solar\Models\SolarProject;
 use App\Modules\Solar\Services\EnergyUtilityResolverService;
@@ -44,16 +45,19 @@ class ProjectController extends Controller
         $customers = $this->customerOptions($company);
         $utilities = $this->utilityOptions();
         $selectedCustomerId = $request->integer('customer');
+        $companySetting = $this->companySetting($company);
 
         return view('solar.projects.create', $this->viewData('Novo projeto', [
             'company' => $company,
             'customers' => $customers,
             'utilities' => $utilities,
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
+            'companySetting' => $companySetting,
             'project' => new SolarProject([
                 'solar_customer_id' => $selectedCustomerId > 0 ? $selectedCustomerId : null,
                 'connection_type' => 'bi',
-                'module_power' => 550,
+                'module_power' => $companySetting?->default_module_power ?: 550,
+                'inverter_model' => $companySetting?->default_inverter_model,
                 'status' => 'draft',
             ]),
         ]));
@@ -76,8 +80,10 @@ class ProjectController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $company = $this->resolveCurrentCompany($request);
+        $companySetting = $this->companySetting($company);
         $data = $this->sizing->applySuggestedSizing(
-            $this->prepareLocationData($this->validatedData($request, $company))
+            $this->prepareLocationData($this->validatedData($request, $company)),
+            $companySetting,
         );
         $data['company_id'] = $company->id;
 
@@ -99,6 +105,7 @@ class ProjectController extends Controller
             'customers' => $this->customerOptions($company),
             'utilities' => $utilities,
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
+            'companySetting' => $this->companySetting($company),
             'project' => $projectRecord,
         ]));
     }
@@ -107,10 +114,12 @@ class ProjectController extends Controller
     {
         $company = $this->resolveCurrentCompany($request);
         $projectRecord = $this->resolveProject($company, $project);
+        $companySetting = $this->companySetting($company);
 
         $projectRecord->update(
             $this->sizing->applySuggestedSizing(
-                $this->prepareLocationData($this->validatedData($request, $company))
+                $this->prepareLocationData($this->validatedData($request, $company)),
+                $companySetting,
             )
         );
 
@@ -278,5 +287,12 @@ class ProjectController extends Controller
             ->orderBy('state')
             ->orderBy('name')
             ->get(['id', 'name', 'state', 'cities_json']);
+    }
+
+    private function companySetting(Company $company): ?SolarCompanySetting
+    {
+        return SolarCompanySetting::query()
+            ->where('company_id', $company->id)
+            ->first();
     }
 }

@@ -40,6 +40,12 @@ class SolarNavigationService
                 'active' => 'solar.quotes.*',
                 'description' => 'Propostas e itens comerciais',
             ],
+            [
+                'label' => 'Configuracoes',
+                'route' => 'solar.settings.edit',
+                'active' => 'solar.settings.*',
+                'description' => 'Custos, margens e padroes da empresa',
+            ],
         ];
     }
 }

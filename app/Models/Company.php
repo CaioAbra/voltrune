@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Modules\Solar\Models\SolarCompanySetting;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -55,5 +56,10 @@ class Company extends Model
     public function latestBillingRecord(): HasOne
     {
         return $this->hasOne(CompanyBillingRecord::class)->latestOfMany('id');
+    }
+
+    public function solarSetting(): HasOne
+    {
+        return $this->hasOne(SolarCompanySetting::class);
     }
 }

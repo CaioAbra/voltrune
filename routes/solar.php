@@ -4,6 +4,7 @@ use App\Modules\Solar\Controllers\CustomerController;
 use App\Modules\Solar\Controllers\ProjectController;
 use App\Modules\Solar\Controllers\QuoteController;
 use App\Modules\Solar\Controllers\SimulationController;
+use App\Modules\Solar\Controllers\SolarCompanySettingController;
 use App\Modules\Solar\Controllers\SolarDashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,8 @@ Route::middleware(['auth', 'company.active', 'product:solar'])
         Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
         Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
         Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+        Route::get('/settings', [SolarCompanySettingController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings', [SolarCompanySettingController::class, 'update'])->name('settings.update');
         Route::get('/simulations', [SimulationController::class, 'index'])->name('simulations.index');
         Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
     });

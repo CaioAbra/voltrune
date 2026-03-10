@@ -2,6 +2,8 @@
 
 namespace App\Modules\Solar\Services;
 
+use App\Modules\Solar\Models\SolarCompanySetting;
+
 class SolarSizingService
 {
     public function estimateRequiredPowerKwp(float|int|string|null $monthlyConsumptionKwh): ?float
@@ -46,14 +48,23 @@ class SolarSizingService
      * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
-    public function applySuggestedSizing(array $data): array
+    public function applySuggestedSizing(array $data, ?SolarCompanySetting $setting = null): array
     {
+        $defaultModulePower = $setting?->default_module_power ?: 550;
+
         $modulePower = isset($data['module_power']) && $data['module_power'] !== ''
             ? (int) $data['module_power']
-            : 550;
+            : $defaultModulePower;
 
         if (! isset($data['module_power']) || $data['module_power'] === null || $data['module_power'] === '') {
             $data['module_power'] = $modulePower;
+        }
+
+        if (
+            $setting?->default_inverter_model
+            && (! isset($data['inverter_model']) || $data['inverter_model'] === null || trim((string) $data['inverter_model']) === '')
+        ) {
+            $data['inverter_model'] = $setting->default_inverter_model;
         }
 
         if (! isset($data['system_power_kwp']) || $data['system_power_kwp'] === null || $data['system_power_kwp'] === '') {

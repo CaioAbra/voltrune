@@ -189,6 +189,9 @@
 <div class="hub-card hub-card--subtle solar-sizing-panel" data-sizing-form>
     <h3>Sistema sugerido</h3>
     <p class="hub-note">O sistema aplica um pre-dimensionamento automatico com base no consumo mensal. O instalador pode ajustar tudo manualmente antes de salvar.</p>
+    @php
+        $defaultModulePower = old('module_power', $project->module_power ?: ($companySetting?->default_module_power ?: 550));
+    @endphp
 
     <div class="solar-sizing-panel__highlights">
         <article class="solar-sizing-chip">
@@ -198,7 +201,7 @@
 
         <article class="solar-sizing-chip">
             <span class="solar-sizing-chip__label">Modulo padrao</span>
-            <strong class="solar-sizing-chip__value" data-sizing-preview="module-power">550 W</strong>
+            <strong class="solar-sizing-chip__value" data-sizing-preview="module-power">{{ $defaultModulePower ?: 550 }} W</strong>
         </article>
 
         <article class="solar-sizing-chip">
@@ -248,7 +251,7 @@
 
 <div>
     <label for="inverter_model" class="hub-auth-label">Modelo do inversor</label>
-    <input id="inverter_model" name="inverter_model" type="text" class="hub-auth-input" value="{{ old('inverter_model', $project->inverter_model) }}">
+    <input id="inverter_model" name="inverter_model" type="text" class="hub-auth-input" value="{{ old('inverter_model', $project->inverter_model ?: ($companySetting?->default_inverter_model ?: '')) }}">
     @error('inverter_model')
         <p class="hub-note">{{ $message }}</p>
     @enderror
