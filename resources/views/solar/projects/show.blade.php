@@ -3,20 +3,20 @@
 @section('title', 'Projeto | Voltrune Solar')
 
 @section('solar-content')
-    <section class="hub-card">
-        <div class="hub-actions">
+    <section class="hub-card solar-project-show">
+        <div class="hub-actions solar-project-show__actions">
             <a href="{{ route('solar.projects.index') }}" class="hub-btn hub-btn--subtle">Voltar para projetos</a>
             <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn">Editar projeto</a>
         </div>
 
-        <div class="hub-grid hub-grid--billing">
-            <article class="hub-card hub-card--subtle">
+        <div class="hub-grid hub-grid--billing solar-project-show__grid">
+            <article class="hub-card hub-card--subtle solar-project-show__card">
                 <h2>{{ $project->name }}</h2>
                 <p class="hub-note">Cliente vinculado: {{ $project->customer?->name ?: '-' }}</p>
                 <p class="hub-note">{{ $project->address ?: 'Endereco ainda em preparacao.' }}</p>
             </article>
 
-            <article class="hub-card hub-card--subtle">
+            <article class="hub-card hub-card--subtle solar-project-show__card">
                 <h2>Consumo e rede</h2>
                 <p><strong>Consumo mensal:</strong> {{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</p>
                 <p><strong>Valor da conta:</strong> {{ $project->energy_bill_value ? 'R$ ' . number_format((float) $project->energy_bill_value, 2, ',', '.') : '-' }}</p>
@@ -30,8 +30,8 @@
             </article>
         </div>
 
-        <div class="hub-grid hub-grid--billing">
-            <article class="hub-card hub-card--subtle">
+        <div class="hub-grid hub-grid--billing solar-project-show__grid">
+            <article class="hub-card hub-card--subtle solar-project-show__card">
                 <h2>Estimativa inicial</h2>
                 <p class="hub-note">Base simples para a futura simulacao de dimensionamento do sistema solar.</p>
                 <p>
@@ -40,7 +40,7 @@
                 </p>
             </article>
 
-            <article class="hub-card hub-card--subtle">
+            <article class="hub-card hub-card--subtle solar-project-show__card">
                 <h2>Status e contexto</h2>
                 <p><strong>Status:</strong> {{ strtoupper($project->status) }}</p>
                 <p><strong>Geocodificacao:</strong> {{ strtoupper($project->geocoding_status ?? 'pending') }}</p>
@@ -48,7 +48,7 @@
             </article>
         </div>
 
-        <article class="hub-card hub-card--subtle solar-sizing-panel">
+        <article class="hub-card hub-card--subtle solar-sizing-panel solar-project-show__card">
             <h2>Sistema sugerido</h2>
             <div class="solar-sizing-panel__highlights">
                 <article class="solar-sizing-chip">
@@ -72,7 +72,7 @@
         </article>
 
         @if ($project->notes)
-            <article class="hub-card hub-card--subtle">
+            <article class="hub-card hub-card--subtle solar-project-show__card">
                 <h2>Observacoes</h2>
                 <p>{{ $project->notes }}</p>
             </article>

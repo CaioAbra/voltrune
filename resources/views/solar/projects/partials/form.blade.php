@@ -110,11 +110,27 @@
 
 <div class="hub-grid hub-grid--billing">
     <div>
-        <label for="utility_company" class="hub-auth-label">Concessionaria</label>
-        <input id="utility_company" name="utility_company" type="text" class="hub-auth-input" value="{{ old('utility_company', $project->utility_company) }}">
-        @error('utility_company')
+        <label for="energy_utility_id" class="hub-auth-label">Concessionaria</label>
+        <select
+            id="energy_utility_id"
+            name="energy_utility_id"
+            class="hub-auth-input"
+            data-utility-select
+            data-utility-lookup='@json($utilityLookup, JSON_UNESCAPED_UNICODE)'
+        >
+            <option value="">Selecionar automaticamente</option>
+            @foreach ($utilities as $utility)
+                <option value="{{ $utility->id }}" @selected((string) old('energy_utility_id', $project->energy_utility_id) === (string) $utility->id)>
+                    {{ $utility->name }} ({{ $utility->state }})
+                </option>
+            @endforeach
+        </select>
+        @error('energy_utility_id')
             <p class="hub-note">{{ $message }}</p>
         @enderror
+        <p class="hub-note solar-utility-feedback" data-utility-feedback>
+            A concessionaria sera sugerida automaticamente a partir da cidade e UF quando disponivel.
+        </p>
     </div>
 
     <div>

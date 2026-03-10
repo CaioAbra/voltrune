@@ -675,6 +675,9 @@ const initZipCodeLookup = () => {
       districtInput.value = payload.bairro || '';
       cityInput.value = payload.localidade || '';
       stateInput.value = payload.uf || '';
+
+      cityInput.dispatchEvent(new Event('change', { bubbles: true }));
+      stateInput.dispatchEvent(new Event('change', { bubbles: true }));
     };
 
     const lookupZipCode = async () => {
@@ -839,6 +842,98 @@ const initSolarSizingForm = () => {
     systemPowerInput.addEventListener('input', updatePreview);
     moduleQuantityInput.addEventListener('input', updatePreview);
     generationInput.addEventListener('input', updatePreview);
+  });
+};
+
+const initEnergyUtilityAutoSelect = () => {
+  const selects = Array.from(document.querySelectorAll('[data-utility-select]'));
+  if (!selects.length) return;
+
+  const normalize = (value) => value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+  selects.forEach((select) => {
+    if (!(select instanceof HTMLSelectElement)) return;
+
+    const root = select.parentElement?.parentElement?.parentElement;
+    if (!root) return;
+
+    const cityInput = root.querySelector('[data-cep-city]');
+    const stateInput = root.querySelector('[data-cep-state]');
+    const feedback = root.querySelector('[data-utility-feedback]');
+
+    if (!(cityInput instanceof HTMLInputElement)) return;
+    if (!(stateInput instanceof HTMLInputElement)) return;
+
+    const lookup = JSON.parse(select.dataset.utilityLookup || '[]');
+    let manualOverride = select.value !== '';
+
+    const setFeedback = (message, state = '') => {
+      if (!(feedback instanceof HTMLElement)) return;
+      feedback.textContent = message;
+      feedback.classList.remove('is-success', 'is-error');
+      if (state) {
+        feedback.classList.add(state);
+      }
+    };
+
+    const resolveUtility = () => {
+      if (manualOverride && select.value !== '') return;
+
+      const city = normalize(cityInput.value || '');
+      const state = (stateInput.value || '').trim().toUpperCase();
+
+      if (!city || !state) {
+        if (select.value === '') {
+          setFeedback('A concessionaria sera sugerida automaticamente a partir da cidade e UF quando disponivel.');
+        }
+        return;
+      }
+
+      const matched = lookup.find((utility) => utility.state === state && utility.cities.includes(city));
+
+      if (matched) {
+        select.value = String(matched.id);
+        setFeedback(`Concessionaria sugerida automaticamente: ${matched.name}.`, 'is-success');
+      } else if (!manualOverride) {
+        select.value = '';
+        setFeedback('Nenhuma concessionaria do catalogo foi encontrada para esta cidade. Selecione manualmente.', 'is-error');
+      }
+    };
+
+    select.addEventListener('change', () => {
+      manualOverride = select.value !== '';
+
+      if (select.value === '') {
+        manualOverride = false;
+        resolveUtility();
+        return;
+      }
+
+      const selectedLabel = select.options[select.selectedIndex]?.textContent?.trim() || 'Concessionaria selecionada.';
+      setFeedback(`${selectedLabel} selecionada manualmente.`, 'is-success');
+    });
+
+    cityInput.addEventListener('input', () => {
+      if (!manualOverride) resolveUtility();
+    });
+
+    stateInput.addEventListener('input', () => {
+      if (!manualOverride) resolveUtility();
+    });
+
+    cityInput.addEventListener('change', () => {
+      if (!manualOverride) resolveUtility();
+    });
+
+    stateInput.addEventListener('change', () => {
+      if (!manualOverride) resolveUtility();
+    });
+
+    resolveUtility();
   });
 };
 
@@ -1140,6 +1235,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFlashAlerts();
   initZipCodeLookup();
   initSolarSizingForm();
+  initEnergyUtilityAutoSelect();
   initErrorEasterEggs();
   initArcaneAccents();
 });

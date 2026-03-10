@@ -4,8 +4,10 @@ namespace App\Modules\Solar\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Modules\Solar\Models\EnergyUtility;
 use App\Modules\Solar\Models\SolarCustomer;
 use App\Modules\Solar\Models\SolarProject;
+use App\Modules\Solar\Services\EnergyUtilityResolverService;
 use App\Modules\Solar\Services\SolarNavigationService;
 use App\Modules\Solar\Services\SolarSizingService;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +19,7 @@ class ProjectController extends Controller
     public function __construct(
         private readonly SolarNavigationService $navigation,
         private readonly SolarSizingService $sizing,
+        private readonly EnergyUtilityResolverService $utilityResolver,
     ) {
     }
 
@@ -39,11 +42,14 @@ class ProjectController extends Controller
     {
         $company = $this->resolveCurrentCompany($request);
         $customers = $this->customerOptions($company);
+        $utilities = $this->utilityOptions();
         $selectedCustomerId = $request->integer('customer');
 
         return view('solar.projects.create', $this->viewData('Novo projeto', [
             'company' => $company,
             'customers' => $customers,
+            'utilities' => $utilities,
+            'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
             'project' => new SolarProject([
                 'solar_customer_id' => $selectedCustomerId > 0 ? $selectedCustomerId : null,
                 'connection_type' => 'bi',
@@ -86,10 +92,13 @@ class ProjectController extends Controller
     {
         $company = $this->resolveCurrentCompany($request);
         $projectRecord = $this->resolveProject($company, $project);
+        $utilities = $this->utilityOptions();
 
         return view('solar.projects.edit', $this->viewData('Editar projeto', [
             'company' => $company,
             'customers' => $this->customerOptions($company),
+            'utilities' => $utilities,
+            'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
             'project' => $projectRecord,
         ]));
     }
@@ -166,6 +175,7 @@ class ProjectController extends Controller
             'monthly_consumption_kwh' => ['nullable', 'numeric', 'min:0'],
             'energy_bill_value' => ['nullable', 'numeric', 'min:0'],
             'connection_type' => ['nullable', 'in:mono,bi,tri'],
+            'energy_utility_id' => ['nullable', 'integer', 'exists:solar_mysql.energy_utilities,id'],
             'system_power_kwp' => ['nullable', 'numeric', 'min:0'],
             'module_power' => ['nullable', 'integer', 'min:1'],
             'module_quantity' => ['nullable', 'integer', 'min:1'],
@@ -218,8 +228,22 @@ class ProjectController extends Controller
             ? trim((string) $data['connection_type'])
             : null;
         $data['inverter_model'] = isset($data['inverter_model']) ? trim((string) $data['inverter_model']) : null;
+        $data['energy_utility_id'] = isset($data['energy_utility_id']) && $data['energy_utility_id'] !== ''
+            ? (int) $data['energy_utility_id']
+            : null;
 
         $hasAddressLookupData = ! empty($data['street']) || ! empty($data['district']) || ! empty($data['city']) || ! empty($data['state']);
+
+        if ($data['energy_utility_id'] === null && ! empty($data['city']) && ! empty($data['state'])) {
+            $resolvedUtility = $this->utilityResolver->resolveUtilityByCity($data['city'], $data['state']);
+            $data['energy_utility_id'] = $resolvedUtility?->id;
+        }
+
+        $selectedUtility = $data['energy_utility_id'] !== null
+            ? EnergyUtility::query()->find($data['energy_utility_id'])
+            : null;
+
+        $data['utility_company'] = $selectedUtility?->name;
 
         $data['geocoding_status'] = match (true) {
             empty($data['zip_code']) => 'not_requested',
@@ -246,5 +270,13 @@ class ProjectController extends Controller
             ->where('company_id', $company->id)
             ->orderBy('name')
             ->get(['id', 'name']);
+    }
+
+    private function utilityOptions()
+    {
+        return EnergyUtility::query()
+            ->orderBy('state')
+            ->orderBy('name')
+            ->get(['id', 'name', 'state', 'cities_json']);
     }
 }
