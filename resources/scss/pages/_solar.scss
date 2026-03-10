@@ -226,6 +226,59 @@
   color: #bfe7df;
 }
 
+.solar-flash-alert {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  transition: opacity 220ms ease, transform 220ms ease, max-height 220ms ease, margin 220ms ease, padding 220ms ease;
+  max-height: 180px;
+  overflow: hidden;
+}
+
+.solar-flash-alert.is-closing {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.solar-flash-alert.is-hidden {
+  max-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.solar-flash-alert__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.solar-flash-alert__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ebfff3;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms ease;
+  flex-shrink: 0;
+}
+
+.solar-flash-alert__close:hover,
+.solar-flash-alert__close:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  transform: scale(1.04);
+}
+
 @media (min-width: 960px) {
   .solar-workspace {
     grid-template-columns: minmax(240px, 270px) 1fr;

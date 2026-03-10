@@ -9,8 +9,19 @@
         </div>
 
         @if (session('solar_status'))
-            <div class="hub-alert hub-alert--success">
-                {{ session('solar_status') }}
+            <div
+                class="hub-alert hub-alert--success solar-flash-alert"
+                data-flash-alert
+                data-flash-timeout="5000"
+                role="status"
+                aria-live="polite"
+            >
+                <div class="solar-flash-alert__content">
+                    {{ session('solar_status') }}
+                </div>
+                <button type="button" class="solar-flash-alert__close" data-flash-close aria-label="Fechar aviso">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
         @endif
 

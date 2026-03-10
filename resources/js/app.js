@@ -598,6 +598,36 @@ const initPasswordToggles = () => {
   });
 };
 
+const initFlashAlerts = () => {
+  const alerts = Array.from(document.querySelectorAll('[data-flash-alert]'));
+  if (!alerts.length) return;
+
+  const closeAlert = (alert) => {
+    if (alert.dataset.flashClosed === 'true') return;
+
+    alert.dataset.flashClosed = 'true';
+    alert.classList.add('is-closing');
+
+    window.setTimeout(() => {
+      alert.classList.add('is-hidden');
+      alert.setAttribute('hidden', 'hidden');
+    }, 220);
+  };
+
+  alerts.forEach((alert) => {
+    const timeout = Number(alert.getAttribute('data-flash-timeout') || 5000);
+    const closeTrigger = alert.querySelector('[data-flash-close]');
+
+    if (closeTrigger instanceof HTMLButtonElement) {
+      closeTrigger.addEventListener('click', () => closeAlert(alert));
+    }
+
+    if (timeout > 0) {
+      window.setTimeout(() => closeAlert(alert), timeout);
+    }
+  });
+};
+
 const initArcaneAccents = () => {
   const targets = Array.from(
     document.querySelectorAll('.service-card, .mission-card, .hosting-box, .system-card, .quest-card, .faq-item'),
@@ -893,6 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSubmitLocks();
   initCustomSelects();
   initPasswordToggles();
+  initFlashAlerts();
   initErrorEasterEggs();
   initArcaneAccents();
 });
