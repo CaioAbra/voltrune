@@ -4,6 +4,9 @@
 
 @section('solar-content')
     <section class="hub-card">
+        <h2>Cliente contratante</h2>
+        <p class="hub-note">Use este cadastro para a pessoa ou empresa que contrata a instalacao. O endereco da usina sera tratado em Projetos.</p>
+
         <div class="hub-actions">
             <a href="{{ route('solar.customers.index') }}" class="hub-btn hub-btn--subtle">Voltar para clientes</a>
         </div>

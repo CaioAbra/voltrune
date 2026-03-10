@@ -6,6 +6,7 @@
     <section class="hub-card">
         <div class="hub-actions">
             <a href="{{ route('solar.customers.create') }}" class="hub-btn">Novo cliente</a>
+            <a href="{{ route('solar.projects.create') }}" class="hub-btn hub-btn--subtle">Novo projeto solar</a>
         </div>
 
         @if (session('solar_status'))
@@ -26,10 +27,15 @@
         @endif
 
         @if ($customers->isEmpty())
-            <h2>Clientes</h2>
-            <p>Nenhum cliente cadastrado para esta empresa ainda.</p>
-            <p class="hub-note">Os registros criados no Solar ficam isolados por company_id.</p>
+            <h2>Clientes contratantes</h2>
+            <p>Nenhum cliente comercial cadastrado para esta empresa ainda.</p>
+            <p class="hub-note">Aqui ficam as pessoas ou empresas contratantes. O local da instalacao sera tratado em Projetos.</p>
         @else
+            <div class="hub-card hub-card--subtle">
+                <h2>Cadastro comercial</h2>
+                <p>Clientes representam a pessoa ou empresa contratante. Cada cliente pode ter um ou mais projetos de instalacao solar.</p>
+            </div>
+
             <div class="hub-table-wrap">
                 <table class="hub-table">
                     <thead>
@@ -63,6 +69,9 @@
                                 </td>
                                 <td>
                                     <div class="hub-table-actions">
+                                        <a href="{{ route('solar.projects.create', ['customer' => $customer->id]) }}" class="hub-btn">
+                                            Criar projeto
+                                        </a>
                                         <a href="{{ route('solar.customers.edit', $customer->id) }}" class="hub-btn hub-btn--subtle">
                                             Editar
                                         </a>

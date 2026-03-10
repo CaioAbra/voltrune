@@ -279,6 +279,22 @@
   transform: scale(1.04);
 }
 
+.solar-cep-feedback {
+  margin-top: 0.45rem;
+}
+
+.solar-cep-feedback.is-loading {
+  color: #ffd06d;
+}
+
+.solar-cep-feedback.is-success {
+  color: #9be7c1;
+}
+
+.solar-cep-feedback.is-error {
+  color: #ffb3b3;
+}
+
 @media (min-width: 960px) {
   .solar-workspace {
     grid-template-columns: minmax(240px, 270px) 1fr;

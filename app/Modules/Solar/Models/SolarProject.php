@@ -20,9 +20,20 @@ class SolarProject extends Model
         'company_id',
         'solar_customer_id',
         'name',
-        'address',
+        'zip_code',
+        'street',
+        'number',
+        'complement',
+        'district',
+        'city',
+        'state',
+        'latitude',
+        'longitude',
+        'geocoding_status',
         'monthly_consumption_kwh',
         'energy_bill_value',
+        'property_type',
+        'utility_company',
         'status',
         'notes',
     ];
@@ -33,6 +44,8 @@ class SolarProject extends Model
     protected function casts(): array
     {
         return [
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
             'monthly_consumption_kwh' => 'decimal:2',
             'energy_bill_value' => 'decimal:2',
         ];

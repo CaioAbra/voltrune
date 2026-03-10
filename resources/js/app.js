@@ -628,6 +628,115 @@ const initFlashAlerts = () => {
   });
 };
 
+const initZipCodeLookup = () => {
+  const sections = Array.from(document.querySelectorAll('[data-cep-lookup]'));
+  if (!sections.length) return;
+
+  const formatZipCode = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 5) return digits;
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  };
+
+  sections.forEach((section) => {
+    const zipInput = section.parentElement?.querySelector('[data-cep-input]');
+    const streetInput = section.parentElement?.querySelector('[data-cep-street]');
+    const districtInput = section.parentElement?.querySelector('[data-cep-district]');
+    const cityInput = section.parentElement?.querySelector('[data-cep-city]');
+    const stateInput = section.parentElement?.querySelector('[data-cep-state]');
+    const feedback = section.parentElement?.querySelector('[data-cep-feedback]');
+    const geocodingStatus = section.parentElement?.querySelector('[data-geocoding-status]');
+
+    if (!(zipInput instanceof HTMLInputElement)) return;
+    if (!(streetInput instanceof HTMLInputElement)) return;
+    if (!(districtInput instanceof HTMLInputElement)) return;
+    if (!(cityInput instanceof HTMLInputElement)) return;
+    if (!(stateInput instanceof HTMLInputElement)) return;
+    if (!(feedback instanceof HTMLElement)) return;
+
+    let lastZipSearched = '';
+
+    const setFeedback = (message, state) => {
+      feedback.textContent = message;
+      feedback.classList.remove('is-loading', 'is-success', 'is-error');
+      if (state) {
+        feedback.classList.add(state);
+      }
+    };
+
+    const setGeocodingStatus = (value) => {
+      if (geocodingStatus instanceof HTMLElement) {
+        geocodingStatus.textContent = value.toUpperCase();
+      }
+    };
+
+    const fillAddress = (payload) => {
+      streetInput.value = payload.logradouro || '';
+      districtInput.value = payload.bairro || '';
+      cityInput.value = payload.localidade || '';
+      stateInput.value = payload.uf || '';
+    };
+
+    const lookupZipCode = async () => {
+      const digits = zipInput.value.replace(/\D/g, '');
+
+      if (digits.length === 0) {
+        setFeedback('Digite um CEP valido para preencher rua, bairro, cidade e UF.', '');
+        setGeocodingStatus('not_requested');
+        return;
+      }
+
+      if (digits.length < 8 || digits === lastZipSearched) {
+        return;
+      }
+
+      lastZipSearched = digits;
+      setFeedback('Buscando endereco pelo CEP...', 'is-loading');
+
+      try {
+        const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`, {
+          headers: {
+            Accept: 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Falha na consulta do CEP.');
+        }
+
+        const payload = await response.json();
+
+        if (payload.erro) {
+          throw new Error('CEP nao encontrado.');
+        }
+
+        fillAddress(payload);
+        setFeedback('Endereco preenchido automaticamente. Voce pode ajustar os campos se precisar.', 'is-success');
+        setGeocodingStatus('address_loaded');
+      } catch (error) {
+        setFeedback('Nao foi possivel localizar o CEP. Preencha o endereco manualmente.', 'is-error');
+        setGeocodingStatus('pending');
+      }
+    };
+
+    zipInput.value = formatZipCode(zipInput.value);
+
+    zipInput.addEventListener('input', () => {
+      zipInput.value = formatZipCode(zipInput.value);
+      const digits = zipInput.value.replace(/\D/g, '');
+
+      if (digits.length < 8) {
+        lastZipSearched = '';
+        setFeedback('Digite um CEP valido para preencher rua, bairro, cidade e UF.', '');
+      }
+    });
+
+    zipInput.addEventListener('blur', () => {
+      lookupZipCode();
+    });
+  });
+};
+
 const initArcaneAccents = () => {
   const targets = Array.from(
     document.querySelectorAll('.service-card, .mission-card, .hosting-box, .system-card, .quest-card, .faq-item'),
@@ -924,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCustomSelects();
   initPasswordToggles();
   initFlashAlerts();
+  initZipCodeLookup();
   initErrorEasterEggs();
   initArcaneAccents();
 });

@@ -6,7 +6,7 @@
     <section class="hub-grid">
         <article class="hub-card">
             <h2>Projetos</h2>
-            <p>Organize as instalacoes solares por cliente, endereco e contexto da operacao.</p>
+            <p>Organize os locais de instalacao por cliente, endereco, consumo e contexto tecnico da operacao.</p>
             <a href="{{ route('solar.projects.index') }}" class="hub-btn">Abrir projetos</a>
         </article>
 

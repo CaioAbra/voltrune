@@ -4,6 +4,9 @@
 
 @section('solar-content')
     <section class="hub-card">
+        <h2>Cliente contratante</h2>
+        <p class="hub-note">Atualize os dados comerciais do contratante. Os dados tecnicos do local ficam nos projetos vinculados.</p>
+
         <div class="hub-actions">
             <a href="{{ route('solar.customers.index') }}" class="hub-btn hub-btn--subtle">Voltar para clientes</a>
         </div>
