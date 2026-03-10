@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Modules\Solar\Models\SolarCustomer;
 use App\Modules\Solar\Models\SolarProject;
 use App\Modules\Solar\Services\SolarNavigationService;
+use App\Modules\Solar\Services\SolarSizingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,6 +16,7 @@ class ProjectController extends Controller
 {
     public function __construct(
         private readonly SolarNavigationService $navigation,
+        private readonly SolarSizingService $sizing,
     ) {
     }
 
@@ -44,15 +46,33 @@ class ProjectController extends Controller
             'customers' => $customers,
             'project' => new SolarProject([
                 'solar_customer_id' => $selectedCustomerId > 0 ? $selectedCustomerId : null,
+                'connection_type' => 'bi',
+                'module_power' => 550,
                 'status' => 'draft',
             ]),
+        ]));
+    }
+
+    public function show(Request $request, int $project): View
+    {
+        $company = $this->resolveCurrentCompany($request);
+        $projectRecord = $this->resolveProject($company, $project, ['customer']);
+
+        return view('solar.projects.show', $this->viewData('Projeto solar', [
+            'company' => $company,
+            'project' => $projectRecord,
+            'estimatedRequiredPowerKwp' => $this->sizing->estimateRequiredPowerKwp($projectRecord->monthly_consumption_kwh),
+            'suggestedModuleQuantity' => $this->sizing->estimateModuleQuantity($projectRecord->system_power_kwp, $projectRecord->module_power),
+            'suggestedGenerationKwh' => $this->sizing->estimateGenerationKwh($projectRecord->system_power_kwp),
         ]));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $company = $this->resolveCurrentCompany($request);
-        $data = $this->prepareLocationData($this->validatedData($request, $company));
+        $data = $this->sizing->applySuggestedSizing(
+            $this->prepareLocationData($this->validatedData($request, $company))
+        );
         $data['company_id'] = $company->id;
 
         SolarProject::create($data);
@@ -79,7 +99,11 @@ class ProjectController extends Controller
         $company = $this->resolveCurrentCompany($request);
         $projectRecord = $this->resolveProject($company, $project);
 
-        $projectRecord->update($this->prepareLocationData($this->validatedData($request, $company)));
+        $projectRecord->update(
+            $this->sizing->applySuggestedSizing(
+                $this->prepareLocationData($this->validatedData($request, $company))
+            )
+        );
 
         return redirect()
             ->route('solar.projects.index')
@@ -141,6 +165,12 @@ class ProjectController extends Controller
             'state' => ['nullable', 'string', 'max:2'],
             'monthly_consumption_kwh' => ['nullable', 'numeric', 'min:0'],
             'energy_bill_value' => ['nullable', 'numeric', 'min:0'],
+            'connection_type' => ['nullable', 'in:mono,bi,tri'],
+            'system_power_kwp' => ['nullable', 'numeric', 'min:0'],
+            'module_power' => ['nullable', 'integer', 'min:1'],
+            'module_quantity' => ['nullable', 'integer', 'min:1'],
+            'inverter_model' => ['nullable', 'string', 'max:255'],
+            'estimated_generation_kwh' => ['nullable', 'numeric', 'min:0'],
             'property_type' => ['nullable', 'string', 'max:255'],
             'utility_company' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
@@ -163,9 +193,10 @@ class ProjectController extends Controller
         return $company;
     }
 
-    private function resolveProject(Company $company, int $projectId): SolarProject
+    private function resolveProject(Company $company, int $projectId, array $with = []): SolarProject
     {
         return SolarProject::query()
+            ->with($with)
             ->where('company_id', $company->id)
             ->findOrFail($projectId);
     }
@@ -183,6 +214,10 @@ class ProjectController extends Controller
         $data['district'] = isset($data['district']) ? trim((string) $data['district']) : null;
         $data['city'] = isset($data['city']) ? trim((string) $data['city']) : null;
         $data['state'] = isset($data['state']) ? strtoupper(trim((string) $data['state'])) : null;
+        $data['connection_type'] = isset($data['connection_type']) && $data['connection_type'] !== ''
+            ? trim((string) $data['connection_type'])
+            : null;
+        $data['inverter_model'] = isset($data['inverter_model']) ? trim((string) $data['inverter_model']) : null;
 
         $hasAddressLookupData = ! empty($data['street']) || ! empty($data['district']) || ! empty($data['city']) || ! empty($data['state']);
 

@@ -118,6 +118,21 @@
     </div>
 
     <div>
+        <label for="connection_type" class="hub-auth-label">Tipo de conexao</label>
+        <select id="connection_type" name="connection_type" class="hub-auth-input">
+            <option value="">Selecione</option>
+            <option value="mono" @selected(old('connection_type', $project->connection_type) === 'mono')>Monofasico</option>
+            <option value="bi" @selected(old('connection_type', $project->connection_type) === 'bi')>Bifasico</option>
+            <option value="tri" @selected(old('connection_type', $project->connection_type) === 'tri')>Trifasico</option>
+        </select>
+        @error('connection_type')
+            <p class="hub-note">{{ $message }}</p>
+        @enderror
+    </div>
+</div>
+
+<div class="hub-grid hub-grid--billing">
+    <div>
         <label for="status" class="hub-auth-label">Status *</label>
         <select id="status" name="status" class="hub-auth-input" required>
             @foreach (['draft' => 'Draft', 'qualified' => 'Qualificado', 'proposal' => 'Proposta', 'won' => 'Fechado'] as $statusValue => $statusLabel)
@@ -130,6 +145,11 @@
             <p class="hub-note">{{ $message }}</p>
         @enderror
     </div>
+</div>
+
+<div class="hub-card hub-card--subtle">
+    <h3>Consumo energetico</h3>
+    <p class="hub-note">Esses dados alimentam a futura simulacao solar e uma estimativa inicial de potencia necessaria.</p>
 </div>
 
 <div class="hub-grid hub-grid--billing">
@@ -148,6 +168,55 @@
             <p class="hub-note">{{ $message }}</p>
         @enderror
     </div>
+</div>
+
+<div class="hub-card hub-card--subtle">
+    <h3>Sistema sugerido</h3>
+    <p class="hub-note">O sistema aplica um dimensionamento inicial com base no consumo mensal. O instalador pode ajustar os campos manualmente.</p>
+</div>
+
+<div class="hub-grid hub-grid--billing">
+    <div>
+        <label for="system_power_kwp" class="hub-auth-label">Potencia do sistema (kWp)</label>
+        <input id="system_power_kwp" name="system_power_kwp" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('system_power_kwp', $project->system_power_kwp) }}">
+        @error('system_power_kwp')
+            <p class="hub-note">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <div>
+        <label for="module_power" class="hub-auth-label">Potencia do modulo (W)</label>
+        <input id="module_power" name="module_power" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_power', $project->module_power ?: 550) }}">
+        @error('module_power')
+            <p class="hub-note">{{ $message }}</p>
+        @enderror
+    </div>
+</div>
+
+<div class="hub-grid hub-grid--billing">
+    <div>
+        <label for="module_quantity" class="hub-auth-label">Quantidade de modulos</label>
+        <input id="module_quantity" name="module_quantity" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_quantity', $project->module_quantity) }}">
+        @error('module_quantity')
+            <p class="hub-note">{{ $message }}</p>
+        @enderror
+    </div>
+
+    <div>
+        <label for="estimated_generation_kwh" class="hub-auth-label">Geracao estimada (kWh)</label>
+        <input id="estimated_generation_kwh" name="estimated_generation_kwh" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('estimated_generation_kwh', $project->estimated_generation_kwh) }}">
+        @error('estimated_generation_kwh')
+            <p class="hub-note">{{ $message }}</p>
+        @enderror
+    </div>
+</div>
+
+<div>
+    <label for="inverter_model" class="hub-auth-label">Modelo do inversor</label>
+    <input id="inverter_model" name="inverter_model" type="text" class="hub-auth-input" value="{{ old('inverter_model', $project->inverter_model) }}">
+    @error('inverter_model')
+        <p class="hub-note">{{ $message }}</p>
+    @enderror
 </div>
 
 <div>

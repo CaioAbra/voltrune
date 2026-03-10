@@ -43,6 +43,7 @@
                             <th>Cliente</th>
                             <th>Cidade/UF</th>
                             <th>Consumo mensal</th>
+                            <th>Concessionaria</th>
                             <th>Status</th>
                             <th>Acoes</th>
                         </tr>
@@ -55,7 +56,7 @@
                                     <div class="hub-table__sub">
                                         {{ $project->street ?: 'Endereco em preparacao' }}{{ $project->number ? ', '.$project->number : '' }}
                                         @if ($project->zip_code)
-                                            <span> • CEP {{ $project->zip_code }}</span>
+                                            <span> | CEP {{ $project->zip_code }}</span>
                                         @endif
                                     </div>
                                 </td>
@@ -67,6 +68,7 @@
                                     {{ $location !== '' ? $location : 'Aguardando localizacao' }}
                                 </td>
                                 <td>{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</td>
+                                <td>{{ $project->utility_company ?: '-' }}</td>
                                 <td>
                                     <div class="hub-inline-badges">
                                         <span class="hub-badge">{{ strtoupper($project->status) }}</span>
@@ -75,6 +77,7 @@
                                 </td>
                                 <td>
                                     <div class="hub-table-actions">
+                                        <a href="{{ route('solar.projects.show', $project->id) }}" class="hub-btn">Ver</a>
                                         <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn hub-btn--subtle">Editar</a>
                                         <form action="{{ route('solar.projects.destroy', $project->id) }}" method="post">
                                             @csrf

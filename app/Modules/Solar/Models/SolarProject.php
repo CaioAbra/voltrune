@@ -32,6 +32,7 @@ class SolarProject extends Model
         'geocoding_status',
         'monthly_consumption_kwh',
         'energy_bill_value',
+        'connection_type',
         'property_type',
         'utility_company',
         'status',

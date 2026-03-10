@@ -1,0 +1,67 @@
+@extends('solar.layout')
+
+@section('title', 'Projeto | Voltrune Solar')
+
+@section('solar-content')
+    <section class="hub-card">
+        <div class="hub-actions">
+            <a href="{{ route('solar.projects.index') }}" class="hub-btn hub-btn--subtle">Voltar para projetos</a>
+            <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn">Editar projeto</a>
+        </div>
+
+        <div class="hub-grid hub-grid--billing">
+            <article class="hub-card hub-card--subtle">
+                <h2>{{ $project->name }}</h2>
+                <p class="hub-note">Cliente vinculado: {{ $project->customer?->name ?: '-' }}</p>
+                <p class="hub-note">{{ $project->address ?: 'Endereco ainda em preparacao.' }}</p>
+            </article>
+
+            <article class="hub-card hub-card--subtle">
+                <h2>Consumo e rede</h2>
+                <p><strong>Consumo mensal:</strong> {{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</p>
+                <p><strong>Valor da conta:</strong> {{ $project->energy_bill_value ? 'R$ ' . number_format((float) $project->energy_bill_value, 2, ',', '.') : '-' }}</p>
+                <p><strong>Concessionaria:</strong> {{ $project->utility_company ?: '-' }}</p>
+                <p><strong>Tipo de conexao:</strong> {{ match ($project->connection_type) {
+                    'mono' => 'Monofasico',
+                    'bi' => 'Bifasico',
+                    'tri' => 'Trifasico',
+                    default => '-',
+                } }}</p>
+            </article>
+        </div>
+
+        <div class="hub-grid hub-grid--billing">
+            <article class="hub-card hub-card--subtle">
+                <h2>Estimativa inicial</h2>
+                <p class="hub-note">Base simples para a futura simulacao de dimensionamento do sistema solar.</p>
+                <p>
+                    <strong>Potencia estimada:</strong>
+                    {{ $estimatedRequiredPowerKwp !== null ? number_format($estimatedRequiredPowerKwp, 2, ',', '.') . ' kWp' : 'Informe o consumo mensal para estimar.' }}
+                </p>
+            </article>
+
+            <article class="hub-card hub-card--subtle">
+                <h2>Status e contexto</h2>
+                <p><strong>Status:</strong> {{ strtoupper($project->status) }}</p>
+                <p><strong>Geocodificacao:</strong> {{ strtoupper($project->geocoding_status ?? 'pending') }}</p>
+                <p><strong>Tipo de imovel:</strong> {{ $project->property_type ?: '-' }}</p>
+            </article>
+        </div>
+
+        <article class="hub-card hub-card--subtle">
+            <h2>Sistema sugerido</h2>
+            <p><strong>Potencia do sistema:</strong> {{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : '-' }}</p>
+            <p><strong>Potencia do modulo:</strong> {{ $project->module_power ? number_format((int) $project->module_power, 0, ',', '.') . ' W' : '-' }}</p>
+            <p><strong>Quantidade de modulos:</strong> {{ $project->module_quantity ?: ($suggestedModuleQuantity ?: '-') }}</p>
+            <p><strong>Modelo do inversor:</strong> {{ $project->inverter_model ?: '-' }}</p>
+            <p><strong>Geracao estimada:</strong> {{ $project->estimated_generation_kwh ? number_format((float) $project->estimated_generation_kwh, 2, ',', '.') . ' kWh' : ($suggestedGenerationKwh ? number_format($suggestedGenerationKwh, 2, ',', '.') . ' kWh' : '-') }}</p>
+        </article>
+
+        @if ($project->notes)
+            <article class="hub-card hub-card--subtle">
+                <h2>Observacoes</h2>
+                <p>{{ $project->notes }}</p>
+            </article>
+        @endif
+    </section>
+@endsection
