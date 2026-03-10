@@ -17,7 +17,13 @@
         old('state', $project->state),
     ])->filter()->implode(' / ');
     $initialSuggestedPrice = old('suggested_price', $project->suggested_price);
-    $initialSavings = old('energy_bill_value', $project->energy_bill_value);
+    $initialEnergyBillValue = old('energy_bill_value', $project->energy_bill_value);
+    $residualMinimumCost = (float) ($residualMinimumCost ?? 70);
+    $initialMonthlySavings = $initialEnergyBillValue !== null && $initialEnergyBillValue !== '' && (float) $initialEnergyBillValue > 0
+        ? max((float) $initialEnergyBillValue - $residualMinimumCost, 0)
+        : null;
+    $initialAnnualSavings = $initialMonthlySavings !== null ? $initialMonthlySavings * 12 : null;
+    $initialLifetimeSavings = $initialAnnualSavings !== null ? $initialAnnualSavings * 25 : null;
 @endphp
 
 <div
@@ -27,26 +33,27 @@
     data-margin-percent="{{ old('company_margin_percent', $companySetting?->margin_percent) }}"
     data-default-inverter-model="{{ $companySetting?->default_inverter_model }}"
     data-pricing-source="{{ $usesMarketPriceFallback ? 'market' : 'custom' }}"
+    data-residual-minimum-cost="{{ $residualMinimumCost }}"
 >
     <section class="hub-card hub-card--subtle solar-project-command">
         <div class="solar-project-command__header">
             <div>
-                <p class="solar-section-eyebrow">Pre-orcamento comercial</p>
-                <h3 data-project-summary-name>{{ old('name', $project->name ?: 'Projeto solar em preparacao') }}</h3>
-                <p class="hub-note">Use este fluxo para sair do cadastro tecnico e chegar rapido a uma leitura comercial de potencia, preco e economia estimada.</p>
+                <p class="solar-section-eyebrow">Pré-orçamento comercial</p>
+                <h3 data-project-summary-name>{{ old('name', $project->name ?: 'Projeto solar em preparação') }}</h3>
+                <p class="hub-note">Use este fluxo para transformar dados técnicos em uma leitura comercial rápida, com potência sugerida, valor inicial e economia estimada.</p>
             </div>
 
             <div class="solar-project-command__status {{ $usesMarketPriceFallback ? 'is-market' : 'is-ready' }}">
-                <span class="solar-project-command__status-label">Configuracao comercial</span>
-                <strong>{{ $usesMarketPriceFallback ? 'Usando media de mercado' : 'Preco proprio configurado' }}</strong>
+                <span class="solar-project-command__status-label">Configuração comercial</span>
+                <strong>{{ $usesMarketPriceFallback ? 'Usando média de mercado' : 'Preço próprio configurado' }}</strong>
                 <p>
                     @if ($usesMarketPriceFallback)
-                        O Solar vai usar {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp ate a empresa definir um valor proprio.
+                        O Solar vai usar {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp até a empresa definir um valor próprio.
                     @else
-                        Preco por kWp da empresa disponivel para gerar valor sugerido automaticamente.
+                        O preço por kWp da empresa já está pronto para gerar o valor sugerido automaticamente.
                     @endif
                 </p>
-                <a href="{{ route('solar.settings.edit') }}" class="hub-btn hub-btn--subtle">Abrir configuracoes</a>
+                <a href="{{ route('solar.settings.edit') }}" class="hub-btn hub-btn--subtle">Abrir configurações</a>
             </div>
         </div>
 
@@ -62,7 +69,7 @@
             </article>
 
             <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Status</span>
+                <span class="solar-sizing-chip__label">Status comercial</span>
                 <strong class="solar-sizing-chip__value" data-project-summary="status">{{ $statusLabels[$currentStatus] ?? strtoupper((string) $currentStatus) }}</strong>
             </article>
 
@@ -74,16 +81,30 @@
             </article>
 
             <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Potencia sugerida</span>
+                <span class="solar-sizing-chip__label">Potência sugerida</span>
                 <strong class="solar-sizing-chip__value" data-project-summary="power">
                     {{ old('system_power_kwp', $project->system_power_kwp) ? number_format((float) old('system_power_kwp', $project->system_power_kwp), 2, ',', '.') . ' kWp' : 'Aguardando consumo' }}
                 </strong>
             </article>
 
             <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Preco sugerido</span>
+                <span class="solar-sizing-chip__label">Módulos sugeridos</span>
+                <strong class="solar-sizing-chip__value" data-project-summary="modules">
+                    {{ old('module_quantity', $project->module_quantity) ?: 'Aguardando sistema' }}
+                </strong>
+            </article>
+
+            <article class="solar-sizing-chip">
+                <span class="solar-sizing-chip__label">Preço sugerido</span>
                 <strong class="solar-sizing-chip__value" data-project-summary="price">
-                    {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando pre-orcamento' }}
+                    {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando pré-orçamento' }}
+                </strong>
+            </article>
+
+            <article class="solar-sizing-chip">
+                <span class="solar-sizing-chip__label">Economia mensal</span>
+                <strong class="solar-sizing-chip__value" data-project-summary="savings">
+                    {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') : 'Aguardando conta' }}
                 </strong>
             </article>
         </div>
@@ -92,10 +113,10 @@
     <section class="hub-card hub-card--subtle solar-flow-section">
         <div class="solar-flow-section__header">
             <div>
-                <p class="solar-section-eyebrow">1. Cliente</p>
-                <h3>Quem esta comprando este sistema?</h3>
+                <p class="solar-section-eyebrow">1. Cliente e local</p>
+                <h3>Quem está comprando e onde será instalada a usina?</h3>
             </div>
-            <p class="hub-note">Defina o cliente e o nome interno do projeto para manter o funil comercial organizado.</p>
+            <p class="hub-note">Comece pelo cliente e pelo nome interno do projeto para manter o fluxo comercial organizado desde o primeiro contato.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
@@ -115,7 +136,7 @@
             </div>
 
             <div>
-                <label for="status" class="hub-auth-label">Status *</label>
+                <label for="status" class="hub-auth-label">Status comercial *</label>
                 <select id="status" name="status" class="hub-auth-input" required data-project-status>
                     @foreach ($statusLabels as $statusValue => $statusLabel)
                         <option value="{{ $statusValue }}" @selected($currentStatus === $statusValue)>
@@ -126,6 +147,7 @@
                 @error('status')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note">Use este campo para marcar em qual etapa comercial o projeto está dentro do funil.</p>
             </div>
         </div>
 
@@ -141,10 +163,10 @@
     <section class="hub-card hub-card--subtle solar-flow-section" data-cep-lookup>
         <div class="solar-flow-section__header">
             <div>
-                <p class="solar-section-eyebrow">2. Local da instalacao</p>
-                <h3>Onde o sistema sera instalado?</h3>
+                <p class="solar-section-eyebrow">2. Local da instalação</p>
+                <h3>Onde o sistema será instalado?</h3>
             </div>
-            <p class="hub-note">O CEP ajuda a preencher o endereco e prepara o projeto para a proxima camada de geolocalizacao interna.</p>
+            <p class="hub-note">O CEP ajuda a preencher o endereço e agiliza o contexto comercial do projeto sem exigir digitação manual de tudo.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
@@ -163,11 +185,11 @@
                 @error('zip_code')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="hub-note solar-cep-feedback" data-cep-feedback>Digite um CEP valido para preencher rua, bairro, cidade e UF.</p>
+                <p class="hub-note solar-cep-feedback" data-cep-feedback>Digite um CEP válido para preencher rua, bairro, cidade e UF automaticamente.</p>
             </div>
 
             <div>
-                <label for="number" class="hub-auth-label">Numero</label>
+                <label for="number" class="hub-auth-label">Número</label>
                 <input id="number" name="number" type="text" class="hub-auth-input" value="{{ old('number', $project->number) }}">
                 @error('number')
                     <p class="hub-note">{{ $message }}</p>
@@ -203,7 +225,7 @@
             </div>
 
             <div>
-                <label for="property_type" class="hub-auth-label">Tipo de imovel</label>
+                <label for="property_type" class="hub-auth-label">Tipo de imóvel</label>
                 <input id="property_type" name="property_type" type="text" class="hub-auth-input" value="{{ old('property_type', $project->property_type) }}">
                 @error('property_type')
                     <p class="hub-note">{{ $message }}</p>
@@ -231,7 +253,7 @@
 
         <div class="hub-grid hub-grid--billing">
             <div>
-                <label for="energy_utility_id" class="hub-auth-label">Concessionaria</label>
+                <label for="energy_utility_id" class="hub-auth-label">Concessionária</label>
                 <select
                     id="energy_utility_id"
                     name="energy_utility_id"
@@ -250,17 +272,17 @@
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
                 <p class="hub-note solar-utility-feedback" data-utility-feedback>
-                    A concessionaria sera sugerida automaticamente a partir da cidade e UF quando disponivel.
+                    A concessionária será sugerida automaticamente a partir da cidade e da UF, quando disponível.
                 </p>
             </div>
 
             <div>
-                <label for="connection_type" class="hub-auth-label">Tipo de conexao</label>
+                <label for="connection_type" class="hub-auth-label">Tipo de conexão</label>
                 <select id="connection_type" name="connection_type" class="hub-auth-input">
                     <option value="">Selecione</option>
-                    <option value="mono" @selected(old('connection_type', $project->connection_type) === 'mono')>Monofasico</option>
-                    <option value="bi" @selected(old('connection_type', $project->connection_type) === 'bi')>Bifasico</option>
-                    <option value="tri" @selected(old('connection_type', $project->connection_type) === 'tri')>Trifasico</option>
+                    <option value="mono" @selected(old('connection_type', $project->connection_type) === 'mono')>Monofásico</option>
+                    <option value="bi" @selected(old('connection_type', $project->connection_type) === 'bi')>Bifásico</option>
+                    <option value="tri" @selected(old('connection_type', $project->connection_type) === 'tri')>Trifásico</option>
                 </select>
                 @error('connection_type')
                     <p class="hub-note">{{ $message }}</p>
@@ -269,7 +291,7 @@
         </div>
 
         <div class="solar-flow-section__footnote">
-            <strong>Status de localizacao interna:</strong>
+            <strong>Status de localização interna:</strong>
             <span data-geocoding-status>{{ strtoupper($project->geocoding_status ?? 'pending') }}</span>
         </div>
     </section>
@@ -277,10 +299,10 @@
     <section class="hub-card hub-card--subtle solar-flow-section">
         <div class="solar-flow-section__header">
             <div>
-                <p class="solar-section-eyebrow">3. Consumo energetico</p>
-                <h3>Qual e a base para o pre-orcamento?</h3>
+                <p class="solar-section-eyebrow">3. Consumo energético</p>
+                <h3>Qual é a base para o pré-orçamento?</h3>
             </div>
-            <p class="hub-note">Com consumo mensal e valor de conta, o Solar monta uma leitura inicial de sistema, preco e economia percebida.</p>
+            <p class="hub-note">Com o consumo mensal e o valor da conta, o Solar monta uma leitura inicial de sistema, preço e economia percebida.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
@@ -298,6 +320,7 @@
                 @error('energy_bill_value')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note">Esse valor alimenta a economia estimada exibida no pré-orçamento.</p>
             </div>
         </div>
     </section>
@@ -306,9 +329,9 @@
         <div class="solar-flow-section__header">
             <div>
                 <p class="solar-section-eyebrow">4. Sistema sugerido</p>
-                <h3>Pre-dimensionamento rapido para o instalador</h3>
+                <h3>Pré-dimensionamento rápido para o instalador</h3>
             </div>
-            <p class="hub-note">A automacao parte do consumo mensal e do modulo selecionado, mas todos os campos continuam editaveis manualmente.</p>
+            <p class="hub-note">O sistema sugere automaticamente os números principais a partir do consumo e da potência do módulo, mas tudo continua editável manualmente.</p>
         </div>
 
         <div class="solar-sizing-panel__highlights">
@@ -318,53 +341,58 @@
             </article>
 
             <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Modulo padrao</span>
+                <span class="solar-sizing-chip__label">Módulo padrão</span>
                 <strong class="solar-sizing-chip__value" data-sizing-preview="module-power">{{ $defaultModulePower ?: 550 }} W</strong>
             </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Potencia sugerida</span>
+            <article class="solar-sizing-chip solar-sizing-chip--featured">
+                <span class="solar-sizing-chip__label">Potência sugerida</span>
                 <strong class="solar-sizing-chip__value" data-sizing-preview="system-power">
                     {{ old('system_power_kwp', $project->system_power_kwp) ? number_format((float) old('system_power_kwp', $project->system_power_kwp), 2, ',', '.') . ' kWp' : 'Aguardando consumo' }}
                 </strong>
+                <span class="solar-sizing-chip__meta">Sugestão automática inicial para acelerar a simulação comercial.</span>
             </article>
         </div>
 
-        <p class="solar-sizing-panel__note" data-sizing-note>Preencha o consumo mensal para gerar a sugestao automatica.</p>
+        <p class="solar-sizing-panel__note" data-sizing-note>Preencha o consumo mensal para gerar a sugestão automática. Se necessário, ajuste os valores manualmente antes de salvar.</p>
 
         <div class="hub-grid hub-grid--billing">
             <div>
-                <label for="system_power_kwp" class="hub-auth-label">Potencia do sistema (kWp)</label>
+                <label for="system_power_kwp" class="hub-auth-label">Potência do sistema (kWp)</label>
                 <input id="system_power_kwp" name="system_power_kwp" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('system_power_kwp', $project->system_power_kwp) }}" data-sizing-system-power>
                 @error('system_power_kwp')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note solar-field-note--automatic">O Solar preenche este campo automaticamente com base no consumo, mas você pode ajustar manualmente.</p>
             </div>
 
             <div>
-                <label for="module_power" class="hub-auth-label">Potencia do modulo (W)</label>
+                <label for="module_power" class="hub-auth-label">Potência do módulo (W)</label>
                 <input id="module_power" name="module_power" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_power', $project->module_power ?: ($companySetting?->default_module_power ?: 550)) }}" data-sizing-module-power>
                 @error('module_power')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note">Ao alterar este campo, o Solar recalcula a quantidade de módulos e a geração estimada.</p>
             </div>
         </div>
 
         <div class="hub-grid hub-grid--billing">
             <div>
-                <label for="module_quantity" class="hub-auth-label">Quantidade de modulos</label>
+                <label for="module_quantity" class="hub-auth-label">Quantidade de módulos</label>
                 <input id="module_quantity" name="module_quantity" type="number" step="1" min="1" class="hub-auth-input" value="{{ old('module_quantity', $project->module_quantity) }}" data-sizing-module-quantity>
                 @error('module_quantity')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note solar-field-note--automatic">Quantidade sugerida automaticamente para apoiar o pré-orçamento, com edição manual liberada.</p>
             </div>
 
             <div>
-                <label for="estimated_generation_kwh" class="hub-auth-label">Geracao estimada (kWh)</label>
+                <label for="estimated_generation_kwh" class="hub-auth-label">Geração estimada (kWh)</label>
                 <input id="estimated_generation_kwh" name="estimated_generation_kwh" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('estimated_generation_kwh', $project->estimated_generation_kwh) }}" data-sizing-generation>
                 @error('estimated_generation_kwh')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note solar-field-note--automatic">Estimativa inicial para reforçar a leitura comercial do projeto. Pode ser ajustada manualmente.</p>
             </div>
         </div>
 
@@ -374,77 +402,139 @@
             @error('inverter_model')
                 <p class="hub-note">{{ $message }}</p>
             @enderror
+            <p class="solar-field-note">O modelo padrão da configuração comercial entra automaticamente como ponto de partida.</p>
         </div>
     </section>
 
     <section class="hub-card hub-card--subtle solar-flow-section solar-pricing-panel">
         <div class="solar-flow-section__header">
             <div>
-                <p class="solar-section-eyebrow">5. Pre-orcamento comercial</p>
-                <h3>Mostre valor automatico antes da proposta final</h3>
+                <p class="solar-section-eyebrow">5. Pré-orçamento comercial</p>
+                <h3>Mostre valor automático antes da proposta final</h3>
             </div>
-            <p class="hub-note">O preco sugerido usa a configuracao comercial da empresa e pode ser ajustado manualmente antes de salvar.</p>
+            <p class="hub-note">O preço sugerido usa a configuração comercial da empresa e pode ser ajustado manualmente antes de salvar.</p>
         </div>
 
         <div class="solar-sizing-panel__highlights solar-pricing-panel__highlights">
             <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Preco por kWp</span>
+                <span class="solar-sizing-chip__label">Preço por kWp</span>
                 <strong class="solar-sizing-chip__value" data-pricing-preview="rate">
                     {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}
                 </strong>
             </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Preco sugerido</span>
+            <article class="solar-sizing-chip solar-sizing-chip--featured">
+                <span class="solar-sizing-chip__label">Preço sugerido</span>
                 <strong class="solar-sizing-chip__value" data-pricing-preview="total">
                     {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando dimensionamento' }}
                 </strong>
+                <span class="solar-sizing-chip__meta">Valor inicial calculado para acelerar a negociação com o cliente.</span>
             </article>
 
-            <article class="solar-sizing-chip">
+            <article class="solar-sizing-chip solar-sizing-chip--featured">
                 <span class="solar-sizing-chip__label">Economia estimada</span>
                 <strong class="solar-sizing-chip__value" data-pricing-preview="savings">
-                    {{ $initialSavings ? 'R$ ' . number_format((float) $initialSavings, 2, ',', '.') . '/mes' : 'Informe a conta de energia' }}
+                    {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') . '/mês' : 'Informe a conta de energia' }}
                 </strong>
+                <span class="solar-sizing-chip__meta">Leitura comercial simples para mostrar valor percebido logo no primeiro atendimento.</span>
             </article>
 
             <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Margem de referencia</span>
+                <span class="solar-sizing-chip__label">Margem de referência</span>
                 <strong class="solar-sizing-chip__value" data-pricing-preview="margin">
-                    {{ $companySetting?->margin_percent ? number_format((float) $companySetting->margin_percent, 2, ',', '.') . '%' : 'Nao configurada' }}
+                    {{ $companySetting?->margin_percent ? number_format((float) $companySetting->margin_percent, 2, ',', '.') . '%' : 'Não configurada' }}
                 </strong>
             </article>
         </div>
 
         <p class="solar-sizing-panel__note solar-pricing-panel__note" data-pricing-note>
             @if ($usesMarketPriceFallback)
-                Sem preco proprio configurado, o Solar esta usando {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp como referencia media de mercado.
+                Sem preço próprio configurado, o Solar está usando {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp como referência média de mercado.
             @else
-                O preco sugerido sera recalculado automaticamente quando a potencia do sistema mudar.
+                O preço sugerido será recalculado automaticamente quando a potência do sistema mudar. Você ainda pode fazer um ajuste manual antes de salvar.
             @endif
         </p>
 
+        <div class="solar-inline-tip">
+            <strong>Leitura comercial rápida:</strong>
+            <span> o Solar usa a configuração da empresa para sugerir valor e mantém o campo liberado para ajuste manual antes da proposta.</span>
+        </div>
+
         <div class="hub-grid hub-grid--billing">
             <div>
-                <label for="suggested_price" class="hub-auth-label">Preco sugerido (R$)</label>
+                <label for="suggested_price" class="hub-auth-label">Preço sugerido (R$)</label>
                 <input id="suggested_price" name="suggested_price" type="text" inputmode="decimal" class="hub-auth-input" value="{{ old('suggested_price', $project->suggested_price) }}" data-pricing-suggested-price data-currency-brl>
                 @error('suggested_price')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note solar-field-note--automatic">Campo preenchido automaticamente pelo Solar, com liberdade para ajuste manual conforme a negociação.</p>
             </div>
 
             <div>
-                <label for="pricing_notes" class="hub-auth-label">Observacoes comerciais</label>
+                <label for="pricing_notes" class="hub-auth-label">Observações comerciais</label>
                 <input id="pricing_notes" name="pricing_notes" type="text" class="hub-auth-input" value="{{ old('pricing_notes', $project->pricing_notes) }}">
                 @error('pricing_notes')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
+                <p class="solar-field-note">Use este campo para registrar contexto de negociação, prazo, condição ou ressalvas do cliente.</p>
             </div>
+        </div>
+    </section>
+
+    <section class="hub-card hub-card--subtle solar-flow-section solar-financial-panel">
+        <div class="solar-flow-section__header">
+            <div>
+                <p class="solar-section-eyebrow">6. Simulação financeira</p>
+                <h3>Mostre a economia estimada de forma imediata</h3>
+            </div>
+            <p class="hub-note">Regra inicial simples: valor da conta de energia menos custo mínimo residual de {{ 'R$ ' . number_format($residualMinimumCost, 2, ',', '.') }}.</p>
+        </div>
+
+        <div class="solar-sizing-panel__highlights solar-financial-panel__highlights">
+            <article class="solar-sizing-chip solar-sizing-chip--featured">
+                <span class="solar-sizing-chip__label">Economia mensal estimada</span>
+                <strong class="solar-sizing-chip__value" data-financial-preview="monthly">
+                    {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') : 'Informe a conta de energia' }}
+                </strong>
+                <span class="solar-sizing-chip__meta">Considerando um custo mínimo residual de {{ 'R$ ' . number_format($residualMinimumCost, 2, ',', '.') }} por mês.</span>
+            </article>
+
+            <article class="solar-sizing-chip">
+                <span class="solar-sizing-chip__label">Economia anual</span>
+                <strong class="solar-sizing-chip__value" data-financial-preview="annual">
+                    {{ $initialAnnualSavings !== null ? 'R$ ' . number_format((float) $initialAnnualSavings, 2, ',', '.') : 'Aguardando simulação' }}
+                </strong>
+            </article>
+
+            <article class="solar-sizing-chip">
+                <span class="solar-sizing-chip__label">Economia em 25 anos</span>
+                <strong class="solar-sizing-chip__value" data-financial-preview="lifetime">
+                    {{ $initialLifetimeSavings !== null ? 'R$ ' . number_format((float) $initialLifetimeSavings, 2, ',', '.') : 'Aguardando simulação' }}
+                </strong>
+            </article>
+        </div>
+
+        <p class="solar-sizing-panel__note solar-financial-panel__note" data-financial-note>
+            @if ($initialMonthlySavings !== null)
+                Simulação ativa com base na conta atual de energia. Os valores servem como leitura comercial inicial para o cliente final.
+            @else
+                Informe o valor da conta de energia para gerar a simulação financeira automática.
+            @endif
+        </p>
+    </section>
+
+    <section class="hub-card hub-card--subtle solar-flow-section">
+        <div class="solar-flow-section__header">
+            <div>
+                <p class="solar-section-eyebrow">7. Observações</p>
+                <h3>Registre informações úteis para a próxima etapa</h3>
+            </div>
+            <p class="hub-note">Use este espaço para anotar detalhes que ajudam o time comercial ou técnico a dar continuidade ao atendimento.</p>
         </div>
 
         <div>
-            <label for="notes" class="hub-auth-label">Observacoes</label>
-            <textarea id="notes" name="notes" class="hub-auth-input">{{ old('notes', $project->notes) }}</textarea>
+            <label for="notes" class="hub-auth-label">Observações gerais</label>
+            <textarea id="notes" name="notes" class="hub-auth-input" placeholder="Ex.: condição do telhado, expectativa do cliente, prazo de retorno, contexto da simulação...">{{ old('notes', $project->notes) }}</textarea>
             @error('notes')
                 <p class="hub-note">{{ $message }}</p>
             @enderror

@@ -4,8 +4,8 @@
 
 @section('solar-content')
     <section class="hub-card">
-        <h2>Refinar pre-orcamento solar</h2>
-        <p class="hub-note">Atualize o fluxo comercial do projeto com consumo, sistema sugerido, valor inicial e contexto da instalacao.</p>
+        <h2>Refinar pré-orçamento solar</h2>
+        <p class="hub-note">Atualize o fluxo comercial do projeto com consumo, sistema sugerido, valor inicial e contexto da instalação.</p>
 
         <div class="hub-actions">
             <a href="{{ route('solar.projects.index') }}" class="hub-btn hub-btn--subtle">Voltar para projetos</a>
@@ -13,7 +13,7 @@
 
         @if ($errors->any())
             <div class="hub-alert hub-alert--danger">
-                <strong>Revise os campos do formulario.</strong>
+                <strong>Revise os campos do formulário.</strong>
             </div>
         @endif
 

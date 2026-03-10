@@ -55,6 +55,7 @@ class ProjectController extends Controller
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
             'companySetting' => $companySetting,
             'effectivePricePerKwp' => $effectivePricePerKwp,
+            'residualMinimumCost' => SolarSizingService::MINIMUM_RESIDUAL_ENERGY_COST,
             'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
             'project' => new SolarProject([
                 'solar_customer_id' => $selectedCustomerId > 0 ? $selectedCustomerId : null,
@@ -78,6 +79,7 @@ class ProjectController extends Controller
             'project' => $projectRecord,
             'companySetting' => $companySetting,
             'effectivePricePerKwp' => $effectivePricePerKwp,
+            'residualMinimumCost' => SolarSizingService::MINIMUM_RESIDUAL_ENERGY_COST,
             'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
             'estimatedRequiredPowerKwp' => $this->sizing->estimateRequiredPowerKwp($projectRecord->monthly_consumption_kwh),
             'suggestedModuleQuantity' => $this->sizing->estimateModuleQuantity($projectRecord->system_power_kwp, $projectRecord->module_power),
@@ -87,6 +89,8 @@ class ProjectController extends Controller
                 $effectivePricePerKwp,
             ),
             'estimatedMonthlySavings' => $this->sizing->estimateMonthlySavings($projectRecord->energy_bill_value),
+            'estimatedAnnualSavings' => $this->sizing->estimateAnnualSavings($projectRecord->energy_bill_value),
+            'estimatedLifetimeSavings' => $this->sizing->estimateLifetimeSavings($projectRecord->energy_bill_value),
         ]));
     }
 
@@ -122,6 +126,7 @@ class ProjectController extends Controller
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
             'companySetting' => $companySetting,
             'effectivePricePerKwp' => $effectivePricePerKwp,
+            'residualMinimumCost' => SolarSizingService::MINIMUM_RESIDUAL_ENERGY_COST,
             'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
             'project' => $projectRecord,
         ]));
@@ -164,7 +169,7 @@ class ProjectController extends Controller
     {
         return array_merge([
             'pageTitle' => $pageTitle,
-            'pageDescription' => 'Fluxo de pre-orcamento rapido para instaladores: cliente, local, consumo, sistema sugerido e valor comercial na mesma jornada.',
+            'pageDescription' => 'Fluxo de pré-orçamento rápido para instaladores: cliente, local, consumo, sistema sugerido e valor comercial na mesma jornada.',
             'navigationItems' => $this->navigation->items(),
         ], $data);
     }

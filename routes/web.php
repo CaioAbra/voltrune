@@ -17,6 +17,7 @@ Route::get('/', function (Request $request) {
 Route::view('/servicos', 'pages.servicos')->name('servicos');
 Route::view('/portfolio', 'pages.portfolio')->name('portfolio');
 Route::view('/sistemas', 'pages.sistemas')->name('sistemas');
+Route::view('/sistemas/solar', 'pages.solar')->name('sistemas.solar');
 Route::view('/contato', 'pages.contato')->name('contato');
 
 Route::post('/contato', [ContactController::class, 'store'])

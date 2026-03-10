@@ -26,13 +26,13 @@
         @endif
 
         @if ($projects->isEmpty())
-            <h2>Projetos de instalacao</h2>
+            <h2>Projetos de instalação</h2>
             <p>Nenhum projeto cadastrado para esta empresa ainda.</p>
-            <p class="hub-note">Cada projeto representa o local da instalacao solar e servira de base para localizacao tecnica e simulacao futura.</p>
+            <p class="hub-note">Cada projeto representa o local da instalação solar e servirá de base para localização técnica e simulação futura.</p>
         @else
             <div class="hub-card hub-card--subtle solar-table-panel">
-                <h2>Local da instalacao</h2>
-                <p>Projetos representam o local da instalacao solar. O sistema parte do CEP e dos dados basicos do imovel para preparar a geolocalizacao interna.</p>
+                <h2>Local da instalação</h2>
+                <p>Projetos representam o local da instalação solar. O sistema parte do CEP e dos dados básicos do imóvel para preparar a geolocalização interna.</p>
             </div>
 
             <div class="hub-table-wrap solar-table-wrap">
@@ -43,9 +43,9 @@
                             <th>Cliente</th>
                             <th>Cidade/UF</th>
                             <th>Consumo mensal</th>
-                            <th>Concessionaria</th>
+                            <th>Concessionária</th>
                             <th>Status</th>
-                            <th>Acoes</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,7 +54,7 @@
                                 <td data-label="Projeto" class="solar-table__cell solar-table__cell--primary">
                                     <strong class="solar-table__entity">{{ $project->name }}</strong>
                                     <div class="hub-table__sub solar-table__meta">
-                                        {{ $project->street ?: 'Endereco em preparacao' }}{{ $project->number ? ', '.$project->number : '' }}
+                                        {{ $project->street ?: 'Endereço em preparação' }}{{ $project->number ? ', '.$project->number : '' }}
                                         @if ($project->zip_code)
                                             <span> | CEP {{ $project->zip_code }}</span>
                                         @endif
@@ -65,17 +65,17 @@
                                     @php
                                         $location = trim(collect([$project->city, $project->state])->filter()->implode('/'));
                                     @endphp
-                                    {{ $location !== '' ? $location : 'Aguardando localizacao' }}
+                                    {{ $location !== '' ? $location : 'Aguardando localização' }}
                                 </td>
                                 <td data-label="Consumo mensal" class="solar-table__cell">{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</td>
-                                <td data-label="Concessionaria" class="solar-table__cell">{{ $project->utility_company ?: '-' }}</td>
+                                <td data-label="Concessionária" class="solar-table__cell">{{ $project->utility_company ?: '-' }}</td>
                                 <td data-label="Status" class="solar-table__cell">
                                     <div class="hub-inline-badges">
                                         <span class="hub-badge">{{ strtoupper($project->status) }}</span>
                                         <span class="hub-badge hub-badge--muted">{{ strtoupper($project->geocoding_status ?? 'pending') }}</span>
                                     </div>
                                 </td>
-                                <td data-label="Acoes" class="solar-table__cell solar-table__cell--actions">
+                                <td data-label="Ações" class="solar-table__cell solar-table__cell--actions">
                                     <div class="hub-table-actions solar-table__actions">
                                         <a href="{{ route('solar.projects.show', $project->id) }}" class="hub-btn">Ver</a>
                                         <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn hub-btn--subtle">Editar</a>

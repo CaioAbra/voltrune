@@ -26,17 +26,17 @@
                 <div>
                     <p class="solar-section-eyebrow">Resumo comercial</p>
                     <h2>{{ $project->name }}</h2>
-                    <p class="hub-note">Leitura rapida do projeto para o instalador entender cliente, contexto, sistema sugerido e valor comercial sem reler todo o cadastro.</p>
+                    <p class="hub-note">Leitura rápida do projeto para o instalador entender cliente, contexto, sistema sugerido e valor comercial sem reler todo o cadastro.</p>
                 </div>
 
                 <div class="solar-project-command__status {{ $usesMarketPriceFallback ? 'is-market' : 'is-ready' }}">
-                    <span class="solar-project-command__status-label">Status do pre-orcamento</span>
-                    <strong>{{ $usesMarketPriceFallback ? 'Ativo com media de mercado' : 'Valor sugerido ativo' }}</strong>
+                    <span class="solar-project-command__status-label">Status do pré-orçamento</span>
+                    <strong>{{ $usesMarketPriceFallback ? 'Ativo com média de mercado' : 'Valor sugerido ativo' }}</strong>
                     <p>
                         @if (! $usesMarketPriceFallback)
-                            O projeto ja usa a regra simples de preco por kWp da empresa.
+                            O projeto já usa a regra simples de preço por kWp da empresa.
                         @else
-                            O projeto esta usando {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp como referencia inicial.
+                            O projeto está usando {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp como referência inicial.
                         @endif
                     </p>
                 </div>
@@ -54,7 +54,7 @@
                 </article>
 
                 <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Status</span>
+                    <span class="solar-sizing-chip__label">Status comercial</span>
                     <strong class="solar-sizing-chip__value">{{ $statusLabel }}</strong>
                 </article>
 
@@ -63,34 +63,46 @@
                     <strong class="solar-sizing-chip__value">{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : 'Aguardando consumo' }}</strong>
                 </article>
 
-                <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Potencia sugerida</span>
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
+                    <span class="solar-sizing-chip__label">Potência sugerida</span>
                     <strong class="solar-sizing-chip__value">{{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : ($estimatedRequiredPowerKwp !== null ? number_format($estimatedRequiredPowerKwp, 2, ',', '.') . ' kWp' : 'Aguardando consumo') }}</strong>
+                    <span class="solar-sizing-chip__meta">Base inicial para apresentar a solução ao cliente.</span>
                 </article>
 
                 <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Preco sugerido</span>
+                    <span class="solar-sizing-chip__label">Módulos sugeridos</span>
+                    <strong class="solar-sizing-chip__value">{{ $project->module_quantity ?: ($suggestedModuleQuantity ?: 'Aguardando sistema') }}</strong>
+                </article>
+
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
+                    <span class="solar-sizing-chip__label">Preço sugerido</span>
                     <strong class="solar-sizing-chip__value">
-                        {{ $project->suggested_price ? 'R$ ' . number_format((float) $project->suggested_price, 2, ',', '.') : ($suggestedCommercialPrice ? 'R$ ' . number_format((float) $suggestedCommercialPrice, 2, ',', '.') : 'Aguardando configuracao') }}
+                        {{ $project->suggested_price ? 'R$ ' . number_format((float) $project->suggested_price, 2, ',', '.') : ($suggestedCommercialPrice ? 'R$ ' . number_format((float) $suggestedCommercialPrice, 2, ',', '.') : 'Aguardando configuração') }}
                     </strong>
+                    <span class="solar-sizing-chip__meta">Valor comercial inicial para acelerar a negociação.</span>
+                </article>
+
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Economia mensal</span>
+                    <strong class="solar-sizing-chip__value">{{ $estimatedMonthlySavings !== null ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') : 'Aguardando conta' }}</strong>
                 </article>
             </div>
         </section>
 
         <div class="hub-grid hub-grid--billing solar-project-show__grid">
             <article class="hub-card hub-card--subtle solar-project-show__card">
-                <h2>Cliente e instalacao</h2>
+                <h2>Cliente e instalação</h2>
                 <p><strong>Cliente:</strong> {{ $project->customer?->name ?: '-' }}</p>
-                <p><strong>Endereco:</strong> {{ $project->address ?: 'Endereco ainda em preparacao.' }}</p>
-                <p><strong>Tipo de imovel:</strong> {{ $project->property_type ?: '-' }}</p>
-                <p><strong>Geocodificacao:</strong> {{ strtoupper($project->geocoding_status ?? 'pending') }}</p>
+                <p><strong>Endereço:</strong> {{ $project->address ?: 'Endereço ainda em preparação.' }}</p>
+                <p><strong>Tipo de imóvel:</strong> {{ $project->property_type ?: '-' }}</p>
+                <p><strong>Geocodificação:</strong> {{ strtoupper($project->geocoding_status ?? 'pending') }}</p>
             </article>
 
             <article class="hub-card hub-card--subtle solar-project-show__card">
                 <h2>Consumo e leitura comercial</h2>
                 <p><strong>Consumo mensal:</strong> {{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</p>
                 <p><strong>Valor da conta:</strong> {{ $project->energy_bill_value ? 'R$ ' . number_format((float) $project->energy_bill_value, 2, ',', '.') : '-' }}</p>
-                <p><strong>Economia estimada:</strong> {{ $estimatedMonthlySavings ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') . '/mes' : 'Informe o valor da conta para gerar esta leitura.' }}</p>
+                <p><strong>Economia estimada:</strong> {{ $estimatedMonthlySavings ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') . '/mês' : 'Informe o valor da conta para gerar esta leitura.' }}</p>
                 <p><strong>Status:</strong> {{ $statusLabel }}</p>
             </article>
         </div>
@@ -98,79 +110,116 @@
         <article class="hub-card hub-card--subtle solar-sizing-panel solar-project-show__card">
             <h2>Sistema sugerido</h2>
             <div class="solar-sizing-panel__highlights">
-                <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Potencia do sistema</span>
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
+                    <span class="solar-sizing-chip__label">Potência do sistema</span>
                     <strong class="solar-sizing-chip__value">{{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : ($estimatedRequiredPowerKwp !== null ? number_format($estimatedRequiredPowerKwp, 2, ',', '.') . ' kWp' : '-') }}</strong>
+                    <span class="solar-sizing-chip__meta">Sugestão automática usada como base para o pré-orçamento.</span>
                 </article>
 
-                <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Modulos</span>
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
+                    <span class="solar-sizing-chip__label">Módulos sugeridos</span>
                     <strong class="solar-sizing-chip__value">{{ $project->module_quantity ?: ($suggestedModuleQuantity ?: '-') }}</strong>
+                    <span class="solar-sizing-chip__meta">Quantidade inicial para apresentar uma solução viável ao cliente.</span>
                 </article>
 
-                <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Geracao estimada</span>
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
+                    <span class="solar-sizing-chip__label">Geração estimada</span>
                     <strong class="solar-sizing-chip__value">{{ $project->estimated_generation_kwh ? number_format((float) $project->estimated_generation_kwh, 2, ',', '.') . ' kWh' : ($suggestedGenerationKwh ? number_format($suggestedGenerationKwh, 2, ',', '.') . ' kWh' : '-') }}</strong>
+                    <span class="solar-sizing-chip__meta">Leitura automática para apoiar a simulação comercial.</span>
                 </article>
             </div>
 
-            <p><strong>Potencia do modulo:</strong> {{ $project->module_power ? number_format((int) $project->module_power, 0, ',', '.') . ' W' : '-' }}</p>
+            <p class="solar-inline-tip">O sistema sugere automaticamente esses números com base no consumo, mas todos podem ser ajustados na edição do projeto.</p>
+            <p><strong>Potência do módulo:</strong> {{ $project->module_power ? number_format((int) $project->module_power, 0, ',', '.') . ' W' : '-' }}</p>
             <p><strong>Modelo do inversor:</strong> {{ $project->inverter_model ?: ($companySetting?->default_inverter_model ?: '-') }}</p>
-            <p><strong>Concessionaria:</strong> {{ $project->utility_company ?: '-' }}</p>
-            <p><strong>Tipo de conexao:</strong> {{ match ($project->connection_type) {
-                'mono' => 'Monofasico',
-                'bi' => 'Bifasico',
-                'tri' => 'Trifasico',
+            <p><strong>Concessionária:</strong> {{ $project->utility_company ?: '-' }}</p>
+            <p><strong>Tipo de conexão:</strong> {{ match ($project->connection_type) {
+                'mono' => 'Monofásico',
+                'bi' => 'Bifásico',
+                'tri' => 'Trifásico',
                 default => '-',
             } }}</p>
         </article>
 
         <article class="hub-card hub-card--subtle solar-pricing-panel solar-project-show__card">
-            <h2>Pre-orcamento comercial</h2>
+            <h2>Pré-orçamento comercial</h2>
             <div class="solar-sizing-panel__highlights solar-pricing-panel__highlights">
                 <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Preco por kWp</span>
+                    <span class="solar-sizing-chip__label">Preço por kWp</span>
                     <strong class="solar-sizing-chip__value">
                         {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}
                     </strong>
                 </article>
 
-                <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Preco sugerido</span>
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
+                    <span class="solar-sizing-chip__label">Preço sugerido</span>
                     <strong class="solar-sizing-chip__value">
                         {{ $project->suggested_price ? 'R$ ' . number_format((float) $project->suggested_price, 2, ',', '.') : ($suggestedCommercialPrice ? 'R$ ' . number_format((float) $suggestedCommercialPrice, 2, ',', '.') : '-') }}
                     </strong>
+                    <span class="solar-sizing-chip__meta">Valor automático para começar a proposta com mais velocidade.</span>
                 </article>
 
-                <article class="solar-sizing-chip">
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
                     <span class="solar-sizing-chip__label">Economia estimada</span>
                     <strong class="solar-sizing-chip__value">
-                        {{ $estimatedMonthlySavings ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') . '/mes' : 'Nao informada' }}
+                        {{ $estimatedMonthlySavings ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') . '/mês' : 'Não informada' }}
                     </strong>
+                    <span class="solar-sizing-chip__meta">Mensagem comercial simples para mostrar valor percebido logo no primeiro contato.</span>
                 </article>
 
                 <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Margem de referencia</span>
+                    <span class="solar-sizing-chip__label">Margem de referência</span>
                     <strong class="solar-sizing-chip__value">
-                        {{ $companySetting?->margin_percent ? number_format((float) $companySetting->margin_percent, 2, ',', '.') . '%' : 'Nao configurada' }}
+                        {{ $companySetting?->margin_percent ? number_format((float) $companySetting->margin_percent, 2, ',', '.') . '%' : 'Não configurada' }}
                     </strong>
                 </article>
             </div>
 
             @if (! $usesMarketPriceFallback)
-                <p class="hub-note">Preco inicial calculado pela regra simples: potencia do sistema x preco por kWp da empresa. O campo permanece ajustavel na edicao do projeto.</p>
+                <p class="hub-note">Preço inicial calculado pela regra simples: potência do sistema x preço por kWp da empresa. O campo permanece ajustável na edição do projeto.</p>
             @else
-                <p class="hub-note">Preco inicial calculado com media de mercado de {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp. A empresa pode substituir esse valor em <a href="{{ route('solar.settings.edit') }}">/solar/settings</a> quando quiser.</p>
+                <p class="hub-note">Preço inicial calculado com média de mercado de {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp. A empresa pode substituir esse valor em <a href="{{ route('solar.settings.edit') }}">/solar/settings</a> quando quiser.</p>
             @endif
 
+            <p class="solar-inline-tip"><strong>Status comercial:</strong> {{ $statusLabel }}. O projeto já está estruturado para evoluir de pré-orçamento para proposta sem perder o contexto comercial.</p>
+
             @if ($project->pricing_notes)
-                <p><strong>Observacoes comerciais:</strong> {{ $project->pricing_notes }}</p>
+                <p><strong>Observações comerciais:</strong> {{ $project->pricing_notes }}</p>
             @endif
+        </article>
+
+        <article class="hub-card hub-card--subtle solar-financial-panel solar-project-show__card">
+            <h2>Simulação financeira</h2>
+            <div class="solar-sizing-panel__highlights solar-financial-panel__highlights">
+                <article class="solar-sizing-chip solar-sizing-chip--featured">
+                    <span class="solar-sizing-chip__label">Economia mensal estimada</span>
+                    <strong class="solar-sizing-chip__value">
+                        {{ $estimatedMonthlySavings !== null ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') : 'Informe a conta de energia' }}
+                    </strong>
+                    <span class="solar-sizing-chip__meta">Considerando custo mínimo residual de {{ 'R$ ' . number_format((float) $residualMinimumCost, 2, ',', '.') }} por mês.</span>
+                </article>
+
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Economia anual</span>
+                    <strong class="solar-sizing-chip__value">
+                        {{ $estimatedAnnualSavings !== null ? 'R$ ' . number_format((float) $estimatedAnnualSavings, 2, ',', '.') : 'Aguardando simulação' }}
+                    </strong>
+                </article>
+
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Economia em 25 anos</span>
+                    <strong class="solar-sizing-chip__value">
+                        {{ $estimatedLifetimeSavings !== null ? 'R$ ' . number_format((float) $estimatedLifetimeSavings, 2, ',', '.') : 'Aguardando simulação' }}
+                    </strong>
+                </article>
+            </div>
+
+            <p class="hub-note">Regra inicial simples: valor da conta de energia menos custo mínimo residual de {{ 'R$ ' . number_format((float) $residualMinimumCost, 2, ',', '.') }}. Sem inflação ou projeção tarifária nesta fase.</p>
         </article>
 
         @if ($project->notes)
             <article class="hub-card hub-card--subtle solar-project-show__card">
-                <h2>Observacoes</h2>
+                <h2>Observações</h2>
                 <p>{{ $project->notes }}</p>
             </article>
         @endif

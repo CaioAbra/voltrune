@@ -24,7 +24,7 @@
                     <span>Voltrune</span>
                     <strong>Solar</strong>
                 </a>
-                <p class="solar-brand__subtitle">Gestao comercial e operacional para energia solar.</p>
+                <p class="solar-brand__subtitle">Gestão comercial e operacional para energia solar.</p>
             </div>
 
             <a href="{{ route('hub.dashboard') }}" class="solar-backlink">Voltar ao Hub</a>

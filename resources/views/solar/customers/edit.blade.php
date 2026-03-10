@@ -5,7 +5,7 @@
 @section('solar-content')
     <section class="hub-card">
         <h2>Cliente contratante</h2>
-        <p class="hub-note">Atualize os dados comerciais do contratante. Os dados tecnicos do local ficam nos projetos vinculados.</p>
+        <p class="hub-note">Atualize os dados comerciais do contratante. Os dados técnicos do local ficam nos projetos vinculados.</p>
 
         <div class="hub-actions">
             <a href="{{ route('solar.customers.index') }}" class="hub-btn hub-btn--subtle">Voltar para clientes</a>
@@ -13,7 +13,7 @@
 
         @if ($errors->any())
             <div class="hub-alert hub-alert--danger">
-                <strong>Revise os campos do formulario.</strong>
+                <strong>Revise os campos do formulário.</strong>
             </div>
         @endif
 
@@ -112,7 +112,7 @@
             </div>
 
             <div>
-                <label for="notes" class="hub-auth-label">Observacoes</label>
+                <label for="notes" class="hub-auth-label">Observações</label>
                 <textarea id="notes" name="notes" class="hub-auth-input">{{ old('notes', $customer->notes) }}</textarea>
                 @error('notes')
                     <p class="hub-note">{{ $message }}</p>

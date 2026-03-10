@@ -7,6 +7,7 @@ use App\Modules\Solar\Models\SolarCompanySetting;
 class SolarSizingService
 {
     public const MARKET_PRICE_PER_KWP = 4200.0;
+    public const MINIMUM_RESIDUAL_ENERGY_COST = 70.0;
 
     public function resolvePricePerKwp(float|int|string|null $pricePerKwp): float
     {
@@ -83,7 +84,29 @@ class SolarSizingService
             return null;
         }
 
-        return round($billValue, 2);
+        return round(max($billValue - self::MINIMUM_RESIDUAL_ENERGY_COST, 0), 2);
+    }
+
+    public function estimateAnnualSavings(float|int|string|null $energyBillValue): ?float
+    {
+        $monthlySavings = $this->estimateMonthlySavings($energyBillValue);
+
+        if ($monthlySavings === null) {
+            return null;
+        }
+
+        return round($monthlySavings * 12, 2);
+    }
+
+    public function estimateLifetimeSavings(float|int|string|null $energyBillValue, int $years = 25): ?float
+    {
+        $annualSavings = $this->estimateAnnualSavings($energyBillValue);
+
+        if ($annualSavings === null || $years <= 0) {
+            return null;
+        }
+
+        return round($annualSavings * $years, 2);
     }
 
     /**

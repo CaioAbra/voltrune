@@ -903,6 +903,10 @@ const initSolarSizingForm = () => {
     const pricingSavingsPreview = root.querySelector('[data-pricing-preview="savings"]');
     const pricingMarginPreview = root.querySelector('[data-pricing-preview="margin"]');
     const pricingNote = root.querySelector('[data-pricing-note]');
+    const financialMonthlyPreview = root.querySelector('[data-financial-preview="monthly"]');
+    const financialAnnualPreview = root.querySelector('[data-financial-preview="annual"]');
+    const financialLifetimePreview = root.querySelector('[data-financial-preview="lifetime"]');
+    const financialNote = root.querySelector('[data-financial-note]');
     const suggestedPriceInput = root.querySelector('[data-pricing-suggested-price]');
     const summaryName = root.querySelector('[data-project-summary-name]');
     const summaryCustomer = root.querySelector('[data-project-summary="customer"]');
@@ -910,7 +914,9 @@ const initSolarSizingForm = () => {
     const summaryStatus = root.querySelector('[data-project-summary="status"]');
     const summaryConsumption = root.querySelector('[data-project-summary="consumption"]');
     const summaryPower = root.querySelector('[data-project-summary="power"]');
+    const summaryModules = root.querySelector('[data-project-summary="modules"]');
     const summaryPrice = root.querySelector('[data-project-summary="price"]');
+    const summarySavings = root.querySelector('[data-project-summary="savings"]');
     const customerSelect = root.querySelector('[data-project-customer-select]');
     const projectNameInput = root.querySelector('[data-project-name]');
     const projectStatusInput = root.querySelector('[data-project-status]');
@@ -920,6 +926,7 @@ const initSolarSizingForm = () => {
     const marginPercent = Number(root.getAttribute('data-margin-percent')?.replace(',', '.') || 0);
     const defaultInverterModel = root.getAttribute('data-default-inverter-model') || '';
     const pricingSource = root.getAttribute('data-pricing-source') || 'custom';
+    const residualMinimumCost = Number(root.getAttribute('data-residual-minimum-cost')?.replace(',', '.') || 70);
 
     if (!(monthlyInput instanceof HTMLInputElement)) return;
     if (!(modulePowerInput instanceof HTMLInputElement)) return;
@@ -944,11 +951,18 @@ const initSolarSizingForm = () => {
 
     const formatCurrency = (value) => `R$ ${value.toFixed(2).replace('.', ',')}`;
     const formatCurrencyMonthly = (value) => `${formatCurrency(value)}/mes`;
+    const estimateMonthlySavings = (energyBillValue) => {
+      if (!Number.isFinite(energyBillValue) || energyBillValue <= 0) return null;
+      return roundTo(Math.max(energyBillValue - residualMinimumCost, 0), 2);
+    };
 
     const updateSummary = () => {
       const currentPower = readNumber(systemPowerInput);
       const currentSuggestedPrice = readNumber(suggestedPriceInput);
       const currentConsumption = readNumber(monthlyInput);
+      const currentModules = readNumber(moduleQuantityInput);
+      const currentEnergyBill = readNumber(energyBillInput);
+      const currentMonthlySavings = estimateMonthlySavings(currentEnergyBill);
 
       if (summaryName instanceof HTMLElement && projectNameInput instanceof HTMLInputElement) {
         summaryName.textContent = projectNameInput.value.trim() || 'Projeto solar em preparacao';
@@ -981,10 +995,22 @@ const initSolarSizingForm = () => {
           : 'Aguardando consumo';
       }
 
+      if (summaryModules instanceof HTMLElement) {
+        summaryModules.textContent = currentModules && currentModules > 0
+          ? String(Math.round(currentModules))
+          : 'Aguardando sistema';
+      }
+
       if (summaryPrice instanceof HTMLElement) {
         summaryPrice.textContent = currentSuggestedPrice && currentSuggestedPrice > 0
           ? formatCurrency(currentSuggestedPrice)
           : 'Aguardando pre-orcamento';
+      }
+
+      if (summarySavings instanceof HTMLElement) {
+        summarySavings.textContent = currentMonthlySavings !== null
+          ? formatCurrency(currentMonthlySavings)
+          : 'Aguardando conta';
       }
     };
 
@@ -1023,6 +1049,9 @@ const initSolarSizingForm = () => {
       const currentGeneration = readNumber(generationInput);
       const currentSuggestedPrice = readNumber(suggestedPriceInput);
       const currentEnergyBill = readNumber(energyBillInput);
+      const currentMonthlySavings = estimateMonthlySavings(currentEnergyBill);
+      const currentAnnualSavings = currentMonthlySavings !== null ? roundTo(currentMonthlySavings * 12, 2) : null;
+      const currentLifetimeSavings = currentAnnualSavings !== null ? roundTo(currentAnnualSavings * 25, 2) : null;
 
       if (systemPreview instanceof HTMLElement) {
         systemPreview.textContent = currentPower && currentPower > 0
@@ -1049,9 +1078,27 @@ const initSolarSizingForm = () => {
       }
 
       if (pricingSavingsPreview instanceof HTMLElement) {
-        pricingSavingsPreview.textContent = currentEnergyBill && currentEnergyBill > 0
-          ? formatCurrencyMonthly(currentEnergyBill)
+        pricingSavingsPreview.textContent = currentMonthlySavings !== null
+          ? formatCurrencyMonthly(currentMonthlySavings)
           : 'Informe a conta de energia';
+      }
+
+      if (financialMonthlyPreview instanceof HTMLElement) {
+        financialMonthlyPreview.textContent = currentMonthlySavings !== null
+          ? formatCurrency(currentMonthlySavings)
+          : 'Informe a conta de energia';
+      }
+
+      if (financialAnnualPreview instanceof HTMLElement) {
+        financialAnnualPreview.textContent = currentAnnualSavings !== null
+          ? formatCurrency(currentAnnualSavings)
+          : 'Aguardando simulacao';
+      }
+
+      if (financialLifetimePreview instanceof HTMLElement) {
+        financialLifetimePreview.textContent = currentLifetimeSavings !== null
+          ? formatCurrency(currentLifetimeSavings)
+          : 'Aguardando simulacao';
       }
 
       if (pricingMarginPreview instanceof HTMLElement) {
@@ -1072,8 +1119,8 @@ const initSolarSizingForm = () => {
         if (pricingPerKwp <= 0) {
           pricingNote.textContent = 'Preco por kWp indisponivel no momento.';
         } else if (currentSuggestedPrice && currentSuggestedPrice > 0) {
-          const savingsSuffix = currentEnergyBill && currentEnergyBill > 0
-            ? ` Economia estimada inicial: ${formatCurrencyMonthly(currentEnergyBill)}.`
+          const savingsSuffix = currentMonthlySavings !== null
+            ? ` Economia mensal estimada: ${formatCurrencyMonthly(currentMonthlySavings)}.`
             : '';
           const sourcePrefix = pricingSource === 'market'
             ? `Pre-orcamento ativo com media de mercado (${formatCurrency(pricingPerKwp)}/kWp): `
@@ -1081,6 +1128,14 @@ const initSolarSizingForm = () => {
           pricingNote.textContent = `${sourcePrefix}${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema.${savingsSuffix}`;
         } else {
           pricingNote.textContent = 'Informe o consumo mensal para gerar o pre-orcamento automatico.';
+        }
+      }
+
+      if (financialNote instanceof HTMLElement) {
+        if (currentMonthlySavings !== null && currentAnnualSavings !== null && currentLifetimeSavings !== null) {
+          financialNote.textContent = `Simulacao automatica ativa: ${formatCurrency(currentMonthlySavings)}/mes, ${formatCurrency(currentAnnualSavings)}/ano e ${formatCurrency(currentLifetimeSavings)} em 25 anos, considerando residual de ${formatCurrency(residualMinimumCost)}.`;
+        } else {
+          financialNote.textContent = `Informe o valor da conta de energia para gerar a simulacao financeira automatica com residual minimo de ${formatCurrency(residualMinimumCost)}.`;
         }
       }
 

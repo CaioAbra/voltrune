@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('title', 'Sistemas Voltrune para operações e gestão')
-@section('meta_description', 'Conheça os sistemas da Voltrune para operações especializadas. Solar para energia solar e Vigilante para fluxos jurídicos.')
+@section('meta_description', 'Conheça os sistemas da Voltrune para operações especializadas. Solar para instaladores e empresas de energia solar e Vigilante para fluxos jurídicos.')
 @section('canonical', route('sistemas'))
 
 @section('content')
 <section class="section page-hero">
     <div class="container narrow">
         <p class="eyebrow">Ecossistema da ordem Voltrune</p>
-        <h1>Sistemas para escalar operações com controle real.</h1>
+        <h1>Sistemas para operações especializadas que precisam de mais controle.</h1>
         <p class="lead">Aqui ficam os produtos proprietários da Voltrune. Hoje, a linha já contempla Solar para operações de energia solar e Vigilante para o contexto jurídico.</p>
     </div>
 </section>
@@ -16,16 +16,16 @@
 <section class="section section-alt">
     <div class="container systems-grid">
         <article class="system-card is-live">
-            <span class="system-badge">Ativo no ecossistema</span>
+            <span class="system-badge">Produto em evolução</span>
             <h2>Solar</h2>
-            <p>Gestão comercial e operacional para empresas de energia solar, com estrutura para clientes, projetos, simulações e orçamento.</p>
+            <p>Software para instaladores solares, integradores e empresas de energia solar fazerem orçamentos mais rápidos, organizarem projetos e venderem com mais agilidade.</p>
             <div class="system-card__actions">
+                <a class="btn" href="{{ route('sistemas.solar') }}">Conhecer o Solar</a>
                 <form method="POST" action="{{ route('contato.prefill') }}">
                     @csrf
                     <input type="hidden" name="subject" value="Voltrune Solar">
-                    <button class="btn" type="submit">Falar sobre o Solar</button>
+                    <button class="btn btn-ghost" type="submit">Falar sobre o Solar</button>
                 </form>
-                <a class="btn btn-ghost" href="{{ route('contato') }}">Enviar briefing</a>
             </div>
         </article>
 

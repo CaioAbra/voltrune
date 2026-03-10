@@ -4,7 +4,7 @@
 
 @section('solar-content')
     <section class="hub-card">
-        <h2>Novo pre-orcamento solar</h2>
+        <h2>Novo pré-orçamento solar</h2>
         <p class="hub-note">Monte um projeto comercial com cliente, local, consumo, sistema sugerido e valor inicial sem sair do fluxo do instalador.</p>
 
         <div class="hub-actions">
@@ -13,7 +13,7 @@
 
         @if ($errors->any())
             <div class="hub-alert hub-alert--danger">
-                <strong>Revise os campos do formulario.</strong>
+                <strong>Revise os campos do formulário.</strong>
             </div>
         @endif
 
