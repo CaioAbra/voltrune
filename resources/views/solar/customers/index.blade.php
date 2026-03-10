@@ -31,13 +31,13 @@
             <p>Nenhum cliente comercial cadastrado para esta empresa ainda.</p>
             <p class="hub-note">Aqui ficam as pessoas ou empresas contratantes. O local da instalacao sera tratado em Projetos.</p>
         @else
-            <div class="hub-card hub-card--subtle">
+            <div class="hub-card hub-card--subtle solar-table-panel">
                 <h2>Cadastro comercial</h2>
                 <p>Clientes representam a pessoa ou empresa contratante. Cada cliente pode ter um ou mais projetos de instalacao solar.</p>
             </div>
 
-            <div class="hub-table-wrap">
-                <table class="hub-table">
+            <div class="hub-table-wrap solar-table-wrap">
+                <table class="hub-table solar-table solar-table--customers">
                     <thead>
                         <tr>
                             <th>Nome</th>
@@ -49,26 +49,26 @@
                     </thead>
                     <tbody>
                         @foreach ($customers as $customer)
-                            <tr>
-                                <td>
-                                    <strong>{{ $customer->name }}</strong>
-                                    <div class="hub-table__sub">
+                            <tr class="solar-table__row">
+                                <td data-label="Nome" class="solar-table__cell solar-table__cell--primary">
+                                    <strong class="solar-table__entity">{{ $customer->name }}</strong>
+                                    <div class="hub-table__sub solar-table__meta">
                                         Criado em {{ $customer->created_at?->format('d/m/Y H:i') ?? '-' }}
                                     </div>
                                 </td>
-                                <td>
+                                <td data-label="Contato" class="solar-table__cell">
                                     <div>{{ $customer->email ?: '-' }}</div>
-                                    <div class="hub-table__sub">{{ $customer->phone ?: 'Sem telefone' }}</div>
+                                    <div class="hub-table__sub solar-table__meta">{{ $customer->phone ?: 'Sem telefone' }}</div>
                                 </td>
-                                <td>{{ $customer->document ?: '-' }}</td>
-                                <td>
+                                <td data-label="Documento" class="solar-table__cell">{{ $customer->document ?: '-' }}</td>
+                                <td data-label="Cidade / UF" class="solar-table__cell">
                                     @php
                                         $location = trim(collect([$customer->city, $customer->state])->filter()->implode('/'));
                                     @endphp
                                     {{ $location !== '' ? $location : '-' }}
                                 </td>
-                                <td>
-                                    <div class="hub-table-actions">
+                                <td data-label="Acoes" class="solar-table__cell solar-table__cell--actions">
+                                    <div class="hub-table-actions solar-table__actions">
                                         <a href="{{ route('solar.projects.create', ['customer' => $customer->id]) }}" class="hub-btn">
                                             Criar projeto
                                         </a>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Modules\Solar\Models\SolarCompanySetting;
 use App\Modules\Solar\Services\SolarNavigationService;
+use App\Modules\Solar\Services\SolarSizingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -24,6 +25,7 @@ class SolarCompanySettingController extends Controller
 
         return view('solar.settings.edit', $this->viewData('Configuracoes comerciais', [
             'company' => $company,
+            'marketPricePerKwp' => SolarSizingService::MARKET_PRICE_PER_KWP,
             'setting' => SolarCompanySetting::query()->firstOrNew([
                 'company_id' => $company->id,
             ]),

@@ -226,6 +226,126 @@
   color: #bfe7df;
 }
 
+.solar-main .hub-actions {
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.solar-main .hub-card > .hub-actions:first-child {
+  margin-bottom: 1.15rem;
+}
+
+.solar-project-flow {
+  display: grid;
+  gap: 1rem;
+}
+
+.solar-section-eyebrow {
+  margin: 0 0 0.3rem;
+  color: #ffd06d;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.solar-flow-section {
+  padding: 1.25rem;
+}
+
+.solar-flow-section__header {
+  display: grid;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.solar-flow-section__header h3 {
+  margin-bottom: 0;
+}
+
+.solar-flow-section__header .hub-note,
+.solar-project-command .hub-note {
+  margin-bottom: 0;
+}
+
+.solar-flow-section__footnote {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.95rem;
+  color: #dcebdd;
+  font-size: 0.88rem;
+}
+
+.solar-project-command {
+  padding: 1.25rem;
+  border-color: rgba(246, 187, 65, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(246, 187, 65, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(17, 29, 31, 0.94), rgba(10, 17, 21, 0.9));
+}
+
+.solar-project-command__header {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.solar-project-command__header h3,
+.solar-project-command__header h2 {
+  margin-bottom: 0.45rem;
+}
+
+.solar-project-command__status {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 14, 16, 0.5);
+}
+
+.solar-project-command__status.is-ready {
+  border-color: rgba(130, 192, 181, 0.28);
+}
+
+.solar-project-command__status.is-warning {
+  border-color: rgba(246, 187, 65, 0.28);
+}
+
+.solar-project-command__status.is-market {
+  border-color: rgba(246, 187, 65, 0.28);
+  background: rgba(39, 31, 12, 0.36);
+}
+
+.solar-project-command__status-label {
+  color: rgba(226, 237, 231, 0.62);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-project-command__status strong {
+  color: #fff2ce;
+  font-size: 1rem;
+}
+
+.solar-project-command__status p {
+  margin: 0;
+  color: #dcebdd;
+  font-size: 0.88rem;
+}
+
+.solar-project-command__status .hub-btn {
+  width: fit-content;
+  margin-top: 0.2rem;
+}
+
+.solar-project-command__highlights {
+  display: grid;
+  gap: 0.95rem;
+  margin-top: 1rem;
+}
+
 .solar-project-show {
   padding: 1.35rem;
 }
@@ -257,6 +377,10 @@
 
 .solar-project-show .hub-note {
   line-height: 1.65;
+}
+
+.solar-project-show__summary {
+  margin-bottom: 1.25rem;
 }
 
 .solar-project-show .solar-sizing-panel {
@@ -367,6 +491,197 @@
   max-width: 60ch;
 }
 
+.solar-pricing-panel__note a {
+  color: #ffe7aa;
+  text-decoration: underline;
+}
+
+.solar-settings-field-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.65rem;
+}
+
+.solar-table-panel {
+  margin-bottom: 0.9rem;
+}
+
+.solar-table-wrap {
+  border: 1px solid rgba(246, 187, 65, 0.14);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(14, 21, 24, 0.84), rgba(10, 16, 18, 0.9)),
+    rgba(10, 16, 18, 0.88);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.2);
+}
+
+.solar-table {
+  min-width: 1240px;
+  font-size: 0.94rem;
+}
+
+.solar-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 1rem 1rem 0.95rem;
+  color: #f7e4b6;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, rgba(18, 27, 30, 0.98), rgba(14, 21, 24, 0.96));
+}
+
+.solar-table td {
+  padding: 1rem;
+  vertical-align: top;
+  border-bottom-color: rgba(246, 187, 65, 0.14);
+}
+
+.solar-table tbody tr {
+  transition: background-color 180ms ease;
+}
+
+.solar-table tbody tr:hover {
+  background: rgba(246, 187, 65, 0.04);
+}
+
+.solar-table__cell {
+  min-width: 0;
+}
+
+.solar-table__cell--primary {
+  min-width: 240px;
+}
+
+.solar-table__entity {
+  display: inline-block;
+  margin-bottom: 0.28rem;
+  color: #f7faf8;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.solar-table__meta {
+  max-width: 34ch;
+  line-height: 1.55;
+}
+
+.solar-table__cell--actions {
+  min-width: 360px;
+}
+
+.solar-table__actions {
+  gap: 0.55rem;
+  align-items: stretch;
+}
+
+.solar-table__actions .hub-btn,
+.solar-table__actions form .hub-btn {
+  min-height: 40px;
+  padding-inline: 0.85rem;
+  white-space: nowrap;
+}
+
+.solar-table__actions form {
+  display: flex;
+}
+
+.solar-table--projects {
+  min-width: 1380px;
+}
+
+.solar-table--projects th:nth-child(1),
+.solar-table--projects td:nth-child(1) {
+  min-width: 250px;
+}
+
+.solar-table--projects th:nth-child(2),
+.solar-table--projects td:nth-child(2) {
+  min-width: 220px;
+}
+
+.solar-table--projects th:nth-child(3),
+.solar-table--projects td:nth-child(3) {
+  min-width: 150px;
+}
+
+.solar-table--projects th:nth-child(4),
+.solar-table--projects td:nth-child(4) {
+  min-width: 160px;
+}
+
+.solar-table--projects th:nth-child(5),
+.solar-table--projects td:nth-child(5) {
+  min-width: 150px;
+}
+
+.solar-table--projects th:nth-child(6),
+.solar-table--projects td:nth-child(6) {
+  min-width: 170px;
+}
+
+.solar-table--projects th:nth-child(7),
+.solar-table--projects td:nth-child(7) {
+  min-width: 360px;
+}
+
+.solar-table--projects td:nth-child(2),
+.solar-table--projects td:nth-child(3),
+.solar-table--projects td:nth-child(4),
+.solar-table--projects td:nth-child(5) {
+  white-space: nowrap;
+}
+
+.solar-table--projects td:nth-child(6) .hub-inline-badges {
+  min-width: 0;
+}
+
+.solar-table--projects .solar-table__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(104px, 1fr));
+}
+
+.solar-table--customers {
+  min-width: 1220px;
+}
+
+.solar-table--customers th:nth-child(1),
+.solar-table--customers td:nth-child(1) {
+  min-width: 260px;
+}
+
+.solar-table--customers th:nth-child(2),
+.solar-table--customers td:nth-child(2) {
+  min-width: 240px;
+}
+
+.solar-table--customers th:nth-child(3),
+.solar-table--customers td:nth-child(3) {
+  min-width: 150px;
+}
+
+.solar-table--customers th:nth-child(4),
+.solar-table--customers td:nth-child(4) {
+  min-width: 150px;
+}
+
+.solar-table--customers th:nth-child(5),
+.solar-table--customers td:nth-child(5) {
+  min-width: 360px;
+}
+
+.solar-table--customers td:nth-child(3),
+.solar-table--customers td:nth-child(4) {
+  white-space: nowrap;
+}
+
+.solar-table--customers .solar-table__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(104px, 1fr));
+}
+
 .solar-sizing-panel::after {
   content: '';
   position: absolute;
@@ -423,6 +738,15 @@
     align-items: start;
   }
 
+  .solar-project-command__header,
+  .solar-flow-section__header {
+    grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.8fr);
+  }
+
+  .solar-project-command__highlights {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .solar-project-show {
     padding: 1.6rem;
   }
@@ -446,5 +770,90 @@
   .solar-topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .solar-project-command__status .hub-btn {
+    width: 100%;
+  }
+
+  .solar-table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .solar-table {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .solar-table--projects,
+  .solar-table--customers {
+    min-width: 0;
+  }
+
+  .solar-table thead {
+    display: none;
+  }
+
+  .solar-table,
+  .solar-table tbody,
+  .solar-table tr,
+  .solar-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .solar-table tbody {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .solar-table__row {
+    border: 1px solid rgba(246, 187, 65, 0.16);
+    border-radius: 18px;
+    background:
+      linear-gradient(145deg, rgba(16, 24, 27, 0.94), rgba(10, 16, 18, 0.96)),
+      rgba(10, 16, 18, 0.92);
+    box-shadow: 0 16px 26px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+  }
+
+  .solar-table td {
+    display: grid;
+    gap: 0.35rem;
+    padding: 0.8rem 0.95rem;
+    border-bottom: 1px solid rgba(246, 187, 65, 0.1);
+  }
+
+  .solar-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .solar-table td::before {
+    content: attr(data-label);
+    color: rgba(226, 237, 231, 0.62);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .solar-table__cell--primary {
+    padding-top: 1rem;
+  }
+
+  .solar-table__cell--actions {
+    padding-top: 0.95rem;
+  }
+
+  .solar-table__actions {
+    display: grid;
+  }
+
+  .solar-table__actions .hub-btn,
+  .solar-table__actions form,
+  .solar-table__actions form .hub-btn {
+    width: 100%;
   }
 }

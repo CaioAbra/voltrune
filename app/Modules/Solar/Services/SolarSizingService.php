@@ -6,6 +6,19 @@ use App\Modules\Solar\Models\SolarCompanySetting;
 
 class SolarSizingService
 {
+    public const MARKET_PRICE_PER_KWP = 4200.0;
+
+    public function resolvePricePerKwp(float|int|string|null $pricePerKwp): float
+    {
+        $price = $pricePerKwp !== null && $pricePerKwp !== '' ? (float) $pricePerKwp : 0.0;
+
+        if ($price > 0) {
+            return round($price, 2);
+        }
+
+        return self::MARKET_PRICE_PER_KWP;
+    }
+
     public function estimateRequiredPowerKwp(float|int|string|null $monthlyConsumptionKwh): ?float
     {
         if ($monthlyConsumptionKwh === null || $monthlyConsumptionKwh === '') {
@@ -49,13 +62,28 @@ class SolarSizingService
         float|int|string|null $pricePerKwp,
     ): ?float {
         $powerKwp = $systemPowerKwp !== null && $systemPowerKwp !== '' ? (float) $systemPowerKwp : 0.0;
-        $price = $pricePerKwp !== null && $pricePerKwp !== '' ? (float) $pricePerKwp : 0.0;
+        $price = $this->resolvePricePerKwp($pricePerKwp);
 
-        if ($powerKwp <= 0 || $price <= 0) {
+        if ($powerKwp <= 0) {
             return null;
         }
 
         return round($powerKwp * $price, 2);
+    }
+
+    public function estimateMonthlySavings(float|int|string|null $energyBillValue): ?float
+    {
+        if ($energyBillValue === null || $energyBillValue === '') {
+            return null;
+        }
+
+        $billValue = (float) $energyBillValue;
+
+        if ($billValue <= 0) {
+            return null;
+        }
+
+        return round($billValue, 2);
     }
 
     /**

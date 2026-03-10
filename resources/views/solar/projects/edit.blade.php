@@ -4,8 +4,8 @@
 
 @section('solar-content')
     <section class="hub-card">
-        <h2>Projeto de instalacao</h2>
-        <p class="hub-note">Atualize o local da instalacao, consumo e contexto operacional do projeto solar.</p>
+        <h2>Refinar pre-orcamento solar</h2>
+        <p class="hub-note">Atualize o fluxo comercial do projeto com consumo, sistema sugerido, valor inicial e contexto da instalacao.</p>
 
         <div class="hub-actions">
             <a href="{{ route('solar.projects.index') }}" class="hub-btn hub-btn--subtle">Voltar para projetos</a>

@@ -44,8 +44,12 @@
 
             <div class="hub-grid hub-grid--billing">
                 <div>
-                    <label for="price_per_kwp" class="hub-auth-label">Preco por kWp</label>
-                    <input id="price_per_kwp" name="price_per_kwp" type="number" min="0" step="0.01" class="hub-auth-input" value="{{ old('price_per_kwp', $setting->price_per_kwp) }}">
+                    <label for="price_per_kwp" class="hub-auth-label">Preco medio por kWp (opcional)</label>
+                    <input id="price_per_kwp" name="price_per_kwp" type="text" inputmode="decimal" class="hub-auth-input" value="{{ old('price_per_kwp', $setting->price_per_kwp) }}" data-market-price-input data-currency-brl>
+                    <p class="hub-note">Se nao informado, o Solar usara um valor medio de mercado para gerar pre-orcamentos.</p>
+                    <div class="solar-settings-field-actions">
+                        <button type="button" class="hub-btn hub-btn--subtle" data-market-price-fill="{{ $marketPricePerKwp }}">Usar valor medio de mercado</button>
+                    </div>
                     @error('price_per_kwp')
                         <p class="hub-note">{{ $message }}</p>
                     @enderror
@@ -62,7 +66,7 @@
 
             <div class="hub-card hub-card--subtle">
                 <h3>Como o Solar usa esses dados</h3>
-                <p class="hub-note">Quando esta empresa tiver configuracoes salvas, novos projetos passam a herdar automaticamente a potencia padrao do modulo e o modelo padrao de inversor. O instalador ainda pode ajustar esses campos manualmente em cada projeto.</p>
+                <p class="hub-note">Quando esta empresa tiver configuracoes salvas, novos projetos passam a herdar automaticamente a potencia padrao do modulo e o modelo padrao de inversor. Se o preco por kWp nao estiver preenchido, o Solar usa {{ 'R$ ' . number_format((float) $marketPricePerKwp, 2, ',', '.') }}/kWp como referencia inicial. O instalador ainda pode ajustar esses campos manualmente em cada projeto.</p>
             </div>
 
             <div class="hub-actions">

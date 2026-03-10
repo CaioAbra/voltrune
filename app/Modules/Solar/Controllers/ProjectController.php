@@ -46,6 +46,7 @@ class ProjectController extends Controller
         $utilities = $this->utilityOptions();
         $selectedCustomerId = $request->integer('customer');
         $companySetting = $this->companySetting($company);
+        $effectivePricePerKwp = $this->sizing->resolvePricePerKwp($companySetting?->price_per_kwp);
 
         return view('solar.projects.create', $this->viewData('Novo projeto', [
             'company' => $company,
@@ -53,6 +54,8 @@ class ProjectController extends Controller
             'utilities' => $utilities,
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
             'companySetting' => $companySetting,
+            'effectivePricePerKwp' => $effectivePricePerKwp,
+            'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
             'project' => new SolarProject([
                 'solar_customer_id' => $selectedCustomerId > 0 ? $selectedCustomerId : null,
                 'connection_type' => 'bi',
@@ -67,18 +70,23 @@ class ProjectController extends Controller
     {
         $company = $this->resolveCurrentCompany($request);
         $projectRecord = $this->resolveProject($company, $project, ['customer']);
+        $companySetting = $this->companySetting($company);
+        $effectivePricePerKwp = $this->sizing->resolvePricePerKwp($companySetting?->price_per_kwp);
 
         return view('solar.projects.show', $this->viewData('Projeto solar', [
             'company' => $company,
             'project' => $projectRecord,
-            'companySetting' => $this->companySetting($company),
+            'companySetting' => $companySetting,
+            'effectivePricePerKwp' => $effectivePricePerKwp,
+            'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
             'estimatedRequiredPowerKwp' => $this->sizing->estimateRequiredPowerKwp($projectRecord->monthly_consumption_kwh),
             'suggestedModuleQuantity' => $this->sizing->estimateModuleQuantity($projectRecord->system_power_kwp, $projectRecord->module_power),
             'suggestedGenerationKwh' => $this->sizing->estimateGenerationKwh($projectRecord->system_power_kwp),
             'suggestedCommercialPrice' => $this->sizing->estimateSuggestedPrice(
                 $projectRecord->system_power_kwp,
-                $this->companySetting($company)?->price_per_kwp,
+                $effectivePricePerKwp,
             ),
+            'estimatedMonthlySavings' => $this->sizing->estimateMonthlySavings($projectRecord->energy_bill_value),
         ]));
     }
 
@@ -104,13 +112,17 @@ class ProjectController extends Controller
         $company = $this->resolveCurrentCompany($request);
         $projectRecord = $this->resolveProject($company, $project);
         $utilities = $this->utilityOptions();
+        $companySetting = $this->companySetting($company);
+        $effectivePricePerKwp = $this->sizing->resolvePricePerKwp($companySetting?->price_per_kwp);
 
         return view('solar.projects.edit', $this->viewData('Editar projeto', [
             'company' => $company,
             'customers' => $this->customerOptions($company),
             'utilities' => $utilities,
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
-            'companySetting' => $this->companySetting($company),
+            'companySetting' => $companySetting,
+            'effectivePricePerKwp' => $effectivePricePerKwp,
+            'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
             'project' => $projectRecord,
         ]));
     }
@@ -152,7 +164,7 @@ class ProjectController extends Controller
     {
         return array_merge([
             'pageTitle' => $pageTitle,
-            'pageDescription' => 'Cada projeto representa o local da instalacao solar. O CEP e os dados do imovel preparam a base para geocodificacao e simulacao futura.',
+            'pageDescription' => 'Fluxo de pre-orcamento rapido para instaladores: cliente, local, consumo, sistema sugerido e valor comercial na mesma jornada.',
             'navigationItems' => $this->navigation->items(),
         ], $data);
     }

@@ -4,6 +4,99 @@ document.documentElement.classList.add('js');
 
 const body = document.body;
 
+const parseLocalizedNumber = (rawValue) => {
+  if (rawValue === null || rawValue === undefined) return null;
+
+  const normalized = String(rawValue)
+    .trim()
+    .replace(/\s+/g, '')
+    .replace(/[R$\u00A0]/g, '');
+
+  if (normalized === '') return null;
+
+  const commaIndex = normalized.lastIndexOf(',');
+  const dotIndex = normalized.lastIndexOf('.');
+  const decimalIndex = Math.max(commaIndex, dotIndex);
+
+  if (decimalIndex >= 0) {
+    const integerPart = normalized.slice(0, decimalIndex).replace(/[^\d-]/g, '');
+    const decimalPart = normalized.slice(decimalIndex + 1).replace(/\D/g, '');
+    const rebuilt = `${integerPart || '0'}.${decimalPart}`;
+    const parsed = Number(rebuilt);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  const parsed = Number(normalized.replace(/[^\d-]/g, ''));
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const formatCurrencyBRL = (value) => new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+}).format(value);
+
+const formatDecimalPtBr = (value) => value.toFixed(2).replace('.', ',');
+
+const initNumberSteppers = () => {
+  const inputs = Array.from(document.querySelectorAll('input.hub-auth-input[type="number"]'));
+  if (!inputs.length) return;
+
+  inputs.forEach((input) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    if (input.closest('.hub-number-field')) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'hub-number-field';
+
+    const upButton = document.createElement('button');
+    upButton.type = 'button';
+    upButton.className = 'hub-number-stepper hub-number-stepper--up';
+    upButton.setAttribute('aria-label', 'Aumentar valor');
+    upButton.innerHTML = '<span aria-hidden="true">+</span>';
+
+    const downButton = document.createElement('button');
+    downButton.type = 'button';
+    downButton.className = 'hub-number-stepper hub-number-stepper--down';
+    downButton.setAttribute('aria-label', 'Diminuir valor');
+    downButton.innerHTML = '<span aria-hidden="true">-</span>';
+
+    const parent = input.parentNode;
+    if (!parent) return;
+
+    parent.insertBefore(wrapper, input);
+    wrapper.appendChild(input);
+    wrapper.appendChild(upButton);
+    wrapper.appendChild(downButton);
+
+    const syncDisabledState = () => {
+      const isDisabled = input.disabled;
+      upButton.disabled = isDisabled;
+      downButton.disabled = isDisabled;
+    };
+
+    const dispatchValueEvents = () => {
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    upButton.addEventListener('click', () => {
+      input.stepUp();
+      dispatchValueEvents();
+      input.focus();
+    });
+
+    downButton.addEventListener('click', () => {
+      input.stepDown();
+      dispatchValueEvents();
+      input.focus();
+    });
+
+    syncDisabledState();
+  });
+};
+
 const initMobileMenu = () => {
   const toggle = document.querySelector('[data-menu-toggle]');
   const menu = document.querySelector('[data-menu]');
@@ -340,6 +433,48 @@ const initPhoneMask = () => {
 
     field.addEventListener('input', () => {
       field.value = formatPhone(field.value);
+    });
+  });
+};
+
+const initCurrencyInputs = () => {
+  const inputs = Array.from(document.querySelectorAll('[data-currency-brl]'));
+  if (!inputs.length) return;
+
+  const formatInput = (input) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    const parsed = parseLocalizedNumber(input.value);
+    input.value = parsed === null ? '' : formatCurrencyBRL(parsed);
+  };
+
+  const normalizeInput = (input) => {
+    if (!(input instanceof HTMLInputElement)) return;
+    const parsed = parseLocalizedNumber(input.value);
+    input.value = parsed === null ? '' : String(parsed.toFixed(2));
+  };
+
+  inputs.forEach((input) => {
+    if (!(input instanceof HTMLInputElement)) return;
+
+    formatInput(input);
+
+    input.addEventListener('focus', () => {
+      const parsed = parseLocalizedNumber(input.value);
+      input.value = parsed === null ? '' : formatDecimalPtBr(parsed);
+    });
+
+    input.addEventListener('blur', () => {
+      formatInput(input);
+    });
+
+    const form = input.closest('form');
+    if (!form || form.dataset.currencyNormalized === 'true') return;
+
+    form.dataset.currencyNormalized = 'true';
+    form.addEventListener('submit', () => {
+      form.querySelectorAll('[data-currency-brl]').forEach((field) => {
+        normalizeInput(field);
+      });
     });
   });
 };
@@ -750,7 +885,7 @@ const initSolarSizingForm = () => {
   };
 
   sections.forEach((section) => {
-    const root = section.parentElement;
+    const root = section.closest('[data-solar-project-form]');
     if (!root) return;
 
     const monthlyInput = root.querySelector('[data-sizing-monthly]');
@@ -758,14 +893,33 @@ const initSolarSizingForm = () => {
     const systemPowerInput = root.querySelector('[data-sizing-system-power]');
     const moduleQuantityInput = root.querySelector('[data-sizing-module-quantity]');
     const generationInput = root.querySelector('[data-sizing-generation]');
+    const inverterInput = root.querySelector('[data-sizing-inverter]');
+    const energyBillInput = root.querySelector('[data-pricing-energy-bill]');
     const note = section.querySelector('[data-sizing-note]');
     const systemPreview = section.querySelector('[data-sizing-preview="system-power"]');
     const modulePreview = section.querySelector('[data-sizing-preview="module-power"]');
     const pricingRatePreview = root.querySelector('[data-pricing-preview="rate"]');
     const pricingTotalPreview = root.querySelector('[data-pricing-preview="total"]');
+    const pricingSavingsPreview = root.querySelector('[data-pricing-preview="savings"]');
+    const pricingMarginPreview = root.querySelector('[data-pricing-preview="margin"]');
     const pricingNote = root.querySelector('[data-pricing-note]');
     const suggestedPriceInput = root.querySelector('[data-pricing-suggested-price]');
+    const summaryName = root.querySelector('[data-project-summary-name]');
+    const summaryCustomer = root.querySelector('[data-project-summary="customer"]');
+    const summaryLocation = root.querySelector('[data-project-summary="location"]');
+    const summaryStatus = root.querySelector('[data-project-summary="status"]');
+    const summaryConsumption = root.querySelector('[data-project-summary="consumption"]');
+    const summaryPower = root.querySelector('[data-project-summary="power"]');
+    const summaryPrice = root.querySelector('[data-project-summary="price"]');
+    const customerSelect = root.querySelector('[data-project-customer-select]');
+    const projectNameInput = root.querySelector('[data-project-name]');
+    const projectStatusInput = root.querySelector('[data-project-status]');
+    const cityInput = root.querySelector('[data-project-city]');
+    const stateInput = root.querySelector('[data-project-state]');
     const pricingPerKwp = Number(section.getAttribute('data-pricing-per-kwp')?.replace(',', '.') || 0);
+    const marginPercent = Number(root.getAttribute('data-margin-percent')?.replace(',', '.') || 0);
+    const defaultInverterModel = root.getAttribute('data-default-inverter-model') || '';
+    const pricingSource = root.getAttribute('data-pricing-source') || 'custom';
 
     if (!(monthlyInput instanceof HTMLInputElement)) return;
     if (!(modulePowerInput instanceof HTMLInputElement)) return;
@@ -773,28 +927,92 @@ const initSolarSizingForm = () => {
     if (!(moduleQuantityInput instanceof HTMLInputElement)) return;
     if (!(generationInput instanceof HTMLInputElement)) return;
     if (!(suggestedPriceInput instanceof HTMLInputElement)) return;
+    if (!(inverterInput instanceof HTMLInputElement)) return;
 
     const readNumber = (input) => {
       if (!(input instanceof HTMLInputElement)) return null;
       if (input.value.trim() === '') return null;
-      const parsed = Number(input.value.replace(',', '.'));
+      const parsed = parseLocalizedNumber(input.value);
       return Number.isFinite(parsed) ? parsed : null;
     };
 
+    const formatNumber = (value, suffix = '', decimals = 2) => `${value.toFixed(decimals).replace('.', ',')}${suffix}`;
     const writeNumber = (input, value, decimals = 2) => {
       if (!(input instanceof HTMLInputElement) || value === null || !Number.isFinite(value)) return;
       input.value = decimals === 0 ? String(Math.round(value)) : value.toFixed(decimals);
     };
 
     const formatCurrency = (value) => `R$ ${value.toFixed(2).replace('.', ',')}`;
+    const formatCurrencyMonthly = (value) => `${formatCurrency(value)}/mes`;
 
-    const applyPricingFromPower = () => {
+    const updateSummary = () => {
       const currentPower = readNumber(systemPowerInput);
+      const currentSuggestedPrice = readNumber(suggestedPriceInput);
+      const currentConsumption = readNumber(monthlyInput);
 
-      if (pricingPerKwp > 0 && currentPower && currentPower > 0) {
+      if (summaryName instanceof HTMLElement && projectNameInput instanceof HTMLInputElement) {
+        summaryName.textContent = projectNameInput.value.trim() || 'Projeto solar em preparacao';
+      }
+
+      if (summaryCustomer instanceof HTMLElement && customerSelect instanceof HTMLSelectElement) {
+        summaryCustomer.textContent = customerSelect.value !== ''
+          ? customerSelect.options[customerSelect.selectedIndex]?.textContent?.trim() || 'Cliente pendente'
+          : 'Cliente pendente';
+      }
+
+      if (summaryLocation instanceof HTMLElement && cityInput instanceof HTMLInputElement && stateInput instanceof HTMLInputElement) {
+        const locationParts = [cityInput.value.trim(), stateInput.value.trim().toUpperCase()].filter(Boolean);
+        summaryLocation.textContent = locationParts.length ? locationParts.join(' / ') : 'Local pendente';
+      }
+
+      if (summaryStatus instanceof HTMLElement && projectStatusInput instanceof HTMLSelectElement) {
+        summaryStatus.textContent = projectStatusInput.options[projectStatusInput.selectedIndex]?.textContent?.trim() || 'Rascunho';
+      }
+
+      if (summaryConsumption instanceof HTMLElement) {
+        summaryConsumption.textContent = currentConsumption && currentConsumption > 0
+          ? formatNumber(currentConsumption, ' kWh')
+          : 'Aguardando consumo';
+      }
+
+      if (summaryPower instanceof HTMLElement) {
+        summaryPower.textContent = currentPower && currentPower > 0
+          ? formatNumber(currentPower, ' kWp')
+          : 'Aguardando consumo';
+      }
+
+      if (summaryPrice instanceof HTMLElement) {
+        summaryPrice.textContent = currentSuggestedPrice && currentSuggestedPrice > 0
+          ? formatCurrency(currentSuggestedPrice)
+          : 'Aguardando pre-orcamento';
+      }
+    };
+
+    const applyDefaultInverter = () => {
+      if (defaultInverterModel && inverterInput.value.trim() === '') {
+        inverterInput.value = defaultInverterModel;
+      }
+    };
+
+    const updateDerivedFieldsFromPower = ({ onlyEmpty = false } = {}) => {
+      const currentPower = readNumber(systemPowerInput);
+      const currentModulePower = readNumber(modulePowerInput) ?? 550;
+
+      if (currentPower && currentPower > 0 && currentModulePower > 0) {
+        if (!onlyEmpty || moduleQuantityInput.value.trim() === '') {
+          writeNumber(moduleQuantityInput, Math.ceil((currentPower * 1000) / currentModulePower), 0);
+        }
+
+        if (!onlyEmpty || generationInput.value.trim() === '') {
+          writeNumber(generationInput, roundTo(currentPower * 130, 2), 2);
+        }
+      }
+
+      if (pricingPerKwp > 0 && currentPower && currentPower > 0 && (!onlyEmpty || suggestedPriceInput.value.trim() === '')) {
         writeNumber(suggestedPriceInput, roundTo(currentPower * pricingPerKwp, 2), 2);
       }
 
+      applyDefaultInverter();
       updatePreview();
     };
 
@@ -804,10 +1022,11 @@ const initSolarSizingForm = () => {
       const currentModules = readNumber(moduleQuantityInput);
       const currentGeneration = readNumber(generationInput);
       const currentSuggestedPrice = readNumber(suggestedPriceInput);
+      const currentEnergyBill = readNumber(energyBillInput);
 
       if (systemPreview instanceof HTMLElement) {
         systemPreview.textContent = currentPower && currentPower > 0
-          ? `${currentPower.toFixed(2).replace('.', ',')} kWp`
+          ? formatNumber(currentPower, ' kWp')
           : 'Aguardando consumo';
       }
 
@@ -820,7 +1039,7 @@ const initSolarSizingForm = () => {
       if (pricingRatePreview instanceof HTMLElement) {
         pricingRatePreview.textContent = pricingPerKwp > 0
           ? formatCurrency(pricingPerKwp)
-          : 'Nao configurado';
+          : 'Indisponivel';
       }
 
       if (pricingTotalPreview instanceof HTMLElement) {
@@ -829,9 +1048,21 @@ const initSolarSizingForm = () => {
           : 'Aguardando dimensionamento';
       }
 
+      if (pricingSavingsPreview instanceof HTMLElement) {
+        pricingSavingsPreview.textContent = currentEnergyBill && currentEnergyBill > 0
+          ? formatCurrencyMonthly(currentEnergyBill)
+          : 'Informe a conta de energia';
+      }
+
+      if (pricingMarginPreview instanceof HTMLElement) {
+        pricingMarginPreview.textContent = marginPercent > 0
+          ? `${marginPercent.toFixed(2).replace('.', ',')}%`
+          : 'Nao configurada';
+      }
+
       if (note instanceof HTMLElement) {
         if (currentPower && currentModules && currentGeneration) {
-          note.textContent = `Sugestao ativa: ${currentPower.toFixed(2).replace('.', ',')} kWp, ${Math.round(currentModules)} modulos e ${currentGeneration.toFixed(2).replace('.', ',')} kWh estimados.`;
+          note.textContent = `Sugestao ativa: ${formatNumber(currentPower, ' kWp')}, ${Math.round(currentModules)} modulos e ${formatNumber(currentGeneration, ' kWh')} estimados.`;
         } else {
           note.textContent = 'Preencha o consumo mensal para gerar a sugestao automatica.';
         }
@@ -839,16 +1070,24 @@ const initSolarSizingForm = () => {
 
       if (pricingNote instanceof HTMLElement) {
         if (pricingPerKwp <= 0) {
-          pricingNote.textContent = 'Configure o preco por kWp em /solar/settings para ativar o pre-orcamento automatico.';
+          pricingNote.textContent = 'Preco por kWp indisponivel no momento.';
         } else if (currentSuggestedPrice && currentSuggestedPrice > 0) {
-          pricingNote.textContent = `Pre-orcamento ativo: ${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema.`;
+          const savingsSuffix = currentEnergyBill && currentEnergyBill > 0
+            ? ` Economia estimada inicial: ${formatCurrencyMonthly(currentEnergyBill)}.`
+            : '';
+          const sourcePrefix = pricingSource === 'market'
+            ? `Pre-orcamento ativo com media de mercado (${formatCurrency(pricingPerKwp)}/kWp): `
+            : `Pre-orcamento ativo com preco proprio (${formatCurrency(pricingPerKwp)}/kWp): `;
+          pricingNote.textContent = `${sourcePrefix}${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema.${savingsSuffix}`;
         } else {
           pricingNote.textContent = 'Informe o consumo mensal para gerar o pre-orcamento automatico.';
         }
       }
+
+      updateSummary();
     };
 
-    const applySizing = ({ onlyEmpty = false } = {}) => {
+    const applySizing = () => {
       const monthlyConsumption = readNumber(monthlyInput);
       const modulePower = readNumber(modulePowerInput) ?? 550;
 
@@ -861,33 +1100,54 @@ const initSolarSizingForm = () => {
       const suggestedModules = Math.ceil((suggestedPower * 1000) / modulePower);
       const suggestedGeneration = roundTo(monthlyConsumption, 2);
 
-      if (!onlyEmpty || systemPowerInput.value.trim() === '') {
-        writeNumber(systemPowerInput, suggestedPower, 2);
-      }
-
-      if (!onlyEmpty || moduleQuantityInput.value.trim() === '') {
-        writeNumber(moduleQuantityInput, suggestedModules, 0);
-      }
-
-      if (!onlyEmpty || generationInput.value.trim() === '') {
-        writeNumber(generationInput, suggestedGeneration, 2);
-      }
+      writeNumber(systemPowerInput, suggestedPower, 2);
+      writeNumber(moduleQuantityInput, suggestedModules, 0);
+      writeNumber(generationInput, suggestedGeneration, 2);
 
       if (pricingPerKwp > 0) {
         writeNumber(suggestedPriceInput, roundTo(suggestedPower * pricingPerKwp, 2), 2);
       }
 
+      applyDefaultInverter();
       updatePreview();
     };
 
-    applySizing({ onlyEmpty: true });
+    applyDefaultInverter();
+    updateDerivedFieldsFromPower({ onlyEmpty: true });
+    updatePreview();
 
     monthlyInput.addEventListener('input', () => applySizing());
     modulePowerInput.addEventListener('input', () => applySizing());
-    systemPowerInput.addEventListener('input', applyPricingFromPower);
+    systemPowerInput.addEventListener('input', updateDerivedFieldsFromPower);
     moduleQuantityInput.addEventListener('input', updatePreview);
     generationInput.addEventListener('input', updatePreview);
     suggestedPriceInput.addEventListener('input', updatePreview);
+    energyBillInput?.addEventListener('input', updatePreview);
+    inverterInput.addEventListener('input', updatePreview);
+    customerSelect?.addEventListener('change', updatePreview);
+    projectNameInput?.addEventListener('input', updatePreview);
+    projectStatusInput?.addEventListener('change', updatePreview);
+    cityInput?.addEventListener('input', updatePreview);
+    stateInput?.addEventListener('input', updatePreview);
+  });
+};
+
+const initSolarMarketPriceFill = () => {
+  const triggers = Array.from(document.querySelectorAll('[data-market-price-fill]'));
+  if (!triggers.length) return;
+
+  triggers.forEach((trigger) => {
+    if (!(trigger instanceof HTMLButtonElement)) return;
+
+    const root = trigger.closest('form');
+    const input = root?.querySelector('[data-market-price-input]');
+    if (!(input instanceof HTMLInputElement)) return;
+
+    trigger.addEventListener('click', () => {
+      const marketValue = Number(trigger.dataset.marketPriceFill || '4200');
+      input.value = Number.isFinite(marketValue) ? formatCurrencyBRL(marketValue) : formatCurrencyBRL(4200);
+      input.focus();
+    });
   });
 };
 
@@ -1275,12 +1535,15 @@ document.addEventListener('DOMContentLoaded', () => {
   initQuestReveal();
   initFaqAccordion();
   initPhoneMask();
+  initNumberSteppers();
+  initCurrencyInputs();
   initSubmitLocks();
   initCustomSelects();
   initPasswordToggles();
   initFlashAlerts();
   initZipCodeLookup();
   initSolarSizingForm();
+  initSolarMarketPriceFill();
   initEnergyUtilityAutoSelect();
   initErrorEasterEggs();
   initArcaneAccents();

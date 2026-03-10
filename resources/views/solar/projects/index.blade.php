@@ -30,13 +30,13 @@
             <p>Nenhum projeto cadastrado para esta empresa ainda.</p>
             <p class="hub-note">Cada projeto representa o local da instalacao solar e servira de base para localizacao tecnica e simulacao futura.</p>
         @else
-            <div class="hub-card hub-card--subtle">
+            <div class="hub-card hub-card--subtle solar-table-panel">
                 <h2>Local da instalacao</h2>
                 <p>Projetos representam o local da instalacao solar. O sistema parte do CEP e dos dados basicos do imovel para preparar a geolocalizacao interna.</p>
             </div>
 
-            <div class="hub-table-wrap">
-                <table class="hub-table">
+            <div class="hub-table-wrap solar-table-wrap">
+                <table class="hub-table solar-table solar-table--projects">
                     <thead>
                         <tr>
                             <th>Projeto</th>
@@ -50,33 +50,33 @@
                     </thead>
                     <tbody>
                         @foreach ($projects as $project)
-                            <tr>
-                                <td>
-                                    <strong>{{ $project->name }}</strong>
-                                    <div class="hub-table__sub">
+                            <tr class="solar-table__row">
+                                <td data-label="Projeto" class="solar-table__cell solar-table__cell--primary">
+                                    <strong class="solar-table__entity">{{ $project->name }}</strong>
+                                    <div class="hub-table__sub solar-table__meta">
                                         {{ $project->street ?: 'Endereco em preparacao' }}{{ $project->number ? ', '.$project->number : '' }}
                                         @if ($project->zip_code)
                                             <span> | CEP {{ $project->zip_code }}</span>
                                         @endif
                                     </div>
                                 </td>
-                                <td>{{ $project->customer?->name ?: '-' }}</td>
-                                <td>
+                                <td data-label="Cliente" class="solar-table__cell">{{ $project->customer?->name ?: '-' }}</td>
+                                <td data-label="Cidade / UF" class="solar-table__cell">
                                     @php
                                         $location = trim(collect([$project->city, $project->state])->filter()->implode('/'));
                                     @endphp
                                     {{ $location !== '' ? $location : 'Aguardando localizacao' }}
                                 </td>
-                                <td>{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</td>
-                                <td>{{ $project->utility_company ?: '-' }}</td>
-                                <td>
+                                <td data-label="Consumo mensal" class="solar-table__cell">{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</td>
+                                <td data-label="Concessionaria" class="solar-table__cell">{{ $project->utility_company ?: '-' }}</td>
+                                <td data-label="Status" class="solar-table__cell">
                                     <div class="hub-inline-badges">
                                         <span class="hub-badge">{{ strtoupper($project->status) }}</span>
                                         <span class="hub-badge hub-badge--muted">{{ strtoupper($project->geocoding_status ?? 'pending') }}</span>
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="hub-table-actions">
+                                <td data-label="Acoes" class="solar-table__cell solar-table__cell--actions">
+                                    <div class="hub-table-actions solar-table__actions">
                                         <a href="{{ route('solar.projects.show', $project->id) }}" class="hub-btn">Ver</a>
                                         <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn hub-btn--subtle">Editar</a>
                                         <form action="{{ route('solar.projects.destroy', $project->id) }}" method="post">
