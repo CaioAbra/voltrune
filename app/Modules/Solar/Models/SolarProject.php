@@ -38,6 +38,10 @@ class SolarProject extends Model
         'module_quantity',
         'inverter_model',
         'estimated_generation_kwh',
+        'solar_factor_used',
+        'solar_factor_source',
+        'solar_factor_fetched_at',
+        'radiation_status',
         'suggested_price',
         'pricing_notes',
         'property_type',
@@ -59,10 +63,12 @@ class SolarProject extends Model
             'energy_bill_value' => 'decimal:2',
             'system_power_kwp' => 'decimal:2',
             'estimated_generation_kwh' => 'decimal:2',
+            'solar_factor_used' => 'decimal:2',
             'suggested_price' => 'decimal:2',
             'module_power' => 'integer',
             'module_quantity' => 'integer',
             'energy_utility_id' => 'integer',
+            'solar_factor_fetched_at' => 'datetime',
         ];
     }
 

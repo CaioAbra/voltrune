@@ -898,6 +898,7 @@ const initSolarSizingForm = () => {
     const note = section.querySelector('[data-sizing-note]');
     const systemPreview = section.querySelector('[data-sizing-preview="system-power"]');
     const modulePreview = section.querySelector('[data-sizing-preview="module-power"]');
+    const factorPreview = section.querySelector('[data-sizing-preview="factor"]');
     const pricingRatePreview = root.querySelector('[data-pricing-preview="rate"]');
     const pricingTotalPreview = root.querySelector('[data-pricing-preview="total"]');
     const pricingSavingsPreview = root.querySelector('[data-pricing-preview="savings"]');
@@ -915,18 +916,25 @@ const initSolarSizingForm = () => {
     const summaryConsumption = root.querySelector('[data-project-summary="consumption"]');
     const summaryPower = root.querySelector('[data-project-summary="power"]');
     const summaryModules = root.querySelector('[data-project-summary="modules"]');
+    const summaryGeneration = root.querySelector('[data-project-summary="generation"]');
     const summaryPrice = root.querySelector('[data-project-summary="price"]');
     const summarySavings = root.querySelector('[data-project-summary="savings"]');
+    const summaryAnnualSavings = root.querySelector('[data-project-summary="annual-savings"]');
+    const summaryLifetimeSavings = root.querySelector('[data-project-summary="lifetime-savings"]');
     const customerSelect = root.querySelector('[data-project-customer-select]');
     const projectNameInput = root.querySelector('[data-project-name]');
     const projectStatusInput = root.querySelector('[data-project-status]');
     const cityInput = root.querySelector('[data-project-city]');
     const stateInput = root.querySelector('[data-project-state]');
+    const solarFactorDisplay = root.querySelector('[data-solar-factor-display]');
+    const solarFactorSourceDisplay = root.querySelector('[data-solar-factor-source-display]');
     const pricingPerKwp = Number(section.getAttribute('data-pricing-per-kwp')?.replace(',', '.') || 0);
     const marginPercent = Number(root.getAttribute('data-margin-percent')?.replace(',', '.') || 0);
     const defaultInverterModel = root.getAttribute('data-default-inverter-model') || '';
     const pricingSource = root.getAttribute('data-pricing-source') || 'custom';
     const residualMinimumCost = Number(root.getAttribute('data-residual-minimum-cost')?.replace(',', '.') || 70);
+    const solarFactorUsed = Number(root.getAttribute('data-solar-factor-used')?.replace(',', '.') || 130);
+    const solarFactorSource = root.getAttribute('data-solar-factor-source') || 'default';
 
     if (!(monthlyInput instanceof HTMLInputElement)) return;
     if (!(modulePowerInput instanceof HTMLInputElement)) return;
@@ -963,6 +971,9 @@ const initSolarSizingForm = () => {
       const currentModules = readNumber(moduleQuantityInput);
       const currentEnergyBill = readNumber(energyBillInput);
       const currentMonthlySavings = estimateMonthlySavings(currentEnergyBill);
+      const currentGeneration = readNumber(generationInput);
+      const currentAnnualSavings = currentMonthlySavings !== null ? roundTo(currentMonthlySavings * 12, 2) : null;
+      const currentLifetimeSavings = currentAnnualSavings !== null ? roundTo(currentAnnualSavings * 25, 2) : null;
 
       if (summaryName instanceof HTMLElement && projectNameInput instanceof HTMLInputElement) {
         summaryName.textContent = projectNameInput.value.trim() || 'Projeto solar em preparacao';
@@ -1001,6 +1012,12 @@ const initSolarSizingForm = () => {
           : 'Aguardando sistema';
       }
 
+      if (summaryGeneration instanceof HTMLElement) {
+        summaryGeneration.textContent = currentGeneration && currentGeneration > 0
+          ? formatNumber(currentGeneration, ' kWh')
+          : 'Aguardando sistema';
+      }
+
       if (summaryPrice instanceof HTMLElement) {
         summaryPrice.textContent = currentSuggestedPrice && currentSuggestedPrice > 0
           ? formatCurrency(currentSuggestedPrice)
@@ -1011,6 +1028,18 @@ const initSolarSizingForm = () => {
         summarySavings.textContent = currentMonthlySavings !== null
           ? formatCurrency(currentMonthlySavings)
           : 'Aguardando conta';
+      }
+
+      if (summaryAnnualSavings instanceof HTMLElement) {
+        summaryAnnualSavings.textContent = currentAnnualSavings !== null
+          ? formatCurrency(currentAnnualSavings)
+          : 'Aguardando simulacao';
+      }
+
+      if (summaryLifetimeSavings instanceof HTMLElement) {
+        summaryLifetimeSavings.textContent = currentLifetimeSavings !== null
+          ? formatCurrency(currentLifetimeSavings)
+          : 'Aguardando simulacao';
       }
     };
 
@@ -1030,7 +1059,7 @@ const initSolarSizingForm = () => {
         }
 
         if (!onlyEmpty || generationInput.value.trim() === '') {
-          writeNumber(generationInput, roundTo(currentPower * 130, 2), 2);
+          writeNumber(generationInput, roundTo(currentPower * solarFactorUsed, 2), 2);
         }
       }
 
@@ -1063,6 +1092,18 @@ const initSolarSizingForm = () => {
         modulePreview.textContent = currentModulePower && currentModulePower > 0
           ? `${Math.round(currentModulePower)} W`
           : '550 W';
+      }
+
+      if (factorPreview instanceof HTMLElement) {
+        factorPreview.textContent = `${formatNumber(solarFactorUsed, '', 2)} kWh/kWp/mes`;
+      }
+
+      if (solarFactorDisplay instanceof HTMLElement) {
+        solarFactorDisplay.textContent = `${formatNumber(solarFactorUsed, '', 2)} kWh/kWp/mes`;
+      }
+
+      if (solarFactorSourceDisplay instanceof HTMLElement) {
+        solarFactorSourceDisplay.textContent = solarFactorSource === 'pvgis' ? 'PVGIS' : 'PADRAO';
       }
 
       if (pricingRatePreview instanceof HTMLElement) {
@@ -1109,9 +1150,9 @@ const initSolarSizingForm = () => {
 
       if (note instanceof HTMLElement) {
         if (currentPower && currentModules && currentGeneration) {
-          note.textContent = `Sugestao ativa: ${formatNumber(currentPower, ' kWp')}, ${Math.round(currentModules)} modulos e ${formatNumber(currentGeneration, ' kWh')} estimados.`;
+          note.textContent = `Sugestao ativa com fator ${formatNumber(solarFactorUsed, '', 2)}: ${formatNumber(currentPower, ' kWp')}, ${Math.round(currentModules)} modulos e ${formatNumber(currentGeneration, ' kWh')} estimados.`;
         } else {
-          note.textContent = 'Preencha o consumo mensal para gerar a sugestao automatica.';
+          note.textContent = 'Preencha o consumo mensal para gerar a sugestao automatica usando o fator regional salvo no projeto.';
         }
       }
 
@@ -1146,14 +1187,14 @@ const initSolarSizingForm = () => {
       const monthlyConsumption = readNumber(monthlyInput);
       const modulePower = readNumber(modulePowerInput) ?? 550;
 
-      if (monthlyConsumption === null || monthlyConsumption <= 0 || modulePower <= 0) {
+      if (monthlyConsumption === null || monthlyConsumption <= 0 || modulePower <= 0 || solarFactorUsed <= 0) {
         updatePreview();
         return;
       }
 
-      const suggestedPower = roundTo(monthlyConsumption / 130, 2);
+      const suggestedPower = roundTo(monthlyConsumption / solarFactorUsed, 2);
       const suggestedModules = Math.ceil((suggestedPower * 1000) / modulePower);
-      const suggestedGeneration = roundTo(monthlyConsumption, 2);
+      const suggestedGeneration = roundTo(suggestedPower * solarFactorUsed, 2);
 
       writeNumber(systemPowerInput, suggestedPower, 2);
       writeNumber(moduleQuantityInput, suggestedModules, 0);

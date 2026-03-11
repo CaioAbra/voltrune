@@ -8,6 +8,18 @@ class SolarSizingService
 {
     public const MARKET_PRICE_PER_KWP = 4200.0;
     public const MINIMUM_RESIDUAL_ENERGY_COST = 70.0;
+    public const DEFAULT_SOLAR_FACTOR = 130.0;
+
+    public function resolveSolarFactor(float|int|string|null $solarFactor): float
+    {
+        $factor = $solarFactor !== null && $solarFactor !== '' ? (float) $solarFactor : 0.0;
+
+        if ($factor > 0) {
+            return round($factor, 2);
+        }
+
+        return self::DEFAULT_SOLAR_FACTOR;
+    }
 
     public function resolvePricePerKwp(float|int|string|null $pricePerKwp): float
     {
@@ -20,19 +32,20 @@ class SolarSizingService
         return self::MARKET_PRICE_PER_KWP;
     }
 
-    public function estimateRequiredPowerKwp(float|int|string|null $monthlyConsumptionKwh): ?float
+    public function estimateRequiredPowerKwp(float|int|string|null $monthlyConsumptionKwh, float|int|string|null $solarFactor = null): ?float
     {
         if ($monthlyConsumptionKwh === null || $monthlyConsumptionKwh === '') {
             return null;
         }
 
         $consumption = (float) $monthlyConsumptionKwh;
+        $factor = $this->resolveSolarFactor($solarFactor);
 
-        if ($consumption <= 0) {
+        if ($consumption <= 0 || $factor <= 0) {
             return null;
         }
 
-        return round($consumption / 130, 2);
+        return round($consumption / $factor, 2);
     }
 
     public function estimateModuleQuantity(float|int|string|null $systemPowerKwp, float|int|string|null $modulePower): ?int
@@ -47,15 +60,16 @@ class SolarSizingService
         return (int) ceil(($powerKwp * 1000) / $modulePowerWp);
     }
 
-    public function estimateGenerationKwh(float|int|string|null $systemPowerKwp): ?float
+    public function estimateGenerationKwh(float|int|string|null $systemPowerKwp, float|int|string|null $solarFactor = null): ?float
     {
         $powerKwp = $systemPowerKwp !== null && $systemPowerKwp !== '' ? (float) $systemPowerKwp : 0.0;
+        $factor = $this->resolveSolarFactor($solarFactor);
 
-        if ($powerKwp <= 0) {
+        if ($powerKwp <= 0 || $factor <= 0) {
             return null;
         }
 
-        return round($powerKwp * 130, 2);
+        return round($powerKwp * $factor, 2);
     }
 
     public function estimateSuggestedPrice(
@@ -113,9 +127,12 @@ class SolarSizingService
      * @param array<string, mixed> $data
      * @return array<string, mixed>
      */
-    public function applySuggestedSizing(array $data, ?SolarCompanySetting $setting = null): array
+    public function applySuggestedSizing(array $data, ?SolarCompanySetting $setting = null, float|int|string|null $solarFactor = null): array
     {
         $defaultModulePower = $setting?->default_module_power ?: 550;
+        $resolvedSolarFactor = $this->resolveSolarFactor($solarFactor ?? ($data['solar_factor_used'] ?? null));
+
+        $data['solar_factor_used'] = $resolvedSolarFactor;
 
         $modulePower = isset($data['module_power']) && $data['module_power'] !== ''
             ? (int) $data['module_power']
@@ -133,7 +150,7 @@ class SolarSizingService
         }
 
         if (! isset($data['system_power_kwp']) || $data['system_power_kwp'] === null || $data['system_power_kwp'] === '') {
-            $data['system_power_kwp'] = $this->estimateRequiredPowerKwp($data['monthly_consumption_kwh'] ?? null);
+            $data['system_power_kwp'] = $this->estimateRequiredPowerKwp($data['monthly_consumption_kwh'] ?? null, $resolvedSolarFactor);
         }
 
         if (! isset($data['module_quantity']) || $data['module_quantity'] === null || $data['module_quantity'] === '') {
@@ -141,7 +158,7 @@ class SolarSizingService
         }
 
         if (! isset($data['estimated_generation_kwh']) || $data['estimated_generation_kwh'] === null || $data['estimated_generation_kwh'] === '') {
-            $data['estimated_generation_kwh'] = $this->estimateGenerationKwh($data['system_power_kwp'] ?? null);
+            $data['estimated_generation_kwh'] = $this->estimateGenerationKwh($data['system_power_kwp'] ?? null, $resolvedSolarFactor);
         }
 
         if (! isset($data['suggested_price']) || $data['suggested_price'] === null || $data['suggested_price'] === '') {

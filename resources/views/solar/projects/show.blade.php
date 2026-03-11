@@ -12,6 +12,7 @@
     };
 
     $locationSummary = collect([$project->city, $project->state])->filter()->implode(' / ');
+    $resolvedSolarFactor = (float) ($solarFactorData['factor'] ?? \App\Modules\Solar\Services\SolarSizingService::DEFAULT_SOLAR_FACTOR);
 @endphp
 
 @section('solar-content')
@@ -42,6 +43,66 @@
                 </div>
             </div>
 
+            <div class="solar-project-command__meta">
+                <span class="solar-project-command__signal">
+                    <strong>Fator solar regional</strong>
+                    {{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mês
+                </span>
+                <span class="solar-project-command__signal">
+                    <strong>Origem do cálculo</strong>
+                    {{ strtoupper(($solarFactorData['source'] ?? 'default') === 'pvgis' ? 'PVGIS' : 'padrão') }}
+                </span>
+                @if (($solarFactorData['message'] ?? null) !== null)
+                    <span class="solar-project-command__fallback solar-project-command__signal">{{ $solarFactorData['message'] }}</span>
+                @endif
+            </div>
+
+            <div class="solar-project-command__summary-board">
+                <article class="solar-summary-metric solar-summary-metric--hero">
+                    <span class="solar-summary-metric__label">Preço sugerido</span>
+                    <strong class="solar-summary-metric__value">
+                        {{ $project->suggested_price ? 'R$ ' . number_format((float) $project->suggested_price, 2, ',', '.') : ($suggestedCommercialPrice ? 'R$ ' . number_format((float) $suggestedCommercialPrice, 2, ',', '.') : 'Aguardando configuração') }}
+                    </strong>
+                    <span class="solar-summary-metric__meta">Valor inicial para a proposta comercial.</span>
+                </article>
+
+                <article class="solar-summary-metric solar-summary-metric--hero">
+                    <span class="solar-summary-metric__label">Economia mensal</span>
+                    <strong class="solar-summary-metric__value">{{ $estimatedMonthlySavings !== null ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') : 'Aguardando conta' }}</strong>
+                    <span class="solar-summary-metric__meta">Leitura rápida de valor percebido para o cliente final.</span>
+                </article>
+
+                <article class="solar-summary-metric">
+                    <span class="solar-summary-metric__label">Potência sugerida</span>
+                    <strong class="solar-summary-metric__value">{{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : ($estimatedRequiredPowerKwp !== null ? number_format($estimatedRequiredPowerKwp, 2, ',', '.') . ' kWp' : 'Aguardando consumo') }}</strong>
+                </article>
+
+                <article class="solar-summary-metric">
+                    <span class="solar-summary-metric__label">Módulos sugeridos</span>
+                    <strong class="solar-summary-metric__value">{{ $project->module_quantity ?: ($suggestedModuleQuantity ?: 'Aguardando sistema') }}</strong>
+                </article>
+
+                <article class="solar-summary-metric">
+                    <span class="solar-summary-metric__label">Geração estimada</span>
+                    <strong class="solar-summary-metric__value">{{ $project->estimated_generation_kwh ? number_format((float) $project->estimated_generation_kwh, 2, ',', '.') . ' kWh' : ($suggestedGenerationKwh ? number_format($suggestedGenerationKwh, 2, ',', '.') . ' kWh' : 'Aguardando sistema') }}</strong>
+                </article>
+
+                <article class="solar-summary-metric">
+                    <span class="solar-summary-metric__label">Economia anual</span>
+                    <strong class="solar-summary-metric__value">{{ $estimatedAnnualSavings !== null ? 'R$ ' . number_format((float) $estimatedAnnualSavings, 2, ',', '.') : 'Aguardando simulação' }}</strong>
+                </article>
+
+                <article class="solar-summary-metric">
+                    <span class="solar-summary-metric__label">Economia em 25 anos</span>
+                    <strong class="solar-summary-metric__value">{{ $estimatedLifetimeSavings !== null ? 'R$ ' . number_format((float) $estimatedLifetimeSavings, 2, ',', '.') : 'Aguardando simulação' }}</strong>
+                </article>
+
+                <article class="solar-summary-metric">
+                    <span class="solar-summary-metric__label">Status comercial</span>
+                    <strong class="solar-summary-metric__value">{{ $statusLabel }}</strong>
+                </article>
+            </div>
+
             <div class="solar-project-command__highlights">
                 <article class="solar-sizing-chip">
                     <span class="solar-sizing-chip__label">Cliente</span>
@@ -54,37 +115,13 @@
                 </article>
 
                 <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Status comercial</span>
-                    <strong class="solar-sizing-chip__value">{{ $statusLabel }}</strong>
+                    <span class="solar-sizing-chip__label">Origem do fator</span>
+                    <strong class="solar-sizing-chip__value">{{ strtoupper(($solarFactorData['source'] ?? 'default') === 'pvgis' ? 'PVGIS' : 'padrão') }}</strong>
                 </article>
 
                 <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Consumo mensal</span>
-                    <strong class="solar-sizing-chip__value">{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : 'Aguardando consumo' }}</strong>
-                </article>
-
-                <article class="solar-sizing-chip solar-sizing-chip--featured">
-                    <span class="solar-sizing-chip__label">Potência sugerida</span>
-                    <strong class="solar-sizing-chip__value">{{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : ($estimatedRequiredPowerKwp !== null ? number_format($estimatedRequiredPowerKwp, 2, ',', '.') . ' kWp' : 'Aguardando consumo') }}</strong>
-                    <span class="solar-sizing-chip__meta">Base inicial para apresentar a solução ao cliente.</span>
-                </article>
-
-                <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Módulos sugeridos</span>
-                    <strong class="solar-sizing-chip__value">{{ $project->module_quantity ?: ($suggestedModuleQuantity ?: 'Aguardando sistema') }}</strong>
-                </article>
-
-                <article class="solar-sizing-chip solar-sizing-chip--featured">
-                    <span class="solar-sizing-chip__label">Preço sugerido</span>
-                    <strong class="solar-sizing-chip__value">
-                        {{ $project->suggested_price ? 'R$ ' . number_format((float) $project->suggested_price, 2, ',', '.') : ($suggestedCommercialPrice ? 'R$ ' . number_format((float) $suggestedCommercialPrice, 2, ',', '.') : 'Aguardando configuração') }}
-                    </strong>
-                    <span class="solar-sizing-chip__meta">Valor comercial inicial para acelerar a negociação.</span>
-                </article>
-
-                <article class="solar-sizing-chip">
-                    <span class="solar-sizing-chip__label">Economia mensal</span>
-                    <strong class="solar-sizing-chip__value">{{ $estimatedMonthlySavings !== null ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') : 'Aguardando conta' }}</strong>
+                    <span class="solar-sizing-chip__label">Pronto para proposta</span>
+                    <strong class="solar-sizing-chip__value">{{ ($project->suggested_price || $suggestedCommercialPrice) && $estimatedMonthlySavings !== null ? 'Sim' : 'Em preparação' }}</strong>
                 </article>
             </div>
         </section>
@@ -114,6 +151,12 @@
                     <span class="solar-sizing-chip__label">Potência do sistema</span>
                     <strong class="solar-sizing-chip__value">{{ $project->system_power_kwp ? number_format((float) $project->system_power_kwp, 2, ',', '.') . ' kWp' : ($estimatedRequiredPowerKwp !== null ? number_format($estimatedRequiredPowerKwp, 2, ',', '.') . ' kWp' : '-') }}</strong>
                     <span class="solar-sizing-chip__meta">Sugestão automática usada como base para o pré-orçamento.</span>
+                </article>
+
+                <article class="solar-sizing-chip">
+                    <span class="solar-sizing-chip__label">Fator regional</span>
+                    <strong class="solar-sizing-chip__value">{{ number_format((float) ($solarFactorData['factor'] ?? \App\Modules\Solar\Services\SolarSizingService::DEFAULT_SOLAR_FACTOR), 2, ',', '.') }} kWh/kWp/mês</strong>
+                    <span class="solar-sizing-chip__meta">{{ ($solarFactorData['source'] ?? 'default') === 'pvgis' ? 'Cálculo regional vindo do PVGIS.' : 'Fallback padrão usado neste projeto.' }}</span>
                 </article>
 
                 <article class="solar-sizing-chip solar-sizing-chip--featured">
