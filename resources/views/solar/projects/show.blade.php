@@ -14,6 +14,7 @@
 
     $locationSummary = collect([$project->city, $project->state])->filter()->implode(' / ');
     $resolvedSolarFactor = (float) ($solarFactorData['factor'] ?? \App\Modules\Solar\Services\SolarSizingService::DEFAULT_SOLAR_FACTOR);
+    $equivalentSolarRadiationDaily = $sizingService->estimateEquivalentSolarRadiationDaily($resolvedSolarFactor);
     $geocodingPrecisionLabel = match ($project->geocoding_precision ?: 'fallback') {
         'address' => 'Endereco refinado',
         'city' => 'Cidade aproximada',
@@ -79,6 +80,10 @@
                 <span class="solar-project-command__signal">
                     <strong>Fator solar</strong>
                     {{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mes
+                </span>
+                <span class="solar-project-command__signal">
+                    <strong>Radiacao solar</strong>
+                    {{ number_format($equivalentSolarRadiationDaily, 2, ',', '.') }} kWh/m2/dia
                 </span>
                 <span class="solar-project-command__signal">
                     <strong>Origem</strong>

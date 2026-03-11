@@ -65,6 +65,7 @@ class SolarSizingServiceTest extends TestCase
 
         $this->assertSame(22.5, $service->estimateAreaSquareMeters(5));
         $this->assertSame(18.4, $service->estimateAreaFromModules(8));
+        $this->assertSame(4.33, $service->estimateEquivalentSolarRadiationDaily(130));
         $this->assertSame(40, $service->estimatePaybackMonths(12000, 370));
         $this->assertSame(3.3, $service->estimatePaybackYears(12000, 370));
         $this->assertSame(30.0, $service->estimateRoiPercentage(12000, 370));

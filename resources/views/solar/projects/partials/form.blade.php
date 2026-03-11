@@ -20,6 +20,7 @@
     $initialEnergyBillValue = old('energy_bill_value', $project->energy_bill_value);
     $residualMinimumCost = (float) ($residualMinimumCost ?? 70);
     $resolvedSolarFactor = (float) old('solar_factor_used', $project->solar_factor_used ?: ($solarFactorData['factor'] ?? \App\Modules\Solar\Services\SolarSizingService::DEFAULT_SOLAR_FACTOR));
+    $equivalentSolarRadiationDaily = $sizingService->estimateEquivalentSolarRadiationDaily($resolvedSolarFactor);
     $resolvedSolarFactorSource = old('solar_factor_source', $project->solar_factor_source ?: ($solarFactorData['source'] ?? 'fallback'));
     $geocodingPrecision = old('geocoding_precision', $project->geocoding_precision ?: 'fallback');
     $geocodingPrecisionLabel = match ($geocodingPrecision) {
@@ -153,6 +154,10 @@
             <span class="solar-project-command__signal">
                 <strong>Fator solar</strong>
                 <span data-solar-factor-display>{{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mes</span>
+            </span>
+            <span class="solar-project-command__signal">
+                <strong>Radiacao solar</strong>
+                <span data-solar-radiation-display>{{ number_format($equivalentSolarRadiationDaily, 2, ',', '.') }} kWh/m2/dia</span>
             </span>
             <span class="solar-project-command__signal">
                 <strong>Origem</strong>

@@ -13,6 +13,7 @@ class SolarSizingService
     public const DEFAULT_SOLAR_FACTOR = 130.0;
     public const ESTIMATED_AREA_PER_KWP = 4.5;
     public const MODULE_AREA_SQM = 2.3;
+    public const AVERAGE_DAYS_PER_MONTH = 30.0;
 
     private const DEFAULT_REGIONAL_PRICE_PER_KWP = [
         'AC' => 4550.0,
@@ -262,6 +263,13 @@ class SolarSizingService
         }
 
         return round($powerKwp * $factor, 2);
+    }
+
+    public function estimateEquivalentSolarRadiationDaily(float|int|string|null $solarFactor): float
+    {
+        $factor = $this->resolveSolarFactor($solarFactor);
+
+        return round($factor / self::AVERAGE_DAYS_PER_MONTH, 2);
     }
 
     public function estimateSuggestedPrice(

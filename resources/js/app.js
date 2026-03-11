@@ -941,6 +941,7 @@ const initSolarSizingForm = () => {
     const numberInput = root.querySelector('#number');
     const districtInput = root.querySelector('[data-cep-district]');
     const solarFactorDisplay = root.querySelector('[data-solar-factor-display]');
+    const solarRadiationDisplay = root.querySelector('[data-solar-radiation-display]');
     const solarFactorSourceDisplay = root.querySelector('[data-solar-factor-source-display]');
     const solarFactorMessage = root.querySelector('[data-solar-factor-message]');
     const geocodingStatusDisplay = root.querySelector('[data-geocoding-status]');
@@ -1081,6 +1082,10 @@ const initSolarSizingForm = () => {
       }
 
       return roundTo((annualSavings / suggestedPrice) * 100, 1);
+    };
+    const estimateEquivalentSolarRadiationDaily = (solarFactor) => {
+      if (!Number.isFinite(solarFactor) || solarFactor <= 0) return null;
+      return roundTo(solarFactor / 30, 2);
     };
     const updateGeocodingDisplays = (status, precisionLabel) => {
       if (geocodingStatusDisplay instanceof HTMLElement && status) {
@@ -1372,6 +1377,13 @@ const initSolarSizingForm = () => {
         solarFactorDisplay.textContent = `${formatNumber(solarFactorUsed, '', 2)} kWh/kWp/mes`;
       }
 
+      if (solarRadiationDisplay instanceof HTMLElement) {
+        const radiation = estimateEquivalentSolarRadiationDaily(solarFactorUsed);
+        solarRadiationDisplay.textContent = radiation !== null
+          ? `${formatNumber(radiation, '', 2)} kWh/m2/dia`
+          : 'Aguardando fator';
+      }
+
       if (solarFactorSourceDisplay instanceof HTMLElement) {
         solarFactorSourceDisplay.textContent = solarFactorSource === 'pvgis' ? 'PVGIS' : 'PADRAO';
       }
@@ -1611,15 +1623,58 @@ const initEnergyUtilityAutoSelect = () => {
 
     const lookup = JSON.parse(select.dataset.utilityLookup || '[]');
     let manualOverride = select.value !== '';
+    const placeholderLabel = select.options[0]?.textContent?.trim() || 'Selecionar automaticamente';
+
     const findUtilityById = (utilityId) => {
       const normalizedId = String(utilityId || '').trim();
       if (!normalizedId) return null;
       return lookup.find((utility) => String(utility.id) === normalizedId) || null;
     };
+
     const currentLocation = () => ({
       city: normalize(cityInput.value || ''),
       state: (stateInput.value || '').trim().toUpperCase(),
     });
+
+    const filteredUtilities = () => {
+      const { city, state } = currentLocation();
+
+      if (!state) {
+        return [];
+      }
+
+      const byState = lookup.filter((utility) => utility.state === state);
+
+      if (!city) {
+        return byState;
+      }
+
+      const byCity = byState.filter((utility) => (
+        !Array.isArray(utility.cities)
+        || utility.cities.length === 0
+        || utility.cities.includes(city)
+      ));
+
+      return byCity.length > 0 ? byCity : byState;
+    };
+
+    const renderUtilityOptions = (utilities) => {
+      const currentValue = select.value;
+      select.innerHTML = '';
+      select.append(new Option(placeholderLabel, ''));
+
+      utilities.forEach((utility) => {
+        const option = new Option(`${utility.name} (${utility.state})`, String(utility.id));
+        select.append(option);
+      });
+
+      if (currentValue !== '' && utilities.some((utility) => String(utility.id) === currentValue)) {
+        select.value = currentValue;
+      } else {
+        select.value = '';
+      }
+    };
+
     const selectedUtilityMatchesLocation = () => {
       const selected = findUtilityById(select.value);
       if (!selected) return false;
@@ -1642,6 +1697,9 @@ const initEnergyUtilityAutoSelect = () => {
     };
 
     const resolveUtility = () => {
+      const utilities = filteredUtilities();
+      renderUtilityOptions(utilities);
+
       if (manualOverride && select.value !== '') {
         if (selectedUtilityMatchesLocation()) return;
 
@@ -1653,21 +1711,37 @@ const initEnergyUtilityAutoSelect = () => {
       const city = normalize(cityInput.value || '');
       const state = (stateInput.value || '').trim().toUpperCase();
 
-      if (!city || !state) {
+      if (!state) {
+        manualOverride = false;
+        select.value = '';
+        setFeedback('Informe a UF para carregar as concessionarias da regiao.');
+        return;
+      }
+
+      if (!city) {
         if (select.value === '') {
-          setFeedback('A concessionaria sera sugerida automaticamente a partir da cidade e UF quando disponivel.');
+          setFeedback('Concessionarias filtradas por UF. Informe a cidade para sugestao automatica precisa.');
         }
         return;
       }
 
-      const matched = lookup.find((utility) => utility.state === state && utility.cities.includes(city));
+      if (utilities.length === 0) {
+        select.value = '';
+        setFeedback('Nenhuma concessionaria encontrada para esta UF no catalogo atual.', 'is-error');
+        return;
+      }
+
+      const matched = utilities.find((utility) => Array.isArray(utility.cities) && utility.cities.includes(city));
 
       if (matched) {
         select.value = String(matched.id);
+        manualOverride = false;
         setFeedback(`Concessionaria sugerida automaticamente: ${matched.name}.`, 'is-success');
       } else if (!manualOverride) {
         select.value = '';
-        setFeedback('Nenhuma concessionaria do catalogo foi encontrada para esta cidade. Selecione manualmente.', 'is-error');
+        setFeedback('Nenhuma concessionaria do catalogo foi encontrada para esta cidade. Ajuste manualmente se necessario.', 'is-error');
+      } else if (select.value === '') {
+        setFeedback('Selecione manualmente uma concessionaria da mesma UF.', 'is-error');
       }
     };
 
@@ -1691,21 +1765,10 @@ const initEnergyUtilityAutoSelect = () => {
       setFeedback(`${selectedLabel} selecionada manualmente.`, 'is-success');
     });
 
-    cityInput.addEventListener('input', () => {
-      if (!manualOverride) resolveUtility();
-    });
-
-    stateInput.addEventListener('input', () => {
-      if (!manualOverride) resolveUtility();
-    });
-
-    cityInput.addEventListener('change', () => {
-      if (!manualOverride) resolveUtility();
-    });
-
-    stateInput.addEventListener('change', () => {
-      if (!manualOverride) resolveUtility();
-    });
+    cityInput.addEventListener('input', resolveUtility);
+    stateInput.addEventListener('input', resolveUtility);
+    cityInput.addEventListener('change', resolveUtility);
+    stateInput.addEventListener('change', resolveUtility);
 
     resolveUtility();
   });
