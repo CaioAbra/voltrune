@@ -30,6 +30,7 @@ class SolarProject extends Model
         'latitude',
         'longitude',
         'geocoding_status',
+        'geocoding_precision',
         'monthly_consumption_kwh',
         'energy_bill_value',
         'connection_type',

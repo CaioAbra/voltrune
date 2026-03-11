@@ -14,6 +14,18 @@
 
     $locationSummary = collect([$project->city, $project->state])->filter()->implode(' / ');
     $resolvedSolarFactor = (float) ($solarFactorData['factor'] ?? \App\Modules\Solar\Services\SolarSizingService::DEFAULT_SOLAR_FACTOR);
+    $geocodingPrecisionLabel = match ($project->geocoding_precision ?: 'fallback') {
+        'address' => 'Endereco refinado',
+        'city' => 'Cidade aproximada',
+        default => 'Fallback padrao',
+    };
+    $geocodingStatusLabel = match ($project->geocoding_status ?: 'pending') {
+        'ready' => 'Localizacao pronta',
+        'not_found' => 'Localizacao nao encontrada',
+        'address_loaded' => 'Endereco parcial carregado',
+        'not_requested' => 'Aguardando CEP',
+        default => 'Buscando melhor localizacao',
+    };
     $kitCost = $sizingService->estimateKitCost($project->suggested_price ?: $suggestedCommercialPrice, $companySetting?->margin_percent);
     $grossProfit = $sizingService->estimateGrossProfit($project->suggested_price ?: $suggestedCommercialPrice, $kitCost);
     $kitBreakdown = $sizingService->estimateKitCostBreakdown($kitCost);
@@ -71,6 +83,10 @@
                 <span class="solar-project-command__signal">
                     <strong>Origem</strong>
                     {{ strtoupper(($solarFactorData['source'] ?? 'fallback') === 'pvgis' ? 'PVGIS' : 'padrao') }}
+                </span>
+                <span class="solar-project-command__signal">
+                    <strong>Precisao</strong>
+                    {{ $geocodingPrecisionLabel }}
                 </span>
                 <span class="solar-project-command__signal">
                     <strong>Preco por kWp</strong>
@@ -157,7 +173,8 @@
                 <p><strong>Cliente:</strong> {{ $project->customer?->name ?: '-' }}</p>
                 <p><strong>Endereco:</strong> {{ $project->address ?: 'Endereco ainda em preparacao.' }}</p>
                 <p><strong>Tipo de imovel:</strong> {{ $project->property_type ?: '-' }}</p>
-                <p><strong>Geocodificacao:</strong> {{ strtoupper($project->geocoding_status ?? 'pending') }}</p>
+                <p><strong>Geocodificacao:</strong> {{ $geocodingStatusLabel }}</p>
+                <p><strong>Precisao usada:</strong> {{ $geocodingPrecisionLabel }}</p>
                 <p><strong>Concessionaria:</strong> {{ $project->utility_company ?: '-' }}</p>
             </article>
 
@@ -182,7 +199,7 @@
                 <article class="solar-sizing-chip">
                     <span class="solar-sizing-chip__label">Fator regional</span>
                     <strong class="solar-sizing-chip__value">{{ number_format((float) ($solarFactorData['factor'] ?? \App\Modules\Solar\Services\SolarSizingService::DEFAULT_SOLAR_FACTOR), 2, ',', '.') }} kWh/kWp/mes</strong>
-                    <span class="solar-sizing-chip__meta">{{ ($solarFactorData['source'] ?? 'fallback') === 'pvgis' ? 'Calculo regional vindo do PVGIS.' : 'Fallback padrao usado neste projeto.' }}</span>
+                    <span class="solar-sizing-chip__meta">{{ ($solarFactorData['source'] ?? 'fallback') === 'pvgis' ? ($project->geocoding_precision === 'address' ? 'Calculo regional vindo do PVGIS com endereco refinado.' : 'Calculo regional vindo do PVGIS com aproximacao por cidade.') : 'Fallback padrao usado neste projeto.' }}</span>
                 </article>
 
                 <article class="solar-sizing-chip solar-sizing-chip--featured">

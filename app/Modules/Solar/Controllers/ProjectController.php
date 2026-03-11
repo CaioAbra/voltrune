@@ -304,7 +304,14 @@ class ProjectController extends Controller
             : null;
 
         $hasAddressLookupData = ! empty($data['street']) || ! empty($data['district']) || ! empty($data['city']) || ! empty($data['state']);
-        $previousAddress = $project?->address;
+        $currentLocationData = $project?->only([
+            'zip_code',
+            'street',
+            'number',
+            'district',
+            'city',
+            'state',
+        ]);
 
         if ($data['energy_utility_id'] === null && ! empty($data['city']) && ! empty($data['state'])) {
             $resolvedUtility = $this->utilityResolver->resolveUtilityByCity($data['city'], $data['state']);
@@ -318,10 +325,11 @@ class ProjectController extends Controller
         $data['utility_company'] = $selectedUtility?->name;
 
         $data['geocoding_status'] = match (true) {
-            empty($data['zip_code']) => 'not_requested',
-            $hasAddressLookupData => 'address_loaded',
+            empty($data['zip_code']) && empty($data['city']) && empty($data['state']) => 'not_requested',
+            $hasAddressLookupData => 'pending',
             default => 'pending',
         };
+        $data['geocoding_precision'] = $project?->geocoding_precision ?: 'fallback';
         $data['solar_factor_used'] = $project?->solar_factor_used;
         $data['solar_factor_source'] = $project?->solar_factor_source;
         $data['solar_factor_fetched_at'] = $project?->solar_factor_fetched_at;
@@ -337,18 +345,30 @@ class ProjectController extends Controller
 
         $coordinatesMissing = $project?->latitude === null || $project?->longitude === null;
 
-        if ($this->geocoding->shouldRefreshCoordinates($data, $previousAddress, $coordinatesMissing)) {
-            $coordinates = $this->geocoding->resolveCoordinates($data);
+        if ($this->geocoding->shouldRefreshCoordinates($data, $currentLocationData, $coordinatesMissing, $project?->geocoding_precision)) {
+            $coordinates = $this->geocoding->resolveCoordinates($data, [
+                'latitude' => $project?->latitude !== null ? (float) $project->latitude : null,
+                'longitude' => $project?->longitude !== null ? (float) $project->longitude : null,
+            ], $project?->geocoding_precision);
             $data['latitude'] = $coordinates['latitude'];
             $data['longitude'] = $coordinates['longitude'];
             $data['geocoding_status'] = $coordinates['status'];
-            $data['solar_factor_used'] = null;
-            $data['solar_factor_source'] = null;
-            $data['solar_factor_fetched_at'] = null;
-            $data['radiation_status'] = null;
+            $data['geocoding_precision'] = $coordinates['precision'];
+
+            $coordinatesChanged = round((float) ($project?->latitude ?? 0), 6) !== round((float) ($coordinates['latitude'] ?? 0), 6)
+                || round((float) ($project?->longitude ?? 0), 6) !== round((float) ($coordinates['longitude'] ?? 0), 6);
+            $precisionChanged = $this->geocoding->normalizePrecision($project?->geocoding_precision) !== $coordinates['precision'];
+
+            if ($coordinatesChanged || $precisionChanged) {
+                $data['solar_factor_used'] = null;
+                $data['solar_factor_source'] = null;
+                $data['solar_factor_fetched_at'] = null;
+                $data['radiation_status'] = null;
+            }
         } else {
             $data['latitude'] = $project?->latitude;
             $data['longitude'] = $project?->longitude;
+            $data['geocoding_precision'] = $project?->geocoding_precision ?: $this->geocoding->normalizePrecision(null);
         }
 
         return $data;

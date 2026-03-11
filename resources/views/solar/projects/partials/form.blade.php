@@ -21,6 +21,24 @@
     $residualMinimumCost = (float) ($residualMinimumCost ?? 70);
     $resolvedSolarFactor = (float) old('solar_factor_used', $project->solar_factor_used ?: ($solarFactorData['factor'] ?? \App\Modules\Solar\Services\SolarSizingService::DEFAULT_SOLAR_FACTOR));
     $resolvedSolarFactorSource = old('solar_factor_source', $project->solar_factor_source ?: ($solarFactorData['source'] ?? 'fallback'));
+    $geocodingPrecision = old('geocoding_precision', $project->geocoding_precision ?: 'fallback');
+    $geocodingPrecisionLabel = match ($geocodingPrecision) {
+        'address' => 'Endereco refinado',
+        'city' => 'Cidade aproximada',
+        default => 'Fallback padrao',
+    };
+    $geocodingStatusLabel = match (old('geocoding_status', $project->geocoding_status ?: 'pending')) {
+        'ready' => 'Localizacao pronta',
+        'not_found' => 'Localizacao nao encontrada',
+        'address_loaded' => 'Endereco parcial carregado',
+        'not_requested' => 'Aguardando CEP',
+        default => 'Buscando melhor localizacao',
+    };
+    $solarFactorContextLabel = match (true) {
+        $resolvedSolarFactorSource === 'pvgis' && $geocodingPrecision === 'address' => 'Origem PVGIS com endereco refinado.',
+        $resolvedSolarFactorSource === 'pvgis' && $geocodingPrecision === 'city' => 'Origem PVGIS com aproximacao por cidade.',
+        default => 'Fallback padrao ativo.',
+    };
     $initialMonthlySavings = $initialEnergyBillValue !== null && $initialEnergyBillValue !== '' && (float) $initialEnergyBillValue > 0
         ? max((float) $initialEnergyBillValue - $residualMinimumCost, 0)
         : null;
@@ -130,6 +148,10 @@
             <span class="solar-project-command__signal">
                 <strong>Origem</strong>
                 <span data-solar-factor-source-display>{{ strtoupper($resolvedSolarFactorSource === 'pvgis' ? 'PVGIS' : 'padrao') }}</span>
+            </span>
+            <span class="solar-project-command__signal">
+                <strong>Precisao</strong>
+                <span>{{ $geocodingPrecisionLabel }}</span>
             </span>
                 <span class="solar-project-command__signal">
                 <strong>Margem</strong>
@@ -311,8 +333,9 @@
         </div>
 
         <div class="solar-flow-section__footnote">
-            <strong>Status de localizacao interna:</strong>
-            <span data-geocoding-status>{{ strtoupper($project->geocoding_status ?? 'pending') }}</span>
+            <strong>Localizacao automatica:</strong>
+            <span data-geocoding-status>{{ $geocodingStatusLabel }}</span>
+            <span class="solar-project-command__signal">{{ $geocodingPrecisionLabel }}</span>
         </div>
     </section>
 
@@ -384,7 +407,7 @@
             <article class="solar-sizing-chip">
                 <span class="solar-sizing-chip__label">Fator usado</span>
                 <strong class="solar-sizing-chip__value" data-sizing-preview="factor">{{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mes</strong>
-                <span class="solar-sizing-chip__meta">{{ $resolvedSolarFactorSource === 'pvgis' ? 'Origem PVGIS.' : 'Fallback padrao ativo.' }}</span>
+                <span class="solar-sizing-chip__meta">{{ $solarFactorContextLabel }}</span>
             </article>
 
             <article class="solar-sizing-chip">
