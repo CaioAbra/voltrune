@@ -1956,8 +1956,14 @@ const initSolarProjectShowcase = () => {
   if (!showcases.length) return;
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
   const formatters = {
-    currency: (value) => `R$ ${value.toFixed(2).replace('.', ',')}`,
+    currency: (value) => currencyFormatter.format(value),
     kwp: (value) => `${value.toFixed(2).replace('.', ',')} kWp`,
     months: (value) => `${Math.round(value)} meses`,
   };

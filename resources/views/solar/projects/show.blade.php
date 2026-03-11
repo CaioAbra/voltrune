@@ -42,6 +42,14 @@
     $displayGeneration = $project->estimated_generation_kwh ?: $suggestedGenerationKwh;
     $displaySuggestedPrice = $project->suggested_price ?: $suggestedCommercialPrice;
     $readyForProposal = $displaySuggestedPrice && $estimatedMonthlySavings !== null;
+    $displayAddress = $project->address ?: collect([
+        $project->street ?: null,
+        $project->number ?: null,
+        $project->complement ?: null,
+        $project->district ?: null,
+        $project->city ?: null,
+        $project->state ?: null,
+    ])->filter()->implode(', ');
 @endphp
 
 @section('solar-content')
@@ -163,7 +171,7 @@
                 <h2>Contexto do projeto</h2>
                 <div class="solar-project-show__info-grid">
                     <p><strong>Cliente</strong><span>{{ $project->customer?->name ?: '-' }}</span></p>
-                    <p><strong>Endereco</strong><span>{{ $project->address ?: 'Endereco ainda em preparacao.' }}</span></p>
+                    <p><strong>Endereco</strong><span>{{ $displayAddress !== '' ? $displayAddress : 'Endereco ainda em preparacao.' }}</span></p>
                     <p><strong>Tipo de imovel</strong><span>{{ $project->property_type ?: '-' }}</span></p>
                     <p><strong>Geocodificacao</strong><span>{{ $geocodingStatusLabel }}</span></p>
                     <p><strong>Precisao usada</strong><span>{{ $geocodingPrecisionLabel }}</span></p>
