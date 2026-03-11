@@ -48,6 +48,17 @@ class SolarSizingServiceTest extends TestCase
         $this->assertSame(4310.0, $context['value']);
     }
 
+    public function test_it_uses_national_fallback_when_company_and_region_are_missing(): void
+    {
+        $service = new SolarSizingService();
+
+        $context = $service->resolveContextualPricePerKwp(null, 'XX');
+
+        $this->assertSame('fallback', $context['source']);
+        $this->assertSame(4200.0, $context['value']);
+        $this->assertSame('BR', $context['market_defaults']['state']);
+    }
+
     public function test_it_estimates_area_and_payback(): void
     {
         $service = new SolarSizingService();

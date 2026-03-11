@@ -60,16 +60,16 @@
                         {{ match ($pricingReferenceSource ?? null) {
                             'company' => 'Preco proprio ativo',
                             'regional' => 'Media regional ativa',
-                            default => 'Fallback padrao ativo',
+                            default => 'Fallback nacional ativo',
                         } }}
                     </strong>
                     <p>
                         @if (($pricingReferenceSource ?? null) === 'company')
                             O projeto esta usando o preco por kWp definido pela empresa.
                         @elseif (($pricingReferenceSource ?? null) === 'regional')
-                            O projeto esta usando media regional por UF para compor o pre-orcamento.
+                            Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.
                         @else
-                            O projeto esta usando {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp como fallback padrao.
+                            Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.
                         @endif
                     </p>
                 </div>
@@ -150,7 +150,7 @@
                         {{ match ($pricingReferenceSource ?? null) {
                             'company' => 'Preco da empresa',
                             'regional' => 'Media regional',
-                            default => 'Fallback padrao',
+                            default => 'Fallback padrao nacional',
                         } }}
                     </strong>
                 </article>
@@ -265,7 +265,7 @@
                         {{ match ($pricingReferenceSource ?? null) {
                             'company' => 'Preco da empresa',
                             'regional' => 'Media regional',
-                            default => 'Fallback padrao',
+                            default => 'Fallback padrao nacional',
                         } }}
                     </strong>
                 </article>
@@ -308,9 +308,9 @@
             @if (($pricingReferenceSource ?? null) === 'company')
                 <p class="hub-note">Preco inicial calculado pela regra simples: potencia do sistema x preco por kWp da empresa.</p>
             @elseif (($pricingReferenceSource ?? null) === 'regional')
-                <p class="hub-note">Preco inicial calculado com media regional da UF para acelerar o pre-orcamento quando a empresa ainda nao definiu preco proprio.</p>
+                <p class="hub-note">Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.</p>
             @else
-                <p class="hub-note">Preco inicial calculado com fallback padrao de {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp.</p>
+                <p class="hub-note">Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.</p>
             @endif
 
             <p class="solar-inline-tip"><strong>Status comercial:</strong> {{ $statusLabel }}. O projeto ja esta estruturado para evoluir de pre-orcamento para proposta sem perder o contexto comercial.</p>

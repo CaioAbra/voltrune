@@ -62,13 +62,22 @@
         $defaultInverterModel,
         $initialSystemPower,
     );
+    $pricingSource = $pricingReferenceSource ?? ($usesMarketPriceFallback ? 'fallback' : 'company');
+    $pricingSourceLabel = match ($pricingSource) {
+        'company' => 'Preco da empresa',
+        'regional' => 'Media regional',
+        default => 'Fallback padrao nacional',
+    };
 @endphp
 
 <div
     class="solar-project-flow"
     data-solar-project-form
-    data-pricing-per-kwp="{{ old('company_price_per_kwp', $effectivePricePerKwp) }}"
-    data-pricing-source="{{ $pricingReferenceSource ?? ($usesMarketPriceFallback ? 'fallback' : 'company') }}"
+    data-automation-preview-url="{{ route('solar.projects.automation-preview') }}"
+    data-project-id="{{ $project->exists ? $project->id : '' }}"
+    data-pricing-effective-per-kwp="{{ old('company_price_per_kwp', $effectivePricePerKwp) }}"
+    data-pricing-default-per-kwp="{{ \App\Modules\Solar\Services\SolarSizingService::MARKET_PRICE_PER_KWP }}"
+    data-pricing-source="{{ $pricingSource }}"
     data-regional-price-lookup='@json($regionalPriceLookup ?? [], JSON_UNESCAPED_UNICODE)'
     data-margin-percent="{{ old('company_margin_percent', $companySetting?->margin_percent) }}"
     data-default-inverter-model="{{ $companySetting?->default_inverter_model }}"
@@ -86,13 +95,13 @@
 
             <div class="solar-project-command__status {{ $usesMarketPriceFallback ? 'is-market' : 'is-ready' }}">
                 <span class="solar-project-command__status-label">Automacao comercial</span>
-                <strong>{{ $usesMarketPriceFallback ? 'Referencia de mercado ativa' : 'Preco proprio ativo' }}</strong>
+                <strong>{{ $usesMarketPriceFallback ? 'Media de mercado ativa' : 'Preco proprio ativo' }}</strong>
                 <p>
-                    @if ($usesMarketPriceFallback)
-                        O Solar esta usando {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp como base automatica.
-                    @else
-                        O Solar esta usando o preco por kWp da empresa para gerar a previa automatica.
-                    @endif
+                    {{ match ($pricingSource) {
+                        'company' => 'O Solar esta usando o preco por kWp da empresa para gerar a previa automatica.',
+                        'regional' => 'Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.',
+                        default => 'Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.',
+                    } }}
                 </p>
                 <a href="{{ route('solar.settings.edit') }}" class="hub-btn hub-btn--subtle">Configuracoes comerciais</a>
             </div>
@@ -151,7 +160,7 @@
             </span>
             <span class="solar-project-command__signal">
                 <strong>Precisao</strong>
-                <span>{{ $geocodingPrecisionLabel }}</span>
+                <span data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
             </span>
                 <span class="solar-project-command__signal">
                 <strong>Margem</strong>
@@ -161,9 +170,9 @@
                 <strong>Preco por kWp</strong>
                 <span data-pricing-preview="rate">{{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}</span>
             </span>
-            @if (($solarFactorData['message'] ?? null) !== null)
-                <span class="solar-project-command__fallback solar-project-command__signal">{{ $solarFactorData['message'] }}</span>
-            @endif
+            <span class="solar-project-command__fallback solar-project-command__signal" data-solar-factor-message @if (($solarFactorData['message'] ?? null) === null) hidden @endif>
+                {{ $solarFactorData['message'] }}
+            </span>
         </div>
     </section>
 
@@ -335,7 +344,8 @@
         <div class="solar-flow-section__footnote">
             <strong>Localizacao automatica:</strong>
             <span data-geocoding-status>{{ $geocodingStatusLabel }}</span>
-            <span class="solar-project-command__signal">{{ $geocodingPrecisionLabel }}</span>
+            <span class="solar-project-command__signal" data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
+            <span class="solar-project-command__signal" data-automation-sync-status>Sincronizado</span>
         </div>
     </section>
 
@@ -372,7 +382,7 @@
     <section
         class="hub-card hub-card--subtle solar-flow-section solar-sizing-panel"
         data-sizing-form
-        data-pricing-per-kwp="{{ old('company_price_per_kwp', $effectivePricePerKwp) }}"
+        data-pricing-effective-per-kwp="{{ old('company_price_per_kwp', $effectivePricePerKwp) }}"
     >
         <div class="solar-flow-section__header">
             <div>
@@ -536,11 +546,7 @@
             <article class="solar-sizing-chip">
                 <span class="solar-sizing-chip__label">Origem do preco</span>
                 <strong class="solar-sizing-chip__value" data-pricing-preview="source">
-                    {{ match ($pricingReferenceSource ?? null) {
-                        'company' => 'Preco da empresa',
-                        'regional' => 'Media regional',
-                        default => 'Fallback padrao',
-                    } }}
+                    {{ $pricingSourceLabel }}
                 </strong>
                 <span class="solar-sizing-chip__meta">Prioridade: empresa, media regional e depois fallback padrao.</span>
             </article>
@@ -590,10 +596,12 @@
         </div>
 
         <p class="solar-sizing-panel__note solar-pricing-panel__note" data-pricing-note>
-            @if ($usesMarketPriceFallback)
-                Sem preco proprio configurado, o Solar esta usando {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}/kWp como referencia automatica.
-            @else
+            @if ($pricingSource === 'company')
                 O preco sugerido sera recalculado automaticamente quando a potencia do sistema mudar. Voce ainda pode ajustar manualmente antes de salvar.
+            @elseif ($pricingSource === 'regional')
+                Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.
+            @else
+                Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.
             @endif
         </p>
 
@@ -609,7 +617,12 @@
                 @error('suggested_price')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="solar-field-note solar-field-note--automatic"><span class="solar-mini-badge solar-mini-badge--automatic">Automatico</span> Preenchido pelo Solar e liberado para ajuste manual.</p>
+                <p class="solar-field-note solar-field-note--automatic">
+                    <span class="solar-mini-badge solar-mini-badge--automatic">Automatico</span>
+                    {{ $pricingSource === 'company'
+                        ? 'Preco sugerido com base na configuracao da empresa. Voce pode ajustar manualmente.'
+                        : 'Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.' }}
+                </p>
             </div>
 
             <div>

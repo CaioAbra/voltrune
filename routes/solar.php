@@ -21,6 +21,7 @@ Route::middleware(['auth', 'company.active', 'product:solar'])
         Route::delete('/customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
         Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
         Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
+        Route::get('/projects/automation-preview', [ProjectController::class, 'automationPreview'])->name('projects.automation-preview');
         Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
         Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
         Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');

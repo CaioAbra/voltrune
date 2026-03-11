@@ -47,6 +47,33 @@ class EnergyUtilityResolverService
             ->all();
     }
 
+    public function matchesLocation(EnergyUtility $utility, ?string $city, ?string $state): bool
+    {
+        $normalizedState = strtoupper(trim((string) $state));
+        $utilityState = strtoupper(trim((string) $utility->state));
+
+        if ($normalizedState !== '' && $utilityState !== $normalizedState) {
+            return false;
+        }
+
+        $normalizedCity = $this->normalize((string) $city);
+
+        if ($normalizedCity === '') {
+            return true;
+        }
+
+        $cities = collect($utility->cities_json ?? [])
+            ->map(fn (mixed $name): string => $this->normalize((string) $name))
+            ->filter()
+            ->values();
+
+        if ($cities->isEmpty()) {
+            return true;
+        }
+
+        return $cities->contains($normalizedCity);
+    }
+
     private function normalize(string $value): string
     {
         return Str::lower(trim(Str::ascii($value)));

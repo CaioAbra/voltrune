@@ -3,6 +3,8 @@
 namespace App\Modules\Solar\Services;
 
 use App\Modules\Solar\Models\SolarCompanySetting;
+use App\Modules\Solar\Models\SolarMarketDefault;
+use Throwable;
 
 class SolarSizingService
 {
@@ -12,7 +14,7 @@ class SolarSizingService
     public const ESTIMATED_AREA_PER_KWP = 4.5;
     public const MODULE_AREA_SQM = 2.3;
 
-    private const REGIONAL_PRICE_PER_KWP = [
+    private const DEFAULT_REGIONAL_PRICE_PER_KWP = [
         'AC' => 4550.0,
         'AL' => 4380.0,
         'AM' => 4600.0,
@@ -42,6 +44,11 @@ class SolarSizingService
         'TO' => 4440.0,
     ];
     private const DEFAULT_GROSS_MARGIN_PERCENT = 22.0;
+    private const MARKET_COMPONENT_SHARE = [
+        'modules' => 0.50,
+        'inverter' => 0.20,
+        'installation' => 0.18,
+    ];
     private const COMPONENT_COST_SHARE = [
         'modules' => 0.50,
         'inverter' => 0.20,
@@ -103,43 +110,82 @@ class SolarSizingService
 
     public function resolveRegionalPricePerKwp(?string $state): ?float
     {
-        $normalizedState = strtoupper(trim((string) $state));
+        $marketDefaults = $this->resolveMarketDefaults($state);
 
-        if ($normalizedState === '') {
+        if ($marketDefaults['source'] !== 'regional') {
             return null;
         }
 
-        $regionalPrice = self::REGIONAL_PRICE_PER_KWP[$normalizedState] ?? null;
-
-        return $regionalPrice !== null ? round($regionalPrice, 2) : null;
+        return $marketDefaults['price_per_kwp'];
     }
 
     /**
-     * @return array{value: float, source: string}
+     * @return array{
+     *     state: string,
+     *     price_per_kwp: float,
+     *     module_cost_average: float,
+     *     inverter_cost_average: float,
+     *     installation_cost_average: float,
+     *     source: string
+     * }
+     */
+    public function resolveMarketDefaults(?string $state = null): array
+    {
+        $normalizedState = strtoupper(trim((string) $state));
+
+        if ($marketDefault = $this->findMarketDefault($normalizedState)) {
+            $resolvedState = strtoupper((string) $marketDefault->state);
+
+            return [
+                'state' => $resolvedState,
+                'price_per_kwp' => round((float) $marketDefault->price_per_kwp, 2),
+                'module_cost_average' => round((float) $marketDefault->module_cost_average, 2),
+                'inverter_cost_average' => round((float) $marketDefault->inverter_cost_average, 2),
+                'installation_cost_average' => round((float) $marketDefault->installation_cost_average, 2),
+                'source' => $normalizedState !== '' && $resolvedState === $normalizedState ? 'regional' : 'fallback',
+            ];
+        }
+
+        $fallbackRegionalPrice = self::DEFAULT_REGIONAL_PRICE_PER_KWP[$normalizedState] ?? null;
+
+        if ($fallbackRegionalPrice !== null) {
+            return $this->buildFallbackMarketDefaults($normalizedState, $fallbackRegionalPrice, 'regional');
+        }
+
+        return $this->buildFallbackMarketDefaults('BR', self::MARKET_PRICE_PER_KWP, 'fallback');
+    }
+
+    /**
+     * @return array{
+     *     value: float,
+     *     source: string,
+     *     market_defaults: array{
+     *         state: string,
+     *         price_per_kwp: float,
+     *         module_cost_average: float,
+     *         inverter_cost_average: float,
+     *         installation_cost_average: float,
+     *         source: string
+     *     }
+     * }
      */
     public function resolveContextualPricePerKwp(float|int|string|null $companyPricePerKwp, ?string $state = null): array
     {
         $companyPrice = $companyPricePerKwp !== null && $companyPricePerKwp !== '' ? (float) $companyPricePerKwp : 0.0;
+        $marketDefaults = $this->resolveMarketDefaults($state);
 
         if ($companyPrice > 0) {
             return [
                 'value' => round($companyPrice, 2),
                 'source' => 'company',
-            ];
-        }
-
-        $regionalPrice = $this->resolveRegionalPricePerKwp($state);
-
-        if ($regionalPrice !== null && $regionalPrice > 0) {
-            return [
-                'value' => $regionalPrice,
-                'source' => 'regional',
+                'market_defaults' => $marketDefaults,
             ];
         }
 
         return [
-            'value' => self::MARKET_PRICE_PER_KWP,
-            'source' => 'fallback',
+            'value' => $marketDefaults['price_per_kwp'],
+            'source' => $marketDefaults['source'],
+            'market_defaults' => $marketDefaults,
         ];
     }
 
@@ -148,7 +194,24 @@ class SolarSizingService
      */
     public function regionalPriceLookup(): array
     {
-        return self::REGIONAL_PRICE_PER_KWP;
+        try {
+            $lookup = SolarMarketDefault::query()
+                ->where('state', '!=', 'BR')
+                ->orderBy('state')
+                ->get(['state', 'price_per_kwp'])
+                ->mapWithKeys(fn (SolarMarketDefault $marketDefault): array => [
+                    strtoupper((string) $marketDefault->state) => round((float) $marketDefault->price_per_kwp, 2),
+                ])
+                ->all();
+
+            if ($lookup !== []) {
+                return $lookup;
+            }
+        } catch (Throwable) {
+            // Fallback para ambientes ainda sem a tabela de referencia criada.
+        }
+
+        return self::DEFAULT_REGIONAL_PRICE_PER_KWP;
     }
 
     /**
@@ -465,5 +528,59 @@ class SolarSizingService
         }
 
         return $data;
+    }
+
+    private function findMarketDefault(string $normalizedState): ?SolarMarketDefault
+    {
+        try {
+            if ($normalizedState !== '') {
+                $regional = SolarMarketDefault::query()
+                    ->where('state', $normalizedState)
+                    ->first();
+
+                if ($regional instanceof SolarMarketDefault) {
+                    return $regional;
+                }
+            }
+
+            $fallback = SolarMarketDefault::query()
+                ->where('state', 'BR')
+                ->first();
+
+            return $fallback instanceof SolarMarketDefault ? $fallback : null;
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @return array{
+     *     state: string,
+     *     price_per_kwp: float,
+     *     module_cost_average: float,
+     *     inverter_cost_average: float,
+     *     installation_cost_average: float,
+     *     source: string
+     * }
+     */
+    private function buildFallbackMarketDefaults(string $state, float $pricePerKwp, string $source): array
+    {
+        $price = round($pricePerKwp, 2);
+
+        return [
+            'state' => $state,
+            'price_per_kwp' => $price,
+            'module_cost_average' => $this->estimateMarketComponentAverage($price, 'modules'),
+            'inverter_cost_average' => $this->estimateMarketComponentAverage($price, 'inverter'),
+            'installation_cost_average' => $this->estimateMarketComponentAverage($price, 'installation'),
+            'source' => $source,
+        ];
+    }
+
+    private function estimateMarketComponentAverage(float $pricePerKwp, string $component): float
+    {
+        $share = self::MARKET_COMPONENT_SHARE[$component] ?? 0;
+
+        return round($pricePerKwp * $share, 2);
     }
 }

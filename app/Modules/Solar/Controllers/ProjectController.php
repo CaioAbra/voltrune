@@ -13,6 +13,7 @@ use App\Modules\Solar\Services\SolarGeocodingService;
 use App\Modules\Solar\Services\SolarNavigationService;
 use App\Modules\Solar\Services\SolarRadiationService;
 use App\Modules\Solar\Services\SolarSizingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -81,7 +82,7 @@ class ProjectController extends Controller
         $company = $this->resolveCurrentCompany($request);
         $projectRecord = $this->resolveProject($company, $project, ['customer']);
         $companySetting = $this->companySetting($company);
-        $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord, $companySetting);
+        $projectRecord = $this->hydrateProjectAutomationState($projectRecord, $companySetting, false);
         $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $projectRecord->state);
         $solarFactorData = $this->radiation->resolveFactorForProject($projectRecord);
 
@@ -138,13 +139,94 @@ class ProjectController extends Controller
             ->with('solar_status', 'Projeto criado com sucesso.');
     }
 
+    public function automationPreview(Request $request): JsonResponse
+    {
+        $company = $this->resolveCurrentCompany($request);
+        $companySetting = $this->companySetting($company);
+        $projectRecord = null;
+        $projectId = $request->integer('project_id');
+
+        if ($projectId > 0) {
+            $projectRecord = $this->resolveProject($company, $projectId);
+        }
+
+        $data = $request->validate([
+            'project_id' => ['nullable', 'integer'],
+            'zip_code' => ['nullable', 'string', 'max:20'],
+            'street' => ['nullable', 'string', 'max:255'],
+            'number' => ['nullable', 'string', 'max:30'],
+            'complement' => ['nullable', 'string', 'max:255'],
+            'district' => ['nullable', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'state' => ['nullable', 'string', 'max:2'],
+            'monthly_consumption_kwh' => ['nullable', 'numeric', 'min:0'],
+            'energy_bill_value' => ['nullable', 'numeric', 'min:0'],
+            'module_power' => ['nullable', 'integer', 'min:1'],
+            'module_quantity' => ['nullable', 'integer', 'min:1'],
+            'system_power_kwp' => ['nullable', 'numeric', 'min:0'],
+            'estimated_generation_kwh' => ['nullable', 'numeric', 'min:0'],
+            'suggested_price' => ['nullable', 'numeric', 'min:0'],
+            'inverter_model' => ['nullable', 'string', 'max:255'],
+            'energy_utility_id' => ['nullable', 'integer'],
+            'connection_type' => ['nullable', 'in:mono,bi,tri'],
+            'pricing_notes' => ['nullable', 'string'],
+        ]);
+
+        $preparedData = $this->prepareLocationData($data, $projectRecord);
+        $previewProject = new SolarProject(array_merge(
+            $projectRecord?->only([
+                'latitude',
+                'longitude',
+                'geocoding_status',
+                'geocoding_precision',
+                'solar_factor_used',
+                'solar_factor_source',
+                'solar_factor_fetched_at',
+                'radiation_status',
+                'monthly_consumption_kwh',
+                'module_power',
+                'module_quantity',
+                'inverter_model',
+                'system_power_kwp',
+                'estimated_generation_kwh',
+                'suggested_price',
+                'state',
+            ]) ?? [],
+            $preparedData,
+        ));
+
+        $previewProject = $this->hydrateProjectAutomationState($previewProject, $companySetting, false);
+        $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $previewProject->state);
+        $solarFactorData = $this->radiation->resolveFactorForProject($previewProject);
+
+        return response()->json([
+            'latitude' => $previewProject->latitude !== null ? (float) $previewProject->latitude : null,
+            'longitude' => $previewProject->longitude !== null ? (float) $previewProject->longitude : null,
+            'geocoding_status' => $previewProject->geocoding_status,
+            'geocoding_precision' => $previewProject->geocoding_precision,
+            'geocoding_precision_label' => match ($previewProject->geocoding_precision ?: 'fallback') {
+                'address' => 'Endereco refinado',
+                'city' => 'Cidade aproximada',
+                default => 'Fallback padrao',
+            },
+            'solar_factor' => round((float) ($previewProject->solar_factor_used ?: SolarSizingService::DEFAULT_SOLAR_FACTOR), 2),
+            'solar_factor_source' => $solarFactorData['source'],
+            'solar_factor_source_label' => strtoupper(($solarFactorData['source'] ?? 'fallback') === 'pvgis' ? 'PVGIS' : 'PADRAO'),
+            'solar_factor_message' => $solarFactorData['message'],
+            'pricing_per_kwp' => $pricingContext['value'],
+            'pricing_source' => $pricingContext['source'],
+            'energy_utility_id' => $preparedData['energy_utility_id'] ?? null,
+            'utility_company' => $preparedData['utility_company'] ?? null,
+        ]);
+    }
+
     public function edit(Request $request, int $project): View
     {
         $company = $this->resolveCurrentCompany($request);
         $projectRecord = $this->resolveProject($company, $project);
         $utilities = $this->utilityOptions();
         $companySetting = $this->companySetting($company);
-        $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord, $companySetting);
+        $projectRecord = $this->hydrateProjectAutomationState($projectRecord, $companySetting, false);
         $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $projectRecord->state);
         $solarFactorData = $this->radiation->resolveFactorForProject($projectRecord);
 
@@ -313,14 +395,22 @@ class ProjectController extends Controller
             'state',
         ]);
 
-        if ($data['energy_utility_id'] === null && ! empty($data['city']) && ! empty($data['state'])) {
-            $resolvedUtility = $this->utilityResolver->resolveUtilityByCity($data['city'], $data['state']);
-            $data['energy_utility_id'] = $resolvedUtility?->id;
-        }
-
         $selectedUtility = $data['energy_utility_id'] !== null
             ? EnergyUtility::query()->find($data['energy_utility_id'])
             : null;
+
+        if (
+            $selectedUtility instanceof EnergyUtility
+            && ! $this->utilityResolver->matchesLocation($selectedUtility, $data['city'] ?? null, $data['state'] ?? null)
+        ) {
+            $selectedUtility = null;
+            $data['energy_utility_id'] = null;
+        }
+
+        if ($selectedUtility === null && ! empty($data['city']) && ! empty($data['state'])) {
+            $selectedUtility = $this->utilityResolver->resolveUtilityByCity($data['city'], $data['state']);
+            $data['energy_utility_id'] = $selectedUtility?->id;
+        }
 
         $data['utility_company'] = $selectedUtility?->name;
 
@@ -368,6 +458,8 @@ class ProjectController extends Controller
         } else {
             $data['latitude'] = $project?->latitude;
             $data['longitude'] = $project?->longitude;
+            $data['geocoding_status'] = $project?->geocoding_status
+                ?: (($project?->latitude !== null && $project?->longitude !== null) ? 'ready' : $data['geocoding_status']);
             $data['geocoding_precision'] = $project?->geocoding_precision ?: $this->geocoding->normalizePrecision(null);
         }
 
@@ -399,11 +491,25 @@ class ProjectController extends Controller
 
     private function refreshProjectRadiationAndSizing(SolarProject $project, ?SolarCompanySetting $companySetting): SolarProject
     {
-        $project = $this->radiation->refreshProjectRadiationData($project);
+        return $this->hydrateProjectAutomationState($project, $companySetting, true);
+    }
+
+    private function hydrateProjectAutomationState(SolarProject $project, ?SolarCompanySetting $companySetting, bool $persist): SolarProject
+    {
+        $factorData = $this->radiation->resolveFactorForProject($project);
+
+        $project->forceFill([
+            'solar_factor_used' => $factorData['factor'],
+            'solar_factor_source' => $factorData['source'],
+            'solar_factor_fetched_at' => $factorData['fetched_at'],
+            'radiation_status' => $factorData['status'],
+        ]);
+
         $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $project->state);
 
         $payload = $project->only([
             'monthly_consumption_kwh',
+            'state',
             'module_power',
             'module_quantity',
             'inverter_model',
@@ -417,11 +523,15 @@ class ProjectController extends Controller
             $this->sizing->applySuggestedSizing(
                 $payload,
                 $companySetting,
-                $project->solar_factor_used,
+                $factorData['factor'],
                 $pricingContext['value'],
             )
-        )->save();
+        );
 
-        return $project->refresh();
+        if ($persist && $project->isDirty()) {
+            $project->save();
+        }
+
+        return $persist ? $project->refresh() : $project;
     }
 }

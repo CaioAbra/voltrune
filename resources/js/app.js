@@ -811,6 +811,8 @@ const initZipCodeLookup = () => {
       cityInput.value = payload.localidade || '';
       stateInput.value = payload.uf || '';
 
+      cityInput.dispatchEvent(new Event('input', { bubbles: true }));
+      stateInput.dispatchEvent(new Event('input', { bubbles: true }));
       cityInput.dispatchEvent(new Event('change', { bubbles: true }));
       stateInput.dispatchEvent(new Event('change', { bubbles: true }));
     };
@@ -934,20 +936,39 @@ const initSolarSizingForm = () => {
     const projectStatusInput = root.querySelector('[data-project-status]');
     const cityInput = root.querySelector('[data-project-city]');
     const stateInput = root.querySelector('[data-project-state]');
+    const zipInput = root.querySelector('[data-cep-input]');
+    const streetInput = root.querySelector('[data-cep-street]');
+    const numberInput = root.querySelector('#number');
+    const districtInput = root.querySelector('[data-cep-district]');
     const solarFactorDisplay = root.querySelector('[data-solar-factor-display]');
     const solarFactorSourceDisplay = root.querySelector('[data-solar-factor-source-display]');
-    let pricingPerKwp = Number(
-      (section.getAttribute('data-pricing-per-kwp')
-        || root.getAttribute('data-pricing-per-kwp')
+    const solarFactorMessage = root.querySelector('[data-solar-factor-message]');
+    const geocodingStatusDisplay = root.querySelector('[data-geocoding-status]');
+    const geocodingPrecisionDisplays = Array.from(root.querySelectorAll('[data-geocoding-precision-display]'));
+    const automationSyncStatus = root.querySelector('[data-automation-sync-status]');
+    const automationPreviewUrl = root.getAttribute('data-automation-preview-url') || '';
+    const projectId = root.getAttribute('data-project-id') || '';
+    const effectivePricingPerKwp = Number(
+      (section.getAttribute('data-pricing-effective-per-kwp')
+        || root.getAttribute('data-pricing-effective-per-kwp')
+        || root.getAttribute('data-pricing-default-per-kwp')
         || '0').replace(',', '.'),
     );
+    const defaultPricingPerKwp = Number(
+      (root.getAttribute('data-pricing-default-per-kwp') || '4200').replace(',', '.'),
+    );
+    let pricingPerKwp = effectivePricingPerKwp;
     let pricingSource = root.getAttribute('data-pricing-source') || 'fallback';
     const regionalPriceLookup = JSON.parse(root.getAttribute('data-regional-price-lookup') || '{}');
     const marginPercent = Number(root.getAttribute('data-margin-percent')?.replace(',', '.') || 0);
     const defaultInverterModel = root.getAttribute('data-default-inverter-model') || '';
     const residualMinimumCost = Number(root.getAttribute('data-residual-minimum-cost')?.replace(',', '.') || 70);
-    const solarFactorUsed = Number(root.getAttribute('data-solar-factor-used')?.replace(',', '.') || 130);
-    const solarFactorSource = root.getAttribute('data-solar-factor-source') || 'fallback';
+    let solarFactorUsed = Number(root.getAttribute('data-solar-factor-used')?.replace(',', '.') || 130);
+    let solarFactorSource = root.getAttribute('data-solar-factor-source') || 'fallback';
+    let automationPreviewTimeout = null;
+    let automationPreviewAbortController = null;
+    let lastAutomationFingerprint = '';
+    let pendingAutomationFingerprint = '';
 
     if (!(monthlyInput instanceof HTMLInputElement)) return;
     if (!(modulePowerInput instanceof HTMLInputElement)) return;
@@ -972,6 +993,35 @@ const initSolarSizingForm = () => {
 
     const formatCurrency = (value) => `R$ ${value.toFixed(2).replace('.', ',')}`;
     const formatCurrencyMonthly = (value) => `${formatCurrency(value)}/mes`;
+    const geocodingStatusLabel = (value) => {
+      switch (value) {
+        case 'ready':
+          return 'Localizacao pronta';
+        case 'not_found':
+          return 'Localizacao nao encontrada';
+        case 'address_loaded':
+          return 'Endereco parcial carregado';
+        case 'not_requested':
+          return 'Aguardando CEP';
+        default:
+          return 'Buscando melhor localizacao';
+      }
+    };
+    const setAutomationSyncStatus = (value) => {
+      if (!(automationSyncStatus instanceof HTMLElement)) return;
+
+      if (value === 'loading') {
+        automationSyncStatus.textContent = 'Atualizando fator solar...';
+        return;
+      }
+
+      if (value === 'error') {
+        automationSyncStatus.textContent = 'Sem atualizacao agora';
+        return;
+      }
+
+      automationSyncStatus.textContent = 'Sincronizado';
+    };
     let currentModulesValue = null;
     const resolveRegionalPricing = () => {
       const currentState = stateInput instanceof HTMLInputElement
@@ -979,6 +1029,7 @@ const initSolarSizingForm = () => {
         : '';
 
       if (root.getAttribute('data-pricing-source') === 'company') {
+        pricingPerKwp = effectivePricingPerKwp;
         pricingSource = 'company';
         return;
       }
@@ -989,7 +1040,7 @@ const initSolarSizingForm = () => {
         pricingPerKwp = regionalPrice;
         pricingSource = 'regional';
       } else {
-        pricingPerKwp = Number(root.getAttribute('data-pricing-per-kwp')?.replace(',', '.') || 4200);
+        pricingPerKwp = defaultPricingPerKwp;
         pricingSource = 'fallback';
       }
     };
@@ -1030,6 +1081,139 @@ const initSolarSizingForm = () => {
       }
 
       return roundTo((annualSavings / suggestedPrice) * 100, 1);
+    };
+    const updateGeocodingDisplays = (status, precisionLabel) => {
+      if (geocodingStatusDisplay instanceof HTMLElement && status) {
+        geocodingStatusDisplay.textContent = geocodingStatusLabel(status);
+      }
+
+      geocodingPrecisionDisplays.forEach((element) => {
+        if (element instanceof HTMLElement && precisionLabel) {
+          element.textContent = precisionLabel;
+        }
+      });
+    };
+    const applyAutomationPreviewData = (payload) => {
+      if (!payload || typeof payload !== 'object') return;
+
+      if (Number.isFinite(Number(payload.solar_factor))) {
+        solarFactorUsed = Number(payload.solar_factor);
+        root.setAttribute('data-solar-factor-used', String(payload.solar_factor));
+      }
+
+      if (typeof payload.solar_factor_source === 'string' && payload.solar_factor_source) {
+        solarFactorSource = payload.solar_factor_source;
+        root.setAttribute('data-solar-factor-source', payload.solar_factor_source);
+      }
+
+      if (Number.isFinite(Number(payload.pricing_per_kwp))) {
+        pricingPerKwp = Number(payload.pricing_per_kwp);
+      }
+
+      if (typeof payload.pricing_source === 'string' && payload.pricing_source) {
+        pricingSource = payload.pricing_source;
+      }
+
+      if (typeof payload.geocoding_status === 'string') {
+        updateGeocodingDisplays(payload.geocoding_status, payload.geocoding_precision_label || '');
+      }
+
+      if (solarFactorMessage instanceof HTMLElement) {
+        const message = typeof payload.solar_factor_message === 'string' ? payload.solar_factor_message.trim() : '';
+        solarFactorMessage.textContent = message;
+        solarFactorMessage.hidden = message === '';
+      }
+
+      if (monthlyInput.value.trim() !== '') {
+        applySizing();
+      } else {
+        updatePreview();
+      }
+    };
+    const buildAutomationFingerprint = () => {
+      const zip = zipInput instanceof HTMLInputElement ? zipInput.value.trim() : '';
+      const city = cityInput instanceof HTMLInputElement ? cityInput.value.trim().toUpperCase() : '';
+      const state = stateInput instanceof HTMLInputElement ? stateInput.value.trim().toUpperCase() : '';
+      const street = streetInput instanceof HTMLInputElement ? streetInput.value.trim().toUpperCase() : '';
+      const number = numberInput instanceof HTMLInputElement ? numberInput.value.trim().toUpperCase() : '';
+
+      if (!city || !state) return '';
+
+      return [zip, city, state, street, number].join('|');
+    };
+    const runAutomationPreview = async () => {
+      if (!automationPreviewUrl) return;
+
+      const fingerprint = buildAutomationFingerprint();
+
+      if (!fingerprint || fingerprint === lastAutomationFingerprint || fingerprint === pendingAutomationFingerprint) {
+        return;
+      }
+
+      if (automationPreviewAbortController) {
+        automationPreviewAbortController.abort();
+      }
+
+      automationPreviewAbortController = new AbortController();
+      pendingAutomationFingerprint = fingerprint;
+      setAutomationSyncStatus('loading');
+
+      const params = new URLSearchParams();
+      if (projectId) params.set('project_id', projectId);
+
+      [
+        ['zip_code', zipInput],
+        ['street', streetInput],
+        ['number', numberInput],
+        ['district', districtInput],
+        ['city', cityInput],
+        ['state', stateInput],
+        ['monthly_consumption_kwh', monthlyInput],
+        ['energy_bill_value', energyBillInput],
+        ['module_power', modulePowerInput],
+        ['module_quantity', moduleQuantityInput],
+        ['system_power_kwp', systemPowerInput],
+        ['estimated_generation_kwh', generationInput],
+        ['inverter_model', inverterInput],
+      ].forEach(([key, input]) => {
+        if (input instanceof HTMLInputElement && input.value.trim() !== '') {
+          params.set(key, input.value.trim());
+        }
+      });
+
+      try {
+        const response = await fetch(`${automationPreviewUrl}?${params.toString()}`, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          signal: automationPreviewAbortController.signal,
+        });
+
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        applyAutomationPreviewData(payload);
+        lastAutomationFingerprint = fingerprint;
+        pendingAutomationFingerprint = '';
+        setAutomationSyncStatus('ok');
+      } catch (error) {
+        pendingAutomationFingerprint = '';
+        if (error?.name !== 'AbortError') {
+          setAutomationSyncStatus('error');
+          updatePreview();
+        }
+      }
+    };
+    const scheduleAutomationPreview = (delay = 450) => {
+      if (automationPreviewTimeout) {
+        window.clearTimeout(automationPreviewTimeout);
+      }
+
+      automationPreviewTimeout = window.setTimeout(() => {
+        runAutomationPreview();
+      }, delay);
     };
 
     const updateSummary = () => {
@@ -1203,7 +1387,7 @@ const initSolarSizingForm = () => {
           ? 'Preco da empresa'
           : pricingSource === 'regional'
             ? 'Media regional'
-            : 'Fallback padrao';
+            : 'Fallback padrao nacional';
       }
 
       if (pricingKitCostPreview instanceof HTMLElement) {
@@ -1289,9 +1473,7 @@ const initSolarSizingForm = () => {
             : '';
           const sourcePrefix = pricingSource === 'company'
             ? `Pre-orcamento ativo com preco proprio (${formatCurrency(pricingPerKwp)}/kWp): `
-            : pricingSource === 'regional'
-              ? `Pre-orcamento ativo com media regional (${formatCurrency(pricingPerKwp)}/kWp): `
-              : `Pre-orcamento ativo com fallback padrao (${formatCurrency(pricingPerKwp)}/kWp): `;
+            : `Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente. Referencia atual: ${formatCurrency(pricingPerKwp)}/kWp. `;
           pricingNote.textContent = `${sourcePrefix}${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema.${savingsSuffix}`;
         } else {
           pricingNote.textContent = 'Informe o consumo mensal para gerar o pre-orcamento automatico.';
@@ -1341,6 +1523,7 @@ const initSolarSizingForm = () => {
     resolveRegionalPricing();
     updateDerivedFieldsFromPower({ onlyEmpty: true });
     updatePreview();
+    scheduleAutomationPreview(0);
 
     monthlyInput.addEventListener('input', () => applySizing());
     modulePowerInput.addEventListener('input', () => applySizing());
@@ -1356,11 +1539,31 @@ const initSolarSizingForm = () => {
     cityInput?.addEventListener('input', () => {
       resolveRegionalPricing();
       updatePreview();
+      scheduleAutomationPreview();
+    });
+    cityInput?.addEventListener('change', () => {
+      resolveRegionalPricing();
+      updatePreview();
+      scheduleAutomationPreview(0);
     });
     stateInput?.addEventListener('input', () => {
       resolveRegionalPricing();
       applySizing();
+      scheduleAutomationPreview();
     });
+    stateInput?.addEventListener('change', () => {
+      resolveRegionalPricing();
+      applySizing();
+      scheduleAutomationPreview(0);
+    });
+    zipInput?.addEventListener('input', () => scheduleAutomationPreview());
+    zipInput?.addEventListener('change', () => scheduleAutomationPreview(0));
+    streetInput?.addEventListener('input', () => scheduleAutomationPreview());
+    streetInput?.addEventListener('change', () => scheduleAutomationPreview(0));
+    numberInput?.addEventListener('input', () => scheduleAutomationPreview());
+    numberInput?.addEventListener('change', () => scheduleAutomationPreview(0));
+    districtInput?.addEventListener('input', () => scheduleAutomationPreview());
+    districtInput?.addEventListener('change', () => scheduleAutomationPreview(0));
   });
 };
 
@@ -1408,6 +1611,26 @@ const initEnergyUtilityAutoSelect = () => {
 
     const lookup = JSON.parse(select.dataset.utilityLookup || '[]');
     let manualOverride = select.value !== '';
+    const findUtilityById = (utilityId) => {
+      const normalizedId = String(utilityId || '').trim();
+      if (!normalizedId) return null;
+      return lookup.find((utility) => String(utility.id) === normalizedId) || null;
+    };
+    const currentLocation = () => ({
+      city: normalize(cityInput.value || ''),
+      state: (stateInput.value || '').trim().toUpperCase(),
+    });
+    const selectedUtilityMatchesLocation = () => {
+      const selected = findUtilityById(select.value);
+      if (!selected) return false;
+
+      const { city, state } = currentLocation();
+      if (!state || selected.state !== state) return false;
+      if (!city) return true;
+      if (!Array.isArray(selected.cities) || selected.cities.length === 0) return true;
+
+      return selected.cities.includes(city);
+    };
 
     const setFeedback = (message, state = '') => {
       if (!(feedback instanceof HTMLElement)) return;
@@ -1419,7 +1642,13 @@ const initEnergyUtilityAutoSelect = () => {
     };
 
     const resolveUtility = () => {
-      if (manualOverride && select.value !== '') return;
+      if (manualOverride && select.value !== '') {
+        if (selectedUtilityMatchesLocation()) return;
+
+        // Endereco mudou e invalida a escolha anterior.
+        manualOverride = false;
+        select.value = '';
+      }
 
       const city = normalize(cityInput.value || '');
       const state = (stateInput.value || '').trim().toUpperCase();
@@ -1447,6 +1676,13 @@ const initEnergyUtilityAutoSelect = () => {
 
       if (select.value === '') {
         manualOverride = false;
+        resolveUtility();
+        return;
+      }
+
+      if (!selectedUtilityMatchesLocation()) {
+        manualOverride = false;
+        select.value = '';
         resolveUtility();
         return;
       }
