@@ -277,7 +277,7 @@ class SolarGeocodingService
     {
         try {
             $response = Http::acceptJson()
-                ->timeout(10)
+                ->timeout(8)
                 ->retry(1, 300)
                 ->withHeaders([
                     'User-Agent' => 'VoltruneSolar/1.0',

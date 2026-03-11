@@ -282,6 +282,251 @@
   gap: 1rem;
 }
 
+.solar-system-hero {
+  padding: 1.25rem;
+  border-color: rgba(246, 187, 65, 0.3);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(246, 187, 65, 0.18), transparent 36%),
+    radial-gradient(circle at 100% 100%, rgba(83, 178, 178, 0.16), transparent 42%),
+    linear-gradient(138deg, rgba(17, 29, 31, 0.96), rgba(10, 16, 20, 0.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 241, 194, 0.08),
+    0 16px 34px rgba(0, 0, 0, 0.24);
+}
+
+.solar-system-hero__header {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.solar-system-hero__header h3 {
+  margin-bottom: 0.45rem;
+}
+
+.solar-system-hero__context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.solar-system-hero__context-item {
+  display: inline-grid;
+  gap: 0.14rem;
+  min-width: 170px;
+  padding: 0.5rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(223, 236, 230, 0.84);
+  font-size: 0.84rem;
+}
+
+.solar-system-hero__context-item strong {
+  color: rgba(255, 242, 206, 0.86);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-system-hero__status {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 14, 16, 0.5);
+}
+
+.solar-system-hero__status.is-ready {
+  border-color: rgba(130, 192, 181, 0.28);
+}
+
+.solar-system-hero__status.is-market {
+  border-color: rgba(246, 187, 65, 0.32);
+  background: rgba(39, 31, 12, 0.35);
+}
+
+.solar-system-hero__status-label {
+  color: rgba(226, 237, 231, 0.62);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-system-hero__status strong {
+  color: #fff2ce;
+  font-size: 1rem;
+}
+
+.solar-system-hero__status p {
+  margin: 0;
+  color: #dcebdd;
+  font-size: 0.88rem;
+}
+
+.solar-system-hero__status .hub-btn {
+  width: fit-content;
+  margin-top: 0.2rem;
+}
+
+.solar-system-hero__metrics {
+  display: grid;
+  gap: 0.95rem;
+  margin-top: 1rem;
+}
+
+.solar-system-hero-metric {
+  display: grid;
+  gap: 0.24rem;
+  min-height: 112px;
+  padding: 0.95rem;
+  border-radius: 18px;
+  border: 1px solid rgba(246, 187, 65, 0.22);
+  background: rgba(8, 14, 16, 0.54);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.solar-system-hero-metric--highlight {
+  border-color: rgba(246, 187, 65, 0.42);
+  background:
+    radial-gradient(circle at top right, rgba(246, 187, 65, 0.2), transparent 42%),
+    linear-gradient(150deg, rgba(46, 33, 10, 0.6), rgba(10, 17, 21, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 242, 206, 0.1),
+    0 0 0 1px rgba(246, 187, 65, 0.06),
+    0 18px 30px rgba(0, 0, 0, 0.2);
+}
+
+.solar-system-hero-metric--energy {
+  border-color: rgba(130, 192, 181, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(83, 178, 178, 0.16), transparent 45%),
+    linear-gradient(150deg, rgba(13, 31, 33, 0.78), rgba(9, 16, 19, 0.9));
+}
+
+.solar-system-hero-metric__label,
+.solar-summary-metric__label {
+  color: rgba(226, 237, 231, 0.68);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-system-hero-metric .solar-summary-metric__value {
+  font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+}
+
+.solar-system-hero-metric.is-counting {
+  border-color: rgba(255, 208, 109, 0.56);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 242, 206, 0.12),
+    0 0 0 1px rgba(246, 187, 65, 0.12),
+    0 20px 34px rgba(0, 0, 0, 0.24);
+  transform: translateY(-1px);
+}
+
+.solar-technical-panel {
+  padding: 1.15rem 1.25rem;
+  border-color: rgba(130, 192, 181, 0.2);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(83, 178, 178, 0.12), transparent 36%),
+    linear-gradient(145deg, rgba(12, 19, 23, 0.88), rgba(10, 17, 20, 0.92));
+}
+
+.solar-technical-panel__grid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.solar-technical-panel__signal {
+  display: inline-grid;
+  gap: 0.15rem;
+  padding: 0.55rem 0.72rem;
+  border-radius: 14px;
+  border: 1px solid rgba(130, 192, 181, 0.15);
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(227, 238, 233, 0.82);
+  font-size: 0.82rem;
+  opacity: 0.92;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-position 280ms ease;
+}
+
+.solar-technical-panel__signal strong {
+  color: rgba(221, 236, 230, 0.8);
+  font-size: 0.67rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.solar-technical-panel__fallback {
+  color: #f7d79a;
+}
+
+.solar-technical-panel__signal[hidden],
+.solar-technical-panel__fallback[hidden] {
+  display: none !important;
+}
+
+.solar-flow-section__footnote .solar-technical-panel__signal {
+  padding: 0.25rem 0.45rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+}
+
+.solar-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.18rem 0.48rem;
+  border-radius: 999px;
+  border: 1px solid rgba(130, 192, 181, 0.26);
+  background: rgba(83, 178, 178, 0.12);
+  color: #d6ece7;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.solar-status-pill.is-loading {
+  border-color: rgba(246, 187, 65, 0.36);
+  background: rgba(246, 187, 65, 0.16);
+  color: #fff2ce;
+}
+
+.solar-status-pill.is-error {
+  border-color: rgba(246, 138, 65, 0.35);
+  background: rgba(246, 138, 65, 0.14);
+  color: #ffd8bc;
+}
+
+.solar-technical-panel.is-syncing .solar-technical-panel__signal {
+  background:
+    linear-gradient(104deg, rgba(255, 255, 255, 0.03) 10%, rgba(246, 187, 65, 0.08) 45%, rgba(255, 255, 255, 0.03) 80%);
+  background-size: 220% 100%;
+  animation: solarShimmer 1.2s linear infinite;
+}
+
+.solar-technical-panel__signal.is-live {
+  border-color: rgba(83, 178, 178, 0.4);
+  box-shadow: 0 0 0 1px rgba(83, 178, 178, 0.12);
+}
+
+@keyframes solarShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .solar-section-eyebrow {
   margin: 0 0 0.3rem;
   color: #ffd06d;
@@ -291,13 +536,33 @@
 }
 
 .solar-flow-section {
+  position: relative;
+  overflow: hidden;
   padding: 1.25rem;
+  border-color: rgba(246, 187, 65, 0.16);
+  background:
+    linear-gradient(160deg, rgba(14, 21, 24, 0.82), rgba(10, 16, 19, 0.9)),
+    rgba(14, 21, 24, 0.78);
+}
+
+.solar-flow-section::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, rgba(246, 187, 65, 0.66), rgba(83, 178, 178, 0.42)),
+    linear-gradient(90deg, rgba(246, 187, 65, 0.22), rgba(246, 187, 65, 0));
+  box-shadow: 1px 0 0 rgba(246, 187, 65, 0.08);
+  opacity: 0.82;
+  pointer-events: none;
 }
 
 .solar-flow-section__header {
   display: grid;
-  gap: 0.65rem;
-  margin-bottom: 1rem;
+  gap: 0.55rem;
+  margin-bottom: 0.9rem;
 }
 
 .solar-flow-section__subhead {
@@ -305,7 +570,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin: 1.1rem 0 0.95rem;
+  margin: 0.9rem 0 0.8rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
@@ -550,19 +815,142 @@
 }
 
 .solar-project-show {
+  display: grid;
+  gap: 1.15rem;
   padding: 1.35rem;
+}
+
+.solar-project-showcase {
+  padding: 1.2rem;
+  margin-bottom: 0;
+  border-color: rgba(246, 187, 65, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(246, 187, 65, 0.16), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(83, 178, 178, 0.14), transparent 30%),
+    linear-gradient(140deg, rgba(18, 30, 32, 0.95), rgba(10, 17, 20, 0.94));
+}
+
+.solar-project-showcase__header {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.solar-project-showcase__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.8rem;
+}
+
+.solar-project-showcase__status {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(8, 14, 16, 0.44);
+}
+
+.solar-project-showcase__status.is-ready {
+  border-color: rgba(130, 192, 181, 0.28);
+}
+
+.solar-project-showcase__status.is-market {
+  border-color: rgba(246, 187, 65, 0.28);
+  background: rgba(39, 31, 12, 0.34);
+}
+
+.solar-project-showcase__status-label {
+  color: rgba(226, 237, 231, 0.62);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-project-showcase__status strong {
+  color: #fff2ce;
+  font-size: 1rem;
+}
+
+.solar-project-showcase__status p {
+  margin: 0;
+  color: #dcebdd;
+  font-size: 0.86rem;
+}
+
+.solar-project-showcase__hero-grid {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+}
+
+.solar-project-showcase-metric {
+  display: grid;
+  gap: 0.24rem;
+  min-height: 112px;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(246, 187, 65, 0.18);
+  background: rgba(8, 14, 16, 0.52);
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.solar-project-showcase-metric:hover {
+  transform: translateY(-2px);
+}
+
+.solar-project-showcase-metric--highlight {
+  border-color: rgba(246, 187, 65, 0.38);
+  background:
+    radial-gradient(circle at top right, rgba(246, 187, 65, 0.18), transparent 40%),
+    linear-gradient(150deg, rgba(46, 33, 10, 0.58), rgba(10, 17, 21, 0.88));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.solar-project-showcase-metric--energy {
+  border-color: rgba(83, 178, 178, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(83, 178, 178, 0.14), transparent 42%),
+    linear-gradient(150deg, rgba(13, 31, 33, 0.78), rgba(9, 16, 19, 0.9));
+}
+
+.solar-project-showcase-metric__label {
+  color: rgba(226, 237, 231, 0.68);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-project-showcase-metric__value {
+  color: #fff2ce;
+  font-size: clamp(1.35rem, 2.4vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.solar-project-showcase-metric__value[data-show-format="currency"],
+.solar-project-showcase-metric__value[data-show-format="months"] {
+  font-size: clamp(1.25rem, 2.2vw, 1.95rem);
+}
+
+.solar-project-showcase-metric.is-counting {
+  border-color: rgba(255, 208, 109, 0.5);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.22);
 }
 
 .solar-project-show__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: 1.4rem;
+  margin-bottom: 0;
 }
 
 .solar-project-show__grid {
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
+  gap: 1rem;
+  margin-bottom: 0;
 }
 
 .solar-project-show__card {
@@ -578,17 +966,89 @@
   margin-top: 0.8rem;
 }
 
+.solar-project-show__info-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.solar-project-show__info-grid p {
+  display: grid;
+  gap: 0.22rem;
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.solar-project-show__info-grid strong {
+  color: rgba(226, 237, 231, 0.66);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.solar-project-show__info-grid span {
+  color: #eef8f2;
+  line-height: 1.5;
+}
+
+.solar-project-show__inline-specs {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.solar-project-show__inline-specs span {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.solar-project-show__inline-specs strong {
+  color: rgba(226, 237, 231, 0.66);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
 .solar-project-show .hub-note {
   line-height: 1.65;
 }
 
 .solar-project-show__summary {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0;
 }
 
 .solar-project-show .solar-sizing-panel {
   padding-top: 1.55rem;
   padding-bottom: 1.55rem;
+}
+
+.solar-project-show > .hub-card,
+.solar-project-show > article.hub-card,
+.solar-project-show > section.hub-card,
+.solar-project-show > .hub-grid {
+  margin: 0;
+}
+
+.solar-project-show .solar-technical-panel {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.solar-project-show .solar-technical-panel__grid {
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.solar-project-show .solar-sizing-panel__highlights,
+.solar-project-show .solar-pricing-panel__highlights,
+.solar-project-show .solar-financial-panel__highlights {
+  gap: 0.85rem;
 }
 
 .solar-flash-alert {
@@ -968,8 +1428,8 @@
 }
 
 .solar-sizing-chip__meta {
-  color: rgba(222, 235, 221, 0.72);
-  font-size: 0.8rem;
+  color: rgba(222, 235, 221, 0.66);
+  font-size: 0.76rem;
   line-height: 1.5;
 }
 
@@ -1023,6 +1483,26 @@
     align-items: start;
   }
 
+  .solar-project-showcase__header {
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.8fr);
+  }
+
+  .solar-project-showcase__hero-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .solar-system-hero__header {
+    grid-template-columns: minmax(0, 1.35fr) minmax(250px, 0.8fr);
+  }
+
+  .solar-system-hero__metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .solar-technical-panel__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .solar-project-command__header,
   .solar-flow-section__header {
     grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.8fr);
@@ -1054,8 +1534,8 @@
   }
 
   .solar-project-show__grid {
-    gap: 1.4rem;
-    margin-bottom: 1.4rem;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .solar-sizing-panel__highlights {
@@ -1064,6 +1544,14 @@
 
   .solar-composition-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .solar-project-show__info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .solar-project-show__inline-specs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .solar-sidebar {
@@ -1076,6 +1564,10 @@
   .solar-topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .solar-system-hero__status .hub-btn {
+    width: 100%;
   }
 
   .solar-project-command__status .hub-btn {

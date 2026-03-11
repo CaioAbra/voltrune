@@ -98,7 +98,7 @@ class SolarRadiationService
             /** @var array{factor: float, source: string, status: string, fetched_at: string} $cached */
             $cached = Cache::remember($cacheKey, self::CACHE_TTL_SECONDS, function () use ($latitude, $longitude): array {
                 $response = Http::acceptJson()
-                    ->timeout(10)
+                    ->timeout(8)
                     ->retry(1, 300)
                     ->get(self::PVGIS_ENDPOINT, [
                         'lat' => $latitude,

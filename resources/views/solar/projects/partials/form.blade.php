@@ -35,11 +35,6 @@
         'not_requested' => 'Aguardando CEP',
         default => 'Buscando melhor localizacao',
     };
-    $solarFactorContextLabel = match (true) {
-        $resolvedSolarFactorSource === 'pvgis' && $geocodingPrecision === 'address' => 'Origem PVGIS com endereco refinado.',
-        $resolvedSolarFactorSource === 'pvgis' && $geocodingPrecision === 'city' => 'Origem PVGIS com aproximacao por cidade.',
-        default => 'Fallback padrao ativo.',
-    };
     $initialMonthlySavings = $initialEnergyBillValue !== null && $initialEnergyBillValue !== '' && (float) $initialEnergyBillValue > 0
         ? max((float) $initialEnergyBillValue - $residualMinimumCost, 0)
         : null;
@@ -86,16 +81,26 @@
     data-solar-factor-used="{{ $resolvedSolarFactor }}"
     data-solar-factor-source="{{ $resolvedSolarFactorSource }}"
 >
-    <section class="hub-card hub-card--subtle solar-project-command">
-        <div class="solar-project-command__header">
+    <section class="hub-card hub-card--subtle solar-system-hero">
+        <div class="solar-system-hero__header">
             <div>
-                <p class="solar-section-eyebrow">Resumo comercial</p>
+                <p class="solar-section-eyebrow">Resumo do sistema</p>
                 <h3 data-project-summary-name>{{ old('name', $project->name ?: 'Projeto solar em preparacao') }}</h3>
-                <p class="hub-note">Leitura rapida do projeto para validar cliente, local e resultado comercial sem reler o cadastro inteiro.</p>
+                <p class="hub-note">Leitura comercial rapida para fechar a proposta com mais confianca.</p>
+                <div class="solar-system-hero__context">
+                    <span class="solar-system-hero__context-item">
+                        <strong>Cliente</strong>
+                        <span data-project-summary="customer">{{ $selectedCustomer?->name ?: 'Cliente pendente' }}</span>
+                    </span>
+                    <span class="solar-system-hero__context-item">
+                        <strong>Cidade / UF</strong>
+                        <span data-project-summary="location">{{ $locationSummary !== '' ? $locationSummary : 'Local pendente' }}</span>
+                    </span>
+                </div>
             </div>
 
-            <div class="solar-project-command__status {{ $usesMarketPriceFallback ? 'is-market' : 'is-ready' }}">
-                <span class="solar-project-command__status-label">Automacao comercial</span>
+            <div class="solar-system-hero__status {{ $usesMarketPriceFallback ? 'is-market' : 'is-ready' }}">
+                <span class="solar-system-hero__status-label">Automacao comercial</span>
                 <strong>{{ $usesMarketPriceFallback ? 'Media de mercado ativa' : 'Preco proprio ativo' }}</strong>
                 <p>
                     {{ match ($pricingSource) {
@@ -108,74 +113,80 @@
             </div>
         </div>
 
-        <div class="solar-project-command__summary-board solar-project-command__summary-board--compact">
-            <article class="solar-summary-metric">
-                <span class="solar-summary-metric__label">Cliente</span>
-                <strong class="solar-summary-metric__value" data-project-summary="customer">{{ $selectedCustomer?->name ?: 'Cliente pendente' }}</strong>
-            </article>
-
-            <article class="solar-summary-metric">
-                <span class="solar-summary-metric__label">Cidade / UF</span>
-                <strong class="solar-summary-metric__value" data-project-summary="location">{{ $locationSummary !== '' ? $locationSummary : 'Local pendente' }}</strong>
-            </article>
-
-            <article class="solar-summary-metric solar-summary-metric--commercial">
-                <span class="solar-summary-metric__label">Potencia sugerida</span>
+        <div class="solar-system-hero__metrics">
+            <article class="solar-system-hero-metric solar-system-hero-metric--energy">
+                <span class="solar-system-hero-metric__label">Potencia do sistema</span>
                 <strong class="solar-summary-metric__value" data-project-summary="power">
                     {{ $initialSystemPower ? number_format((float) $initialSystemPower, 2, ',', '.') . ' kWp' : 'Aguardando consumo' }}
                 </strong>
             </article>
 
-            <article class="solar-summary-metric solar-summary-metric--commercial">
+            <article class="solar-system-hero-metric solar-system-hero-metric--energy">
                 <span class="solar-summary-metric__label">Geracao estimada</span>
                 <strong class="solar-summary-metric__value" data-project-summary="generation">
-                    {{ $initialGeneration ? number_format((float) $initialGeneration, 2, ',', '.') . ' kWh' : 'Aguardando sistema' }}
+                    {{ $initialGeneration ? number_format((float) $initialGeneration, 2, ',', '.') . ' kWh/mes' : 'Aguardando sistema' }}
                 </strong>
             </article>
 
-            <article class="solar-summary-metric solar-summary-metric--hero">
+            <article class="solar-system-hero-metric solar-system-hero-metric--highlight">
                 <span class="solar-summary-metric__label">Preco sugerido</span>
                 <strong class="solar-summary-metric__value" data-project-summary="price">
                     {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando pre-orcamento' }}
                 </strong>
-                <span class="solar-summary-metric__meta">Previa automatica para acelerar a conversa comercial.</span>
             </article>
 
-            <article class="solar-summary-metric solar-summary-metric--hero">
+            <article class="solar-system-hero-metric solar-system-hero-metric--highlight">
                 <span class="solar-summary-metric__label">Economia mensal</span>
                 <strong class="solar-summary-metric__value" data-project-summary="savings">
                     {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') : 'Aguardando conta' }}
                 </strong>
-                <span class="solar-summary-metric__meta">Mensagem principal de valor para apresentar ao cliente.</span>
             </article>
         </div>
+    </section>
 
-        <div class="solar-project-command__meta">
-            <span class="solar-project-command__signal">
+    <section class="hub-card hub-card--subtle solar-technical-panel">
+        <div class="solar-flow-section__header">
+            <div>
+                <p class="solar-section-eyebrow">Dados tecnicos do dimensionamento</p>
+                <h3>Contexto tecnico e confianca da automacao</h3>
+            </div>
+            <p class="hub-note">Base tecnica da simulacao com menor peso visual.</p>
+        </div>
+
+        <div class="solar-technical-panel__grid">
+            <span class="solar-technical-panel__signal">
                 <strong>Fator solar</strong>
                 <span data-solar-factor-display>{{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mes</span>
             </span>
-            <span class="solar-project-command__signal">
+            <span class="solar-technical-panel__signal">
                 <strong>Radiacao solar</strong>
                 <span data-solar-radiation-display>{{ number_format($equivalentSolarRadiationDaily, 2, ',', '.') }} kWh/m2/dia</span>
             </span>
-            <span class="solar-project-command__signal">
+            <span class="solar-technical-panel__signal">
                 <strong>Origem</strong>
                 <span data-solar-factor-source-display>{{ strtoupper($resolvedSolarFactorSource === 'pvgis' ? 'PVGIS' : 'padrao') }}</span>
             </span>
-            <span class="solar-project-command__signal">
+            <span class="solar-technical-panel__signal">
                 <strong>Precisao</strong>
                 <span data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
             </span>
-                <span class="solar-project-command__signal">
+            <span class="solar-technical-panel__signal">
                 <strong>Margem</strong>
                 <span data-pricing-preview="margin">{{ $companySetting?->margin_percent ? number_format((float) $companySetting->margin_percent, 2, ',', '.') . '%' : 'Nao configurada' }}</span>
             </span>
-            <span class="solar-project-command__signal">
+            <span class="solar-technical-panel__signal">
                 <strong>Preco por kWp</strong>
                 <span data-pricing-preview="rate">{{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}</span>
             </span>
-            <span class="solar-project-command__fallback solar-project-command__signal" data-solar-factor-message @if (($solarFactorData['message'] ?? null) === null) hidden @endif>
+            <span class="solar-technical-panel__signal">
+                <strong>Geolocalizacao</strong>
+                <span data-geocoding-status>{{ $geocodingStatusLabel }}</span>
+            </span>
+            <span class="solar-technical-panel__signal">
+                <strong>Status da automacao</strong>
+                <span class="solar-status-pill" data-automation-sync-status>Pronto</span>
+            </span>
+            <span class="solar-technical-panel__fallback solar-technical-panel__signal" data-solar-factor-message @if (($solarFactorData['message'] ?? null) === null) hidden @endif>
                 {{ $solarFactorData['message'] }}
             </span>
         </div>
@@ -187,7 +198,7 @@
                 <p class="solar-section-eyebrow">1. Cliente e local</p>
                 <h3>Quem e o cliente e onde sera a instalacao?</h3>
             </div>
-            <p class="hub-note">Organize o projeto desde o primeiro contato e deixe o Solar preencher o contexto do local sempre que possivel.</p>
+            <p class="hub-note">Comece pelo cliente e local. O Solar preenche o restante automaticamente.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
@@ -349,8 +360,7 @@
         <div class="solar-flow-section__footnote">
             <strong>Localizacao automatica:</strong>
             <span data-geocoding-status>{{ $geocodingStatusLabel }}</span>
-            <span class="solar-project-command__signal" data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
-            <span class="solar-project-command__signal" data-automation-sync-status>Sincronizado</span>
+            <span class="solar-technical-panel__signal" data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
         </div>
     </section>
 
@@ -360,7 +370,7 @@
                 <p class="solar-section-eyebrow">2. Consumo energetico</p>
                 <h3>Qual consumo vamos usar como base?</h3>
             </div>
-            <p class="hub-note">Com consumo mensal e valor da conta, o Solar monta a sugestao comercial em tempo real.</p>
+            <p class="hub-note">Consumo e conta de energia destravam o pre-dimensionamento comercial.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
@@ -394,7 +404,7 @@
                 <p class="solar-section-eyebrow">3. Sistema sugerido</p>
                 <h3>Veja a solucao sugerida e ajuste se precisar</h3>
             </div>
-            <p class="hub-note">Os campos principais sao sugeridos automaticamente com base no consumo e na potencia do modulo, sem bloquear ajuste manual.</p>
+            <p class="hub-note">Sugestao automatica com edicao manual liberada.</p>
         </div>
 
         <div class="solar-flow-section__inline-tags">
@@ -408,7 +418,6 @@
                 <strong class="solar-sizing-chip__value" data-sizing-preview="system-power">
                     {{ $initialSystemPower ? number_format((float) $initialSystemPower, 2, ',', '.') . ' kWp' : 'Aguardando consumo' }}
                 </strong>
-                <span class="solar-sizing-chip__meta">Base inicial para a oferta comercial.</span>
             </article>
 
             <article class="solar-sizing-chip solar-sizing-chip--featured">
@@ -416,13 +425,14 @@
                 <strong class="solar-sizing-chip__value" data-sizing-preview="generation">
                     {{ $initialGeneration ? number_format((float) $initialGeneration, 2, ',', '.') . ' kWh' : 'Aguardando sistema' }}
                 </strong>
-                <span class="solar-sizing-chip__meta">Indicador comercial para reforcar o ganho esperado.</span>
             </article>
 
             <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Fator usado</span>
-                <strong class="solar-sizing-chip__value" data-sizing-preview="factor">{{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mes</strong>
-                <span class="solar-sizing-chip__meta">{{ $solarFactorContextLabel }}</span>
+                <span class="solar-sizing-chip__label">Modulos sugeridos</span>
+                <strong class="solar-sizing-chip__value" data-sizing-preview="modules">
+                    {{ $initialModuleQuantity ? number_format((float) $initialModuleQuantity, 0, ',', '.') : 'Aguardando sistema' }}
+                </strong>
+                <span class="solar-sizing-chip__meta">Quantidade inicial para estimar area e custo do kit.</span>
             </article>
 
             <article class="solar-sizing-chip">
@@ -507,7 +517,7 @@
                 <p class="solar-section-eyebrow">4. Pre-orcamento</p>
                 <h3>Destaque o valor sugerido com leitura comercial</h3>
             </div>
-            <p class="hub-note">O Solar recalcula a previa em tempo real conforme potencia, preco por kWp e conta de energia.</p>
+            <p class="hub-note">Atualizacao automatica do valor sugerido sem travar sua edicao.</p>
         </div>
 
         <div class="solar-flow-section__inline-tags">
@@ -521,7 +531,6 @@
                 <strong class="solar-sizing-chip__value" data-pricing-preview="total">
                     {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando dimensionamento' }}
                 </strong>
-                <span class="solar-sizing-chip__meta">Valor inicial para comecar a negociacao com mais clareza.</span>
             </article>
 
             <article class="solar-sizing-chip solar-sizing-chip--featured">
@@ -529,7 +538,6 @@
                 <strong class="solar-sizing-chip__value" data-pricing-preview="savings">
                     {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') . '/mes' : 'Informe a conta de energia' }}
                 </strong>
-                <span class="solar-sizing-chip__meta">Argumento comercial principal no primeiro atendimento.</span>
             </article>
 
             <article class="solar-sizing-chip">
@@ -647,7 +655,7 @@
                 <p class="solar-section-eyebrow">5. Simulacao financeira</p>
                 <h3>Transforme a simulacao em argumento comercial</h3>
             </div>
-            <p class="hub-note">A economia mensal e o destaque principal. Os horizontes anual e de 25 anos entram como reforco.</p>
+            <p class="hub-note">Mostre economia, retorno e ROI de forma objetiva.</p>
         </div>
 
         <div class="solar-sizing-panel__highlights solar-financial-panel__highlights">
@@ -703,7 +711,7 @@
                 <p class="solar-section-eyebrow">6. Observacoes e status</p>
                 <h3>Feche o contexto comercial do projeto</h3>
             </div>
-            <p class="hub-note">Defina a etapa do funil e registre qualquer detalhe util para a proxima conversa com o cliente.</p>
+            <p class="hub-note">Defina etapa do funil e registre os proximos passos.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">

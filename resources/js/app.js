@@ -773,6 +773,21 @@ const initZipCodeLookup = () => {
     return `${digits.slice(0, 5)}-${digits.slice(5)}`;
   };
 
+  const geocodingStatusLabel = (value) => {
+    switch (String(value || '').trim().toLowerCase()) {
+      case 'ready':
+        return 'Geolocalizacao pronta';
+      case 'not_found':
+        return 'Localizacao nao encontrada';
+      case 'address_loaded':
+        return 'Endereco identificado, refinando localizacao';
+      case 'not_requested':
+        return 'Aguardando CEP';
+      default:
+        return 'Buscando geolocalizacao do endereco...';
+    }
+  };
+
   sections.forEach((section) => {
     const zipInput = section.parentElement?.querySelector('[data-cep-input]');
     const streetInput = section.parentElement?.querySelector('[data-cep-street]');
@@ -780,7 +795,7 @@ const initZipCodeLookup = () => {
     const cityInput = section.parentElement?.querySelector('[data-cep-city]');
     const stateInput = section.parentElement?.querySelector('[data-cep-state]');
     const feedback = section.parentElement?.querySelector('[data-cep-feedback]');
-    const geocodingStatus = section.parentElement?.querySelector('[data-geocoding-status]');
+    const geocodingStatusElements = Array.from(section.parentElement?.querySelectorAll('[data-geocoding-status]') || []);
 
     if (!(zipInput instanceof HTMLInputElement)) return;
     if (!(streetInput instanceof HTMLInputElement)) return;
@@ -800,9 +815,10 @@ const initZipCodeLookup = () => {
     };
 
     const setGeocodingStatus = (value) => {
-      if (geocodingStatus instanceof HTMLElement) {
-        geocodingStatus.textContent = value.toUpperCase();
-      }
+      geocodingStatusElements.forEach((element) => {
+        if (!(element instanceof HTMLElement)) return;
+        element.textContent = geocodingStatusLabel(value);
+      });
     };
 
     const fillAddress = (payload) => {
@@ -815,6 +831,7 @@ const initZipCodeLookup = () => {
       stateInput.dispatchEvent(new Event('input', { bubbles: true }));
       cityInput.dispatchEvent(new Event('change', { bubbles: true }));
       stateInput.dispatchEvent(new Event('change', { bubbles: true }));
+      section.dispatchEvent(new CustomEvent('solar:address-autofilled', { bubbles: true }));
     };
 
     const lookupZipCode = async () => {
@@ -860,6 +877,7 @@ const initZipCodeLookup = () => {
     };
 
     zipInput.value = formatZipCode(zipInput.value);
+    let zipLookupTimeout = null;
 
     zipInput.addEventListener('input', () => {
       zipInput.value = formatZipCode(zipInput.value);
@@ -868,7 +886,18 @@ const initZipCodeLookup = () => {
       if (digits.length < 8) {
         lastZipSearched = '';
         setFeedback('Digite um CEP valido para preencher rua, bairro, cidade e UF.', '');
+        setGeocodingStatus('not_requested');
+        return;
       }
+
+      if (zipLookupTimeout !== null) {
+        window.clearTimeout(zipLookupTimeout);
+      }
+
+      // Nao esperar blur: quando CEP fica completo, inicia busca rapidamente.
+      zipLookupTimeout = window.setTimeout(() => {
+        lookupZipCode();
+      }, 180);
     });
 
     zipInput.addEventListener('blur', () => {
@@ -900,6 +929,7 @@ const initSolarSizingForm = () => {
     const note = section.querySelector('[data-sizing-note]');
     const systemPreview = section.querySelector('[data-sizing-preview="system-power"]');
     const modulePreview = section.querySelector('[data-sizing-preview="module-power"]');
+    const moduleCountPreview = section.querySelector('[data-sizing-preview="modules"]');
     const factorPreview = section.querySelector('[data-sizing-preview="factor"]');
     const generationPreview = section.querySelector('[data-sizing-preview="generation"]');
     const areaPreview = section.querySelector('[data-sizing-preview="area"]');
@@ -944,7 +974,9 @@ const initSolarSizingForm = () => {
     const solarRadiationDisplay = root.querySelector('[data-solar-radiation-display]');
     const solarFactorSourceDisplay = root.querySelector('[data-solar-factor-source-display]');
     const solarFactorMessage = root.querySelector('[data-solar-factor-message]');
-    const geocodingStatusDisplay = root.querySelector('[data-geocoding-status]');
+    const technicalPanel = root.querySelector('.solar-technical-panel');
+    const technicalSignals = Array.from(root.querySelectorAll('.solar-technical-panel__signal'));
+    const geocodingStatusDisplays = Array.from(root.querySelectorAll('[data-geocoding-status]'));
     const geocodingPrecisionDisplays = Array.from(root.querySelectorAll('[data-geocoding-precision-display]'));
     const automationSyncStatus = root.querySelector('[data-automation-sync-status]');
     const automationPreviewUrl = root.getAttribute('data-automation-preview-url') || '';
@@ -985,6 +1017,21 @@ const initSolarSizingForm = () => {
       const parsed = parseLocalizedNumber(input.value);
       return Number.isFinite(parsed) ? parsed : null;
     };
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const counterAnimationMap = new WeakMap();
+    const debounce = (callback, delay = 380) => {
+      let timeoutId = null;
+
+      return (...args) => {
+        if (timeoutId !== null) {
+          window.clearTimeout(timeoutId);
+        }
+
+        timeoutId = window.setTimeout(() => {
+          callback(...args);
+        }, delay);
+      };
+    };
 
     const formatNumber = (value, suffix = '', decimals = 2) => `${value.toFixed(decimals).replace('.', ',')}${suffix}`;
     const writeNumber = (input, value, decimals = 2) => {
@@ -994,34 +1041,124 @@ const initSolarSizingForm = () => {
 
     const formatCurrency = (value) => `R$ ${value.toFixed(2).replace('.', ',')}`;
     const formatCurrencyMonthly = (value) => `${formatCurrency(value)}/mes`;
+    const animateNumber = (element, targetValue, formatter, options = {}) => {
+      if (!(element instanceof HTMLElement)) return;
+      if (!Number.isFinite(targetValue)) return;
+
+      const {
+        duration = 360,
+        highlightClass = 'is-counting',
+      } = options;
+      const container = element.closest('.solar-system-hero-metric');
+      const activeClassTarget = container || element;
+      const previousState = counterAnimationMap.get(element);
+
+      if (previousState?.rafId) {
+        window.cancelAnimationFrame(previousState.rafId);
+      }
+
+      const startingValue = previousState && Number.isFinite(previousState.value)
+        ? previousState.value
+        : targetValue;
+      const diff = targetValue - startingValue;
+
+      if (prefersReducedMotion || Math.abs(diff) < 0.01) {
+        element.textContent = formatter(targetValue);
+        counterAnimationMap.set(element, { value: targetValue, rafId: null });
+        return;
+      }
+
+      activeClassTarget.classList.add(highlightClass);
+      const startedAt = performance.now();
+
+      const tick = (now) => {
+        const elapsed = Math.min((now - startedAt) / duration, 1);
+        const eased = 1 - ((1 - elapsed) ** 3);
+        const currentValue = startingValue + (diff * eased);
+        element.textContent = formatter(currentValue);
+
+        if (elapsed < 1) {
+          const rafId = window.requestAnimationFrame(tick);
+          counterAnimationMap.set(element, { value: currentValue, rafId });
+          return;
+        }
+
+        element.textContent = formatter(targetValue);
+        counterAnimationMap.set(element, { value: targetValue, rafId: null });
+        window.setTimeout(() => {
+          activeClassTarget.classList.remove(highlightClass);
+        }, 120);
+      };
+
+      const rafId = window.requestAnimationFrame(tick);
+      counterAnimationMap.set(element, { value: startingValue, rafId });
+    };
     const geocodingStatusLabel = (value) => {
-      switch (value) {
+      switch (String(value || '').trim().toLowerCase()) {
         case 'ready':
-          return 'Localizacao pronta';
+          return 'Geolocalizacao pronta';
         case 'not_found':
           return 'Localizacao nao encontrada';
         case 'address_loaded':
-          return 'Endereco parcial carregado';
+          return 'Endereco identificado, refinando localizacao';
         case 'not_requested':
           return 'Aguardando CEP';
         default:
-          return 'Buscando melhor localizacao';
+          return 'Buscando geolocalizacao do endereco...';
       }
     };
-    const setAutomationSyncStatus = (value) => {
+    const updateGeocodingProgressByInput = () => {
+      const hasCity = cityInput instanceof HTMLInputElement && cityInput.value.trim() !== '';
+      const hasState = stateInput instanceof HTMLInputElement && stateInput.value.trim() !== '';
+      const hasStreet = streetInput instanceof HTMLInputElement && streetInput.value.trim() !== '';
+      const hasNumber = numberInput instanceof HTMLInputElement && numberInput.value.trim() !== '';
+
+      if (hasCity && hasState && hasStreet && hasNumber) {
+        geocodingStatusDisplays.forEach((element) => {
+          if (element instanceof HTMLElement) {
+            element.textContent = 'Refinando localizacao exata do endereco...';
+          }
+        });
+        return;
+      }
+
+      if (hasCity && hasState) {
+        geocodingStatusDisplays.forEach((element) => {
+          if (element instanceof HTMLElement) {
+            element.textContent = 'Cidade identificada, buscando coordenadas...';
+          }
+        });
+      }
+    };
+    const setAutomationSyncStatus = (value, factorSource = solarFactorSource) => {
       if (!(automationSyncStatus instanceof HTMLElement)) return;
+      const clearSignalState = () => {
+        automationSyncStatus.classList.remove('is-loading', 'is-error');
+        technicalSignals.forEach((signal) => signal.classList.remove('is-live'));
+      };
+
+      clearSignalState();
+      technicalPanel?.classList.toggle('is-syncing', value === 'loading');
 
       if (value === 'loading') {
-        automationSyncStatus.textContent = 'Atualizando fator solar...';
+        automationSyncStatus.classList.add('is-loading');
+        automationSyncStatus.textContent = 'Atualizando';
         return;
       }
 
       if (value === 'error') {
-        automationSyncStatus.textContent = 'Sem atualizacao agora';
+        automationSyncStatus.classList.add('is-error');
+        automationSyncStatus.textContent = 'Fallback';
         return;
       }
 
-      automationSyncStatus.textContent = 'Sincronizado';
+      if (factorSource === 'pvgis') {
+        automationSyncStatus.textContent = 'Regional';
+        technicalSignals.forEach((signal) => signal.classList.add('is-live'));
+        return;
+      }
+
+      automationSyncStatus.textContent = 'Padrao';
     };
     let currentModulesValue = null;
     const resolveRegionalPricing = () => {
@@ -1088,9 +1225,11 @@ const initSolarSizingForm = () => {
       return roundTo(solarFactor / 30, 2);
     };
     const updateGeocodingDisplays = (status, precisionLabel) => {
-      if (geocodingStatusDisplay instanceof HTMLElement && status) {
-        geocodingStatusDisplay.textContent = geocodingStatusLabel(status);
-      }
+      geocodingStatusDisplays.forEach((element) => {
+        if (element instanceof HTMLElement && status) {
+          element.textContent = geocodingStatusLabel(status);
+        }
+      });
 
       geocodingPrecisionDisplays.forEach((element) => {
         if (element instanceof HTMLElement && precisionLabel) {
@@ -1129,6 +1268,8 @@ const initSolarSizingForm = () => {
         solarFactorMessage.hidden = message === '';
       }
 
+      setAutomationSyncStatus('ok', solarFactorSource);
+
       if (monthlyInput.value.trim() !== '') {
         applySizing();
       } else {
@@ -1162,6 +1303,7 @@ const initSolarSizingForm = () => {
       automationPreviewAbortController = new AbortController();
       pendingAutomationFingerprint = fingerprint;
       setAutomationSyncStatus('loading');
+      updateGeocodingProgressByInput();
 
       const params = new URLSearchParams();
       if (projectId) params.set('project_id', projectId);
@@ -1211,7 +1353,7 @@ const initSolarSizingForm = () => {
         }
       }
     };
-    const scheduleAutomationPreview = (delay = 450) => {
+    const scheduleAutomationPreview = (delay = 140) => {
       if (automationPreviewTimeout) {
         window.clearTimeout(automationPreviewTimeout);
       }
@@ -1270,21 +1412,27 @@ const initSolarSizingForm = () => {
       }
 
       if (summaryGeneration instanceof HTMLElement) {
-        summaryGeneration.textContent = currentGeneration && currentGeneration > 0
-          ? formatNumber(currentGeneration, ' kWh')
-          : 'Aguardando sistema';
+        if (currentGeneration && currentGeneration > 0) {
+          animateNumber(summaryGeneration, currentGeneration, (value) => formatNumber(value, ' kWh/mes'));
+        } else {
+          summaryGeneration.textContent = 'Aguardando sistema';
+        }
       }
 
       if (summaryPrice instanceof HTMLElement) {
-        summaryPrice.textContent = currentSuggestedPrice && currentSuggestedPrice > 0
-          ? formatCurrency(currentSuggestedPrice)
-          : 'Aguardando pre-orcamento';
+        if (currentSuggestedPrice && currentSuggestedPrice > 0) {
+          animateNumber(summaryPrice, currentSuggestedPrice, (value) => formatCurrency(value));
+        } else {
+          summaryPrice.textContent = 'Aguardando pre-orcamento';
+        }
       }
 
       if (summarySavings instanceof HTMLElement) {
-        summarySavings.textContent = currentMonthlySavings !== null
-          ? formatCurrency(currentMonthlySavings)
-          : 'Aguardando conta';
+        if (currentMonthlySavings !== null) {
+          animateNumber(summarySavings, currentMonthlySavings, (value) => formatCurrency(value));
+        } else {
+          summarySavings.textContent = 'Aguardando conta';
+        }
       }
 
       if (summaryAnnualSavings instanceof HTMLElement) {
@@ -1361,10 +1509,18 @@ const initSolarSizingForm = () => {
         factorPreview.textContent = `${formatNumber(solarFactorUsed, '', 2)} kWh/kWp/mes`;
       }
 
-      if (generationPreview instanceof HTMLElement) {
-        generationPreview.textContent = currentGeneration && currentGeneration > 0
-          ? formatNumber(currentGeneration, ' kWh')
+      if (moduleCountPreview instanceof HTMLElement) {
+        moduleCountPreview.textContent = currentModules && currentModules > 0
+          ? String(Math.round(currentModules))
           : 'Aguardando sistema';
+      }
+
+      if (generationPreview instanceof HTMLElement) {
+        if (currentGeneration && currentGeneration > 0) {
+          animateNumber(generationPreview, currentGeneration, (value) => formatNumber(value, ' kWh'));
+        } else {
+          generationPreview.textContent = 'Aguardando sistema';
+        }
       }
 
       if (areaPreview instanceof HTMLElement) {
@@ -1415,27 +1571,35 @@ const initSolarSizingForm = () => {
       }
 
       if (pricingRoiPreview instanceof HTMLElement) {
-        pricingRoiPreview.textContent = currentRoi !== null
-          ? `${currentRoi.toFixed(1).replace('.', ',')}%`
-          : 'Aguardando simulacao';
+        if (currentRoi !== null) {
+          animateNumber(pricingRoiPreview, currentRoi, (value) => `${value.toFixed(1).replace('.', ',')}%`);
+        } else {
+          pricingRoiPreview.textContent = 'Aguardando simulacao';
+        }
       }
 
       if (pricingTotalPreview instanceof HTMLElement) {
-        pricingTotalPreview.textContent = currentSuggestedPrice && currentSuggestedPrice > 0
-          ? formatCurrency(currentSuggestedPrice)
-          : 'Aguardando dimensionamento';
+        if (currentSuggestedPrice && currentSuggestedPrice > 0) {
+          animateNumber(pricingTotalPreview, currentSuggestedPrice, (value) => formatCurrency(value));
+        } else {
+          pricingTotalPreview.textContent = 'Aguardando dimensionamento';
+        }
       }
 
       if (pricingSavingsPreview instanceof HTMLElement) {
-        pricingSavingsPreview.textContent = currentMonthlySavings !== null
-          ? formatCurrencyMonthly(currentMonthlySavings)
-          : 'Informe a conta de energia';
+        if (currentMonthlySavings !== null) {
+          animateNumber(pricingSavingsPreview, currentMonthlySavings, (value) => formatCurrencyMonthly(value));
+        } else {
+          pricingSavingsPreview.textContent = 'Informe a conta de energia';
+        }
       }
 
       if (financialMonthlyPreview instanceof HTMLElement) {
-        financialMonthlyPreview.textContent = currentMonthlySavings !== null
-          ? formatCurrency(currentMonthlySavings)
-          : 'Informe a conta de energia';
+        if (currentMonthlySavings !== null) {
+          animateNumber(financialMonthlyPreview, currentMonthlySavings, (value) => formatCurrency(value));
+        } else {
+          financialMonthlyPreview.textContent = 'Informe a conta de energia';
+        }
       }
 
       if (financialAnnualPreview instanceof HTMLElement) {
@@ -1457,9 +1621,11 @@ const initSolarSizingForm = () => {
       }
 
       if (financialRoiPreview instanceof HTMLElement) {
-        financialRoiPreview.textContent = currentRoi !== null
-          ? `${currentRoi.toFixed(1).replace('.', ',')}%`
-          : 'Aguardando simulacao';
+        if (currentRoi !== null) {
+          animateNumber(financialRoiPreview, currentRoi, (value) => `${value.toFixed(1).replace('.', ',')}%`);
+        } else {
+          financialRoiPreview.textContent = 'Aguardando simulacao';
+        }
       }
 
       if (pricingMarginPreview instanceof HTMLElement) {
@@ -1530,27 +1696,34 @@ const initSolarSizingForm = () => {
       applyDefaultInverter();
       updatePreview();
     };
+    const debouncedApplySizing = debounce(() => applySizing(), 180);
+    const debouncedUpdateDerivedFromPower = debounce(() => updateDerivedFieldsFromPower(), 140);
+    const debouncedPreviewRefresh = debounce(() => updatePreview(), 180);
 
     applyDefaultInverter();
     resolveRegionalPricing();
     updateDerivedFieldsFromPower({ onlyEmpty: true });
     updatePreview();
+    setAutomationSyncStatus('ok', solarFactorSource);
     scheduleAutomationPreview(0);
 
-    monthlyInput.addEventListener('input', () => applySizing());
-    modulePowerInput.addEventListener('input', () => applySizing());
-    systemPowerInput.addEventListener('input', updateDerivedFieldsFromPower);
+    monthlyInput.addEventListener('input', debouncedApplySizing);
+    modulePowerInput.addEventListener('input', debouncedApplySizing);
+    systemPowerInput.addEventListener('input', debouncedUpdateDerivedFromPower);
+    monthlyInput.addEventListener('change', () => applySizing());
+    modulePowerInput.addEventListener('change', () => applySizing());
+    systemPowerInput.addEventListener('change', () => updateDerivedFieldsFromPower());
     moduleQuantityInput.addEventListener('input', updatePreview);
-    generationInput.addEventListener('input', updatePreview);
-    suggestedPriceInput.addEventListener('input', updatePreview);
-    energyBillInput?.addEventListener('input', updatePreview);
+    generationInput.addEventListener('input', debouncedPreviewRefresh);
+    suggestedPriceInput.addEventListener('input', debouncedPreviewRefresh);
+    energyBillInput?.addEventListener('input', debouncedPreviewRefresh);
     inverterInput.addEventListener('input', updatePreview);
     customerSelect?.addEventListener('change', updatePreview);
     projectNameInput?.addEventListener('input', updatePreview);
     projectStatusInput?.addEventListener('change', updatePreview);
     cityInput?.addEventListener('input', () => {
       resolveRegionalPricing();
-      updatePreview();
+      debouncedPreviewRefresh();
       scheduleAutomationPreview();
     });
     cityInput?.addEventListener('change', () => {
@@ -1560,7 +1733,7 @@ const initSolarSizingForm = () => {
     });
     stateInput?.addEventListener('input', () => {
       resolveRegionalPricing();
-      applySizing();
+      debouncedApplySizing();
       scheduleAutomationPreview();
     });
     stateInput?.addEventListener('change', () => {
@@ -1576,6 +1749,9 @@ const initSolarSizingForm = () => {
     numberInput?.addEventListener('change', () => scheduleAutomationPreview(0));
     districtInput?.addEventListener('input', () => scheduleAutomationPreview());
     districtInput?.addEventListener('change', () => scheduleAutomationPreview(0));
+    root.addEventListener('solar:address-autofilled', () => {
+      scheduleAutomationPreview(80);
+    });
   });
 };
 
@@ -1611,8 +1787,8 @@ const initEnergyUtilityAutoSelect = () => {
   selects.forEach((select) => {
     if (!(select instanceof HTMLSelectElement)) return;
 
-    const root = select.parentElement?.parentElement?.parentElement;
-    if (!root) return;
+    const root = select.closest('[data-cep-lookup]') || select.closest('.solar-flow-section');
+    if (!(root instanceof HTMLElement)) return;
 
     const cityInput = root.querySelector('[data-cep-city]');
     const stateInput = root.querySelector('[data-cep-state]');
@@ -1769,8 +1945,64 @@ const initEnergyUtilityAutoSelect = () => {
     stateInput.addEventListener('input', resolveUtility);
     cityInput.addEventListener('change', resolveUtility);
     stateInput.addEventListener('change', resolveUtility);
+    root.addEventListener('solar:address-autofilled', resolveUtility);
 
     resolveUtility();
+  });
+};
+
+const initSolarProjectShowcase = () => {
+  const showcases = Array.from(document.querySelectorAll('[data-solar-showcase]'));
+  if (!showcases.length) return;
+
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const formatters = {
+    currency: (value) => `R$ ${value.toFixed(2).replace('.', ',')}`,
+    kwp: (value) => `${value.toFixed(2).replace('.', ',')} kWp`,
+    months: (value) => `${Math.round(value)} meses`,
+  };
+
+  showcases.forEach((showcase) => {
+    const metrics = Array.from(showcase.querySelectorAll('[data-show-animate-number]'));
+
+    metrics.forEach((metric, index) => {
+      if (!(metric instanceof HTMLElement)) return;
+
+      const targetValue = Number(metric.dataset.showValue || '');
+      const formatterKey = metric.dataset.showFormat || 'currency';
+      const formatter = formatters[formatterKey] || ((value) => String(value));
+      const card = metric.closest('.solar-project-showcase-metric');
+
+      if (!Number.isFinite(targetValue) || prefersReducedMotion) {
+        return;
+      }
+
+      const duration = 520;
+      const delay = index * 70;
+
+      window.setTimeout(() => {
+        const startedAt = performance.now();
+        card?.classList.add('is-counting');
+
+        const tick = (now) => {
+          const elapsed = Math.min((now - startedAt) / duration, 1);
+          const eased = 1 - ((1 - elapsed) ** 3);
+          metric.textContent = formatter(targetValue * eased);
+
+          if (elapsed < 1) {
+            window.requestAnimationFrame(tick);
+            return;
+          }
+
+          metric.textContent = formatter(targetValue);
+          window.setTimeout(() => {
+            card?.classList.remove('is-counting');
+          }, 120);
+        };
+
+        window.requestAnimationFrame(tick);
+      }, delay);
+    });
   });
 };
 
@@ -2076,6 +2308,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSolarSizingForm();
   initSolarMarketPriceFill();
   initEnergyUtilityAutoSelect();
+  initSolarProjectShowcase();
   initErrorEasterEggs();
   initArcaneAccents();
 });
