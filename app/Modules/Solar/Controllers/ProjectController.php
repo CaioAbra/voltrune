@@ -9,6 +9,7 @@ use App\Modules\Solar\Models\SolarCompanySetting;
 use App\Modules\Solar\Models\SolarCustomer;
 use App\Modules\Solar\Models\SolarProject;
 use App\Modules\Solar\Services\EnergyUtilityResolverService;
+use App\Modules\Solar\Services\SolarGeocodingService;
 use App\Modules\Solar\Services\SolarNavigationService;
 use App\Modules\Solar\Services\SolarRadiationService;
 use App\Modules\Solar\Services\SolarSizingService;
@@ -22,6 +23,7 @@ class ProjectController extends Controller
         private readonly SolarNavigationService $navigation,
         private readonly SolarSizingService $sizing,
         private readonly EnergyUtilityResolverService $utilityResolver,
+        private readonly SolarGeocodingService $geocoding,
         private readonly SolarRadiationService $radiation,
     ) {
     }
@@ -48,7 +50,6 @@ class ProjectController extends Controller
         $utilities = $this->utilityOptions();
         $selectedCustomerId = $request->integer('customer');
         $companySetting = $this->companySetting($company);
-        $effectivePricePerKwp = $this->sizing->resolvePricePerKwp($companySetting?->price_per_kwp);
         $newProject = new SolarProject([
             'solar_customer_id' => $selectedCustomerId > 0 ? $selectedCustomerId : null,
             'connection_type' => 'bi',
@@ -57,6 +58,7 @@ class ProjectController extends Controller
             'status' => 'draft',
         ]);
         $factorData = $this->radiation->resolveFactorForProject($newProject);
+        $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $newProject->state);
 
         return view('solar.projects.create', $this->viewData('Novo projeto', [
             'company' => $company,
@@ -64,10 +66,12 @@ class ProjectController extends Controller
             'utilities' => $utilities,
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
             'companySetting' => $companySetting,
-            'effectivePricePerKwp' => $effectivePricePerKwp,
+            'effectivePricePerKwp' => $pricingContext['value'],
+            'pricingReferenceSource' => $pricingContext['source'],
+            'regionalPriceLookup' => $this->sizing->regionalPriceLookup(),
             'solarFactorData' => $factorData,
             'residualMinimumCost' => SolarSizingService::MINIMUM_RESIDUAL_ENERGY_COST,
-            'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
+            'usesMarketPriceFallback' => $pricingContext['source'] !== 'company',
             'project' => $newProject,
         ]));
     }
@@ -78,27 +82,37 @@ class ProjectController extends Controller
         $projectRecord = $this->resolveProject($company, $project, ['customer']);
         $companySetting = $this->companySetting($company);
         $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord, $companySetting);
-        $effectivePricePerKwp = $this->sizing->resolvePricePerKwp($companySetting?->price_per_kwp);
+        $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $projectRecord->state);
         $solarFactorData = $this->radiation->resolveFactorForProject($projectRecord);
 
         return view('solar.projects.show', $this->viewData('Projeto solar', [
             'company' => $company,
             'project' => $projectRecord,
             'companySetting' => $companySetting,
-            'effectivePricePerKwp' => $effectivePricePerKwp,
+            'effectivePricePerKwp' => $pricingContext['value'],
+            'pricingReferenceSource' => $pricingContext['source'],
             'solarFactorData' => $solarFactorData,
             'residualMinimumCost' => SolarSizingService::MINIMUM_RESIDUAL_ENERGY_COST,
-            'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
+            'usesMarketPriceFallback' => $pricingContext['source'] !== 'company',
             'estimatedRequiredPowerKwp' => $this->sizing->estimateRequiredPowerKwp($projectRecord->monthly_consumption_kwh, $projectRecord->solar_factor_used),
             'suggestedModuleQuantity' => $this->sizing->estimateModuleQuantity($projectRecord->system_power_kwp, $projectRecord->module_power),
             'suggestedGenerationKwh' => $this->sizing->estimateGenerationKwh($projectRecord->system_power_kwp, $projectRecord->solar_factor_used),
             'suggestedCommercialPrice' => $this->sizing->estimateSuggestedPrice(
                 $projectRecord->system_power_kwp,
-                $effectivePricePerKwp,
+                $pricingContext['value'],
             ),
             'estimatedMonthlySavings' => $this->sizing->estimateMonthlySavings($projectRecord->energy_bill_value),
             'estimatedAnnualSavings' => $this->sizing->estimateAnnualSavings($projectRecord->energy_bill_value),
             'estimatedLifetimeSavings' => $this->sizing->estimateLifetimeSavings($projectRecord->energy_bill_value),
+            'estimatedAreaSquareMeters' => $this->sizing->estimateAreaSquareMeters($projectRecord->system_power_kwp),
+            'estimatedPaybackMonths' => $this->sizing->estimatePaybackMonths($projectRecord->suggested_price ?: $this->sizing->estimateSuggestedPrice(
+                $projectRecord->system_power_kwp,
+                $pricingContext['value'],
+            ), $projectRecord->energy_bill_value),
+            'estimatedRoiPercentage' => $this->sizing->estimateRoiPercentage($projectRecord->suggested_price ?: $this->sizing->estimateSuggestedPrice(
+                $projectRecord->system_power_kwp,
+                $pricingContext['value'],
+            ), $projectRecord->energy_bill_value),
         ]));
     }
 
@@ -107,10 +121,12 @@ class ProjectController extends Controller
         $company = $this->resolveCurrentCompany($request);
         $companySetting = $this->companySetting($company);
         $preparedData = $this->prepareLocationData($this->validatedData($request, $company));
+        $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $preparedData['state'] ?? null);
         $data = $this->sizing->applySuggestedSizing(
             $preparedData,
             $companySetting,
             $preparedData['solar_factor_used'] ?? null,
+            $pricingContext['value'],
         );
         $data['company_id'] = $company->id;
 
@@ -129,7 +145,7 @@ class ProjectController extends Controller
         $utilities = $this->utilityOptions();
         $companySetting = $this->companySetting($company);
         $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord, $companySetting);
-        $effectivePricePerKwp = $this->sizing->resolvePricePerKwp($companySetting?->price_per_kwp);
+        $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $projectRecord->state);
         $solarFactorData = $this->radiation->resolveFactorForProject($projectRecord);
 
         return view('solar.projects.edit', $this->viewData('Editar projeto', [
@@ -138,10 +154,12 @@ class ProjectController extends Controller
             'utilities' => $utilities,
             'utilityLookup' => $this->utilityResolver->toFrontendLookup($utilities),
             'companySetting' => $companySetting,
-            'effectivePricePerKwp' => $effectivePricePerKwp,
+            'effectivePricePerKwp' => $pricingContext['value'],
+            'pricingReferenceSource' => $pricingContext['source'],
+            'regionalPriceLookup' => $this->sizing->regionalPriceLookup(),
             'solarFactorData' => $solarFactorData,
             'residualMinimumCost' => SolarSizingService::MINIMUM_RESIDUAL_ENERGY_COST,
-            'usesMarketPriceFallback' => ! $companySetting?->price_per_kwp,
+            'usesMarketPriceFallback' => $pricingContext['source'] !== 'company',
             'project' => $projectRecord,
         ]));
     }
@@ -152,12 +170,14 @@ class ProjectController extends Controller
         $projectRecord = $this->resolveProject($company, $project);
         $companySetting = $this->companySetting($company);
         $preparedData = $this->prepareLocationData($this->validatedData($request, $company), $projectRecord);
+        $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $preparedData['state'] ?? null);
 
         $projectRecord->update(
             $this->sizing->applySuggestedSizing(
                 $preparedData,
                 $companySetting,
                 $preparedData['solar_factor_used'] ?? $projectRecord->solar_factor_used,
+                $pricingContext['value'],
             )
         );
         $this->refreshProjectRadiationAndSizing($projectRecord->refresh(), $companySetting);
@@ -284,6 +304,7 @@ class ProjectController extends Controller
             : null;
 
         $hasAddressLookupData = ! empty($data['street']) || ! empty($data['district']) || ! empty($data['city']) || ! empty($data['state']);
+        $previousAddress = $project?->address;
 
         if ($data['energy_utility_id'] === null && ! empty($data['city']) && ! empty($data['state'])) {
             $resolvedUtility = $this->utilityResolver->resolveUtilityByCity($data['city'], $data['state']);
@@ -301,12 +322,10 @@ class ProjectController extends Controller
             $hasAddressLookupData => 'address_loaded',
             default => 'pending',
         };
-        $data['latitude'] = $project?->latitude;
-        $data['longitude'] = $project?->longitude;
-        $data['solar_factor_used'] = $project?->solar_factor_used ?: SolarSizingService::DEFAULT_SOLAR_FACTOR;
-        $data['solar_factor_source'] = $project?->solar_factor_source ?: 'default';
+        $data['solar_factor_used'] = $project?->solar_factor_used;
+        $data['solar_factor_source'] = $project?->solar_factor_source;
         $data['solar_factor_fetched_at'] = $project?->solar_factor_fetched_at;
-        $data['radiation_status'] = $project?->radiation_status ?: 'fallback';
+        $data['radiation_status'] = $project?->radiation_status;
         $data['address'] = collect([
             $data['street'] ?: null,
             $data['number'] ?: null,
@@ -315,6 +334,22 @@ class ProjectController extends Controller
             $data['city'] ?: null,
             $data['state'] ?: null,
         ])->filter()->implode(', ');
+
+        $coordinatesMissing = $project?->latitude === null || $project?->longitude === null;
+
+        if ($this->geocoding->shouldRefreshCoordinates($data, $previousAddress, $coordinatesMissing)) {
+            $coordinates = $this->geocoding->resolveCoordinates($data);
+            $data['latitude'] = $coordinates['latitude'];
+            $data['longitude'] = $coordinates['longitude'];
+            $data['geocoding_status'] = $coordinates['status'];
+            $data['solar_factor_used'] = null;
+            $data['solar_factor_source'] = null;
+            $data['solar_factor_fetched_at'] = null;
+            $data['radiation_status'] = null;
+        } else {
+            $data['latitude'] = $project?->latitude;
+            $data['longitude'] = $project?->longitude;
+        }
 
         return $data;
     }
@@ -345,6 +380,7 @@ class ProjectController extends Controller
     private function refreshProjectRadiationAndSizing(SolarProject $project, ?SolarCompanySetting $companySetting): SolarProject
     {
         $project = $this->radiation->refreshProjectRadiationData($project);
+        $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $project->state);
 
         $payload = $project->only([
             'monthly_consumption_kwh',
@@ -362,6 +398,7 @@ class ProjectController extends Controller
                 $payload,
                 $companySetting,
                 $project->solar_factor_used,
+                $pricingContext['value'],
             )
         )->save();
 

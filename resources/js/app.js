@@ -899,14 +899,22 @@ const initSolarSizingForm = () => {
     const systemPreview = section.querySelector('[data-sizing-preview="system-power"]');
     const modulePreview = section.querySelector('[data-sizing-preview="module-power"]');
     const factorPreview = section.querySelector('[data-sizing-preview="factor"]');
+    const generationPreview = section.querySelector('[data-sizing-preview="generation"]');
+    const areaPreview = section.querySelector('[data-sizing-preview="area"]');
     const pricingRatePreview = root.querySelector('[data-pricing-preview="rate"]');
     const pricingTotalPreview = root.querySelector('[data-pricing-preview="total"]');
     const pricingSavingsPreview = root.querySelector('[data-pricing-preview="savings"]');
     const pricingMarginPreview = root.querySelector('[data-pricing-preview="margin"]');
+    const pricingSourcePreview = root.querySelector('[data-pricing-preview="source"]');
+    const pricingKitCostPreview = root.querySelector('[data-pricing-preview="kit-cost"]');
+    const pricingGrossProfitPreview = root.querySelector('[data-pricing-preview="gross-profit"]');
+    const pricingRoiPreview = root.querySelector('[data-pricing-preview="roi"]');
     const pricingNote = root.querySelector('[data-pricing-note]');
     const financialMonthlyPreview = root.querySelector('[data-financial-preview="monthly"]');
     const financialAnnualPreview = root.querySelector('[data-financial-preview="annual"]');
     const financialLifetimePreview = root.querySelector('[data-financial-preview="lifetime"]');
+    const financialPaybackPreview = root.querySelector('[data-financial-preview="payback"]');
+    const financialRoiPreview = root.querySelector('[data-financial-preview="roi"]');
     const financialNote = root.querySelector('[data-financial-note]');
     const suggestedPriceInput = root.querySelector('[data-pricing-suggested-price]');
     const summaryName = root.querySelector('[data-project-summary-name]');
@@ -928,13 +936,18 @@ const initSolarSizingForm = () => {
     const stateInput = root.querySelector('[data-project-state]');
     const solarFactorDisplay = root.querySelector('[data-solar-factor-display]');
     const solarFactorSourceDisplay = root.querySelector('[data-solar-factor-source-display]');
-    const pricingPerKwp = Number(section.getAttribute('data-pricing-per-kwp')?.replace(',', '.') || 0);
+    let pricingPerKwp = Number(
+      (section.getAttribute('data-pricing-per-kwp')
+        || root.getAttribute('data-pricing-per-kwp')
+        || '0').replace(',', '.'),
+    );
+    let pricingSource = root.getAttribute('data-pricing-source') || 'fallback';
+    const regionalPriceLookup = JSON.parse(root.getAttribute('data-regional-price-lookup') || '{}');
     const marginPercent = Number(root.getAttribute('data-margin-percent')?.replace(',', '.') || 0);
     const defaultInverterModel = root.getAttribute('data-default-inverter-model') || '';
-    const pricingSource = root.getAttribute('data-pricing-source') || 'custom';
     const residualMinimumCost = Number(root.getAttribute('data-residual-minimum-cost')?.replace(',', '.') || 70);
     const solarFactorUsed = Number(root.getAttribute('data-solar-factor-used')?.replace(',', '.') || 130);
-    const solarFactorSource = root.getAttribute('data-solar-factor-source') || 'default';
+    const solarFactorSource = root.getAttribute('data-solar-factor-source') || 'fallback';
 
     if (!(monthlyInput instanceof HTMLInputElement)) return;
     if (!(modulePowerInput instanceof HTMLInputElement)) return;
@@ -959,9 +972,64 @@ const initSolarSizingForm = () => {
 
     const formatCurrency = (value) => `R$ ${value.toFixed(2).replace('.', ',')}`;
     const formatCurrencyMonthly = (value) => `${formatCurrency(value)}/mes`;
+    let currentModulesValue = null;
+    const resolveRegionalPricing = () => {
+      const currentState = stateInput instanceof HTMLInputElement
+        ? stateInput.value.trim().toUpperCase()
+        : '';
+
+      if (root.getAttribute('data-pricing-source') === 'company') {
+        pricingSource = 'company';
+        return;
+      }
+
+      const regionalPrice = Number(regionalPriceLookup[currentState] || 0);
+
+      if (regionalPrice > 0) {
+        pricingPerKwp = regionalPrice;
+        pricingSource = 'regional';
+      } else {
+        pricingPerKwp = Number(root.getAttribute('data-pricing-per-kwp')?.replace(',', '.') || 4200);
+        pricingSource = 'fallback';
+      }
+    };
+
     const estimateMonthlySavings = (energyBillValue) => {
       if (!Number.isFinite(energyBillValue) || energyBillValue <= 0) return null;
       return roundTo(Math.max(energyBillValue - residualMinimumCost, 0), 2);
+    };
+    const estimateArea = (systemPower) => {
+      if (Number.isFinite(currentModulesValue) && currentModulesValue > 0) {
+        return roundTo(currentModulesValue * 2.3, 2);
+      }
+      if (!Number.isFinite(systemPower) || systemPower <= 0) return null;
+      return roundTo(systemPower * 4.5, 2);
+    };
+    const estimateKitCost = (suggestedPrice) => {
+      if (!Number.isFinite(suggestedPrice) || suggestedPrice <= 0) return null;
+      const effectiveMargin = marginPercent > 0 ? marginPercent : 22;
+      return roundTo(suggestedPrice / (1 + (effectiveMargin / 100)), 2);
+    };
+    const estimateGrossProfit = (suggestedPrice, kitCost) => {
+      if (!Number.isFinite(suggestedPrice) || suggestedPrice <= 0 || !Number.isFinite(kitCost) || kitCost <= 0) {
+        return null;
+      }
+
+      return roundTo(suggestedPrice - kitCost, 2);
+    };
+    const estimatePaybackMonths = (suggestedPrice, monthlySavings) => {
+      if (!Number.isFinite(suggestedPrice) || suggestedPrice <= 0 || !Number.isFinite(monthlySavings) || monthlySavings <= 0) {
+        return null;
+      }
+
+      return Math.ceil(suggestedPrice / monthlySavings);
+    };
+    const estimateRoi = (suggestedPrice, annualSavings) => {
+      if (!Number.isFinite(suggestedPrice) || suggestedPrice <= 0 || !Number.isFinite(annualSavings) || annualSavings <= 0) {
+        return null;
+      }
+
+      return roundTo((annualSavings / suggestedPrice) * 100, 1);
     };
 
     const updateSummary = () => {
@@ -1081,6 +1149,12 @@ const initSolarSizingForm = () => {
       const currentMonthlySavings = estimateMonthlySavings(currentEnergyBill);
       const currentAnnualSavings = currentMonthlySavings !== null ? roundTo(currentMonthlySavings * 12, 2) : null;
       const currentLifetimeSavings = currentAnnualSavings !== null ? roundTo(currentAnnualSavings * 25, 2) : null;
+      currentModulesValue = currentModules;
+      const currentArea = estimateArea(currentPower);
+      const currentKitCost = estimateKitCost(currentSuggestedPrice);
+      const currentGrossProfit = estimateGrossProfit(currentSuggestedPrice, currentKitCost);
+      const currentPaybackMonths = estimatePaybackMonths(currentSuggestedPrice, currentMonthlySavings);
+      const currentRoi = estimateRoi(currentSuggestedPrice, currentAnnualSavings);
 
       if (systemPreview instanceof HTMLElement) {
         systemPreview.textContent = currentPower && currentPower > 0
@@ -1098,6 +1172,18 @@ const initSolarSizingForm = () => {
         factorPreview.textContent = `${formatNumber(solarFactorUsed, '', 2)} kWh/kWp/mes`;
       }
 
+      if (generationPreview instanceof HTMLElement) {
+        generationPreview.textContent = currentGeneration && currentGeneration > 0
+          ? formatNumber(currentGeneration, ' kWh')
+          : 'Aguardando sistema';
+      }
+
+      if (areaPreview instanceof HTMLElement) {
+        areaPreview.textContent = currentArea !== null
+          ? formatNumber(currentArea, ' m2')
+          : 'Aguardando sistema';
+      }
+
       if (solarFactorDisplay instanceof HTMLElement) {
         solarFactorDisplay.textContent = `${formatNumber(solarFactorUsed, '', 2)} kWh/kWp/mes`;
       }
@@ -1110,6 +1196,32 @@ const initSolarSizingForm = () => {
         pricingRatePreview.textContent = pricingPerKwp > 0
           ? formatCurrency(pricingPerKwp)
           : 'Indisponivel';
+      }
+
+      if (pricingSourcePreview instanceof HTMLElement) {
+        pricingSourcePreview.textContent = pricingSource === 'company'
+          ? 'Preco da empresa'
+          : pricingSource === 'regional'
+            ? 'Media regional'
+            : 'Fallback padrao';
+      }
+
+      if (pricingKitCostPreview instanceof HTMLElement) {
+        pricingKitCostPreview.textContent = currentKitCost !== null
+          ? formatCurrency(currentKitCost)
+          : 'Aguardando sistema';
+      }
+
+      if (pricingGrossProfitPreview instanceof HTMLElement) {
+        pricingGrossProfitPreview.textContent = currentGrossProfit !== null
+          ? formatCurrency(currentGrossProfit)
+          : 'Aguardando sistema';
+      }
+
+      if (pricingRoiPreview instanceof HTMLElement) {
+        pricingRoiPreview.textContent = currentRoi !== null
+          ? `${currentRoi.toFixed(1).replace('.', ',')}%`
+          : 'Aguardando simulacao';
       }
 
       if (pricingTotalPreview instanceof HTMLElement) {
@@ -1142,6 +1254,18 @@ const initSolarSizingForm = () => {
           : 'Aguardando simulacao';
       }
 
+      if (financialPaybackPreview instanceof HTMLElement) {
+        financialPaybackPreview.textContent = currentPaybackMonths !== null
+          ? `${currentPaybackMonths} meses`
+          : 'Aguardando simulacao';
+      }
+
+      if (financialRoiPreview instanceof HTMLElement) {
+        financialRoiPreview.textContent = currentRoi !== null
+          ? `${currentRoi.toFixed(1).replace('.', ',')}%`
+          : 'Aguardando simulacao';
+      }
+
       if (pricingMarginPreview instanceof HTMLElement) {
         pricingMarginPreview.textContent = marginPercent > 0
           ? `${marginPercent.toFixed(2).replace('.', ',')}%`
@@ -1163,9 +1287,11 @@ const initSolarSizingForm = () => {
           const savingsSuffix = currentMonthlySavings !== null
             ? ` Economia mensal estimada: ${formatCurrencyMonthly(currentMonthlySavings)}.`
             : '';
-          const sourcePrefix = pricingSource === 'market'
-            ? `Pre-orcamento ativo com media de mercado (${formatCurrency(pricingPerKwp)}/kWp): `
-            : `Pre-orcamento ativo com preco proprio (${formatCurrency(pricingPerKwp)}/kWp): `;
+          const sourcePrefix = pricingSource === 'company'
+            ? `Pre-orcamento ativo com preco proprio (${formatCurrency(pricingPerKwp)}/kWp): `
+            : pricingSource === 'regional'
+              ? `Pre-orcamento ativo com media regional (${formatCurrency(pricingPerKwp)}/kWp): `
+              : `Pre-orcamento ativo com fallback padrao (${formatCurrency(pricingPerKwp)}/kWp): `;
           pricingNote.textContent = `${sourcePrefix}${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema.${savingsSuffix}`;
         } else {
           pricingNote.textContent = 'Informe o consumo mensal para gerar o pre-orcamento automatico.';
@@ -1174,7 +1300,9 @@ const initSolarSizingForm = () => {
 
       if (financialNote instanceof HTMLElement) {
         if (currentMonthlySavings !== null && currentAnnualSavings !== null && currentLifetimeSavings !== null) {
-          financialNote.textContent = `Simulacao automatica ativa: ${formatCurrency(currentMonthlySavings)}/mes, ${formatCurrency(currentAnnualSavings)}/ano e ${formatCurrency(currentLifetimeSavings)} em 25 anos, considerando residual de ${formatCurrency(residualMinimumCost)}.`;
+          const paybackSuffix = currentPaybackMonths !== null ? ` Retorno estimado: ${currentPaybackMonths} meses.` : '';
+          const roiSuffix = currentRoi !== null ? ` ROI aproximado: ${currentRoi.toFixed(1).replace('.', ',')}% ao ano.` : '';
+          financialNote.textContent = `Simulacao automatica ativa: ${formatCurrency(currentMonthlySavings)}/mes, ${formatCurrency(currentAnnualSavings)}/ano e ${formatCurrency(currentLifetimeSavings)} em 25 anos, considerando residual de ${formatCurrency(residualMinimumCost)}.${paybackSuffix}${roiSuffix}`;
         } else {
           financialNote.textContent = `Informe o valor da conta de energia para gerar a simulacao financeira automatica com residual minimo de ${formatCurrency(residualMinimumCost)}.`;
         }
@@ -1186,6 +1314,7 @@ const initSolarSizingForm = () => {
     const applySizing = () => {
       const monthlyConsumption = readNumber(monthlyInput);
       const modulePower = readNumber(modulePowerInput) ?? 550;
+      resolveRegionalPricing();
 
       if (monthlyConsumption === null || monthlyConsumption <= 0 || modulePower <= 0 || solarFactorUsed <= 0) {
         updatePreview();
@@ -1209,6 +1338,7 @@ const initSolarSizingForm = () => {
     };
 
     applyDefaultInverter();
+    resolveRegionalPricing();
     updateDerivedFieldsFromPower({ onlyEmpty: true });
     updatePreview();
 
@@ -1223,8 +1353,14 @@ const initSolarSizingForm = () => {
     customerSelect?.addEventListener('change', updatePreview);
     projectNameInput?.addEventListener('input', updatePreview);
     projectStatusInput?.addEventListener('change', updatePreview);
-    cityInput?.addEventListener('input', updatePreview);
-    stateInput?.addEventListener('input', updatePreview);
+    cityInput?.addEventListener('input', () => {
+      resolveRegionalPricing();
+      updatePreview();
+    });
+    stateInput?.addEventListener('input', () => {
+      resolveRegionalPricing();
+      applySizing();
+    });
   });
 };
 

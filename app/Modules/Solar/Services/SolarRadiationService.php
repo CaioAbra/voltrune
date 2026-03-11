@@ -12,7 +12,6 @@ class SolarRadiationService
 {
     private const PVGIS_ENDPOINT = 'https://re.jrc.ec.europa.eu/api/PVcalc';
     private const CACHE_TTL_SECONDS = 2592000;
-    private const REFRESH_AFTER_DAYS = 30;
 
     /**
      * @return array{factor: float, source: string, status: string, fetched_at: ?Carbon, message: ?string}
@@ -24,10 +23,24 @@ class SolarRadiationService
         if (! $project instanceof SolarProject) {
             return [
                 'factor' => $defaultFactor,
-                'source' => 'default',
+                'source' => 'fallback',
                 'status' => 'fallback',
                 'fetched_at' => null,
-                'message' => 'Fator padrão ativo até haver coordenadas disponíveis.',
+                'message' => 'Fator padrao ativo ate haver coordenadas disponiveis.',
+            ];
+        }
+
+        if (
+            $project->solar_factor_used !== null
+            && (float) $project->solar_factor_used > 0
+            && $project->solar_factor_fetched_at !== null
+        ) {
+            return [
+                'factor' => (float) $project->solar_factor_used,
+                'source' => $project->solar_factor_source ?: 'fallback',
+                'status' => $project->radiation_status ?: 'ready',
+                'fetched_at' => $project->solar_factor_fetched_at,
+                'message' => null,
             ];
         }
 
@@ -37,25 +50,10 @@ class SolarRadiationService
         if ($latitude === null || $longitude === null) {
             return [
                 'factor' => $this->fallbackFactor($project),
-                'source' => $project->solar_factor_source ?: 'default',
+                'source' => $project->solar_factor_source ?: 'fallback',
                 'status' => $project->radiation_status ?: 'fallback',
                 'fetched_at' => $project->solar_factor_fetched_at,
-                'message' => 'Sem latitude/longitude disponíveis. O Solar está usando o fator padrão.',
-            ];
-        }
-
-        if (
-            $project->solar_factor_used !== null
-            && $project->solar_factor_fetched_at !== null
-            && $project->solar_factor_source === 'pvgis'
-            && $project->solar_factor_fetched_at->greaterThanOrEqualTo(now()->subDays(self::REFRESH_AFTER_DAYS))
-        ) {
-            return [
-                'factor' => (float) $project->solar_factor_used,
-                'source' => 'pvgis',
-                'status' => $project->radiation_status ?: 'ready',
-                'fetched_at' => $project->solar_factor_fetched_at,
-                'message' => null,
+                'message' => 'Sem latitude/longitude disponiveis. O Solar esta usando o fator padrao.',
             ];
         }
 
@@ -78,7 +76,11 @@ class SolarRadiationService
 
     private function fallbackFactor(SolarProject $project): float
     {
-        if ($project->solar_factor_used !== null && (float) $project->solar_factor_used > 0) {
+        if (
+            $project->solar_factor_used !== null
+            && (float) $project->solar_factor_used > 0
+            && $project->solar_factor_source === 'pvgis'
+        ) {
             return (float) $project->solar_factor_used;
         }
 
@@ -126,7 +128,7 @@ class SolarRadiationService
                 }
 
                 if (! is_numeric($monthlyFactor) || (float) $monthlyFactor <= 0) {
-                    throw new \RuntimeException('PVGIS não retornou fator mensal válido.');
+                    throw new \RuntimeException('PVGIS nao retornou fator mensal valido.');
                 }
 
                 return [
@@ -147,10 +149,10 @@ class SolarRadiationService
         } catch (Throwable) {
             return [
                 'factor' => $defaultFactor,
-                'source' => 'default',
+                'source' => 'fallback',
                 'status' => 'fallback',
-                'fetched_at' => null,
-                'message' => 'PVGIS indisponível no momento. O Solar voltou para o fator padrão.',
+                'fetched_at' => now(),
+                'message' => 'PVGIS indisponivel no momento. O Solar voltou para o fator padrao.',
             ];
         }
     }
