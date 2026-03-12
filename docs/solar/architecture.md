@@ -61,6 +61,7 @@ Core models:
 
 - `SolarCustomer`
 - `SolarProject`
+- `SolarSimulation`
 - `SolarCompanySetting`
 - `SolarMarketDefault`
 - `EnergyUtility`
@@ -70,11 +71,12 @@ Core models:
 Why these models exist:
 
 - `SolarCustomer` stores client context
-- `SolarProject` stores the entire pre-budget journey
+- `SolarProject` stores the installation context and commercial base
+- `SolarSimulation` stores technical/commercial scenarios derived from a project
 - `SolarCompanySetting` stores company-specific defaults
 - `SolarMarketDefault` allows zero-config commercial fallback
 - `EnergyUtility` supports location-aware utility selection
-- `SolarQuote` and `SolarQuoteItem` prepare the module for proposal evolution
+- `SolarQuote` and `SolarQuoteItem` prepare the module for proposal evolution from a simulation
 
 ### Services
 
@@ -113,6 +115,27 @@ It does not yet favor:
 - deep DDD boundaries
 - a full product catalog engine
 - a quotation workflow with strict technical validation
+
+## Functional Positioning
+
+The module now follows this conceptual flow:
+
+1. `SolarCustomer`
+2. `SolarProject`
+3. `SolarSimulation`
+4. `SolarQuote`
+
+Why this matters:
+
+- project is no longer the final commercial object
+- multiple scenarios can coexist for the same installation context
+- quotes can evolve from a selected scenario instead of mutating the base project
+
+Current compatibility strategy:
+
+- `SolarProject` still keeps the persisted snapshot used by the existing flow
+- `SolarSimulation` is synchronized from the project incrementally
+- the first simulation acts as the default scenario during transition
 
 That tradeoff was deliberate.
 

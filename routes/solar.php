@@ -27,8 +27,10 @@ Route::middleware(['auth', 'company.active', 'product:solar'])
         Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
         Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
         Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+        Route::post('/projects/{project}/simulations', [SimulationController::class, 'storeFromProject'])->name('projects.simulations.store');
         Route::get('/settings', [SolarCompanySettingController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [SolarCompanySettingController::class, 'update'])->name('settings.update');
         Route::get('/simulations', [SimulationController::class, 'index'])->name('simulations.index');
+        Route::get('/simulations/{simulation}', [SimulationController::class, 'show'])->name('simulations.show');
         Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
     });

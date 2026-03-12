@@ -55,10 +55,18 @@ This is the internal operating console for Voltrune staff.
 Purpose:
 
 - enable solar installers to create commercial pre-budgets fast
+- organize the solar workflow around customer, project, simulation and quote
 
 Main route source:
 
 - [routes/solar.php](/d:/projects/voltrune/routes/solar.php)
+
+Current functional chain:
+
+1. customer
+2. project
+3. simulation
+4. quote
 
 ## Runtime Model
 

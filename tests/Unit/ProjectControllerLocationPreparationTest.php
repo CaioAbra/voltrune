@@ -8,6 +8,7 @@ use App\Modules\Solar\Services\EnergyUtilityResolverService;
 use App\Modules\Solar\Services\SolarGeocodingService;
 use App\Modules\Solar\Services\SolarNavigationService;
 use App\Modules\Solar\Services\SolarRadiationService;
+use App\Modules\Solar\Services\SolarSimulationService;
 use App\Modules\Solar\Services\SolarSizingService;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
@@ -24,6 +25,7 @@ class ProjectControllerLocationPreparationTest extends TestCase
         $utilityResolver = Mockery::mock(EnergyUtilityResolverService::class);
         $geocoding = Mockery::mock(SolarGeocodingService::class);
         $radiation = Mockery::mock(SolarRadiationService::class);
+        $simulations = Mockery::mock(SolarSimulationService::class);
 
         $controller = new ProjectController(
             $navigation,
@@ -31,6 +33,7 @@ class ProjectControllerLocationPreparationTest extends TestCase
             $utilityResolver,
             $geocoding,
             $radiation,
+            $simulations,
         );
 
         $project = new SolarProject([

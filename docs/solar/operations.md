@@ -75,6 +75,21 @@ Why:
 
 - keeps national coverage fresh without manual intervention
 
+### Backfill default simulations from existing projects
+
+Command:
+
+`php artisan solar:backfill-project-simulations`
+
+Why:
+
+- creates the default simulation for legacy projects
+- supports the gradual transition from project-centric sizing to scenario-centric sizing
+
+Reference:
+
+- [BackfillSolarProjectSimulationsCommand.php](/d:/projects/voltrune/app/Console/Commands/BackfillSolarProjectSimulationsCommand.php)
+
 ## Tests That Protect Critical Logic
 
 Main unit tests:
@@ -82,6 +97,7 @@ Main unit tests:
 - [SolarSizingServiceTest.php](/d:/projects/voltrune/tests/Unit/SolarSizingServiceTest.php)
 - [SolarGeocodingServiceTest.php](/d:/projects/voltrune/tests/Unit/SolarGeocodingServiceTest.php)
 - [SolarRadiationServiceTest.php](/d:/projects/voltrune/tests/Unit/SolarRadiationServiceTest.php)
+- [SolarSimulationServiceTest.php](/d:/projects/voltrune/tests/Unit/SolarSimulationServiceTest.php)
 - [EnergyUtilityResolverServiceTest.php](/d:/projects/voltrune/tests/Unit/EnergyUtilityResolverServiceTest.php)
 - [ProjectControllerLocationPreparationTest.php](/d:/projects/voltrune/tests/Unit/ProjectControllerLocationPreparationTest.php)
 

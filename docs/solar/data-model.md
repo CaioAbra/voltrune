@@ -17,7 +17,7 @@ Why it exists:
 
 Purpose:
 
-- stores the pre-budget state end-to-end
+- stores the installation context and base project record
 
 Key groups of fields:
 
@@ -32,13 +32,48 @@ Key groups of fields:
 
 Important note:
 
-`SolarProject` is the central aggregate of the module.
+`SolarProject` is still the operational anchor of the module, but it is no longer the ideal final place for every commercial scenario.
 
 Why this is useful:
 
 - all relevant context stays on one record
 - the UI can render quickly from persisted state
-- the project can be viewed as a commercial object, not only a technical one
+- the project can now feed multiple downstream simulations
+
+### SolarSimulation
+
+Purpose:
+
+- stores a scenario snapshot derived from one project
+
+Current fields of interest:
+
+- system power
+- module power and quantity
+- inverter model
+- estimated generation
+- area estimated
+- solar factor used and source
+- suggested price
+- estimated module, inverter, structure and installation cost
+- estimated total kit cost
+- estimated gross profit
+- monthly, annual and lifetime savings
+- ROI and payback
+- status and notes
+- basic system composition snapshot
+
+Why it exists:
+
+- one installation context can produce multiple commercial scenarios
+- the project should not be confused with the budget itself
+- quotes need a stable source scenario
+- installers need to see price, cost and composition together, not as disconnected data
+
+Transition rule:
+
+- project data remains compatible
+- the first simulation is synchronized automatically from the saved project
 
 ### SolarCompanySetting
 
@@ -167,3 +202,19 @@ What this means:
 
 - there is no supplier/SKU engine yet
 - some system composition output is descriptive, not catalog-driven
+
+### SolarQuote
+
+Purpose:
+
+- stores the commercial proposal layer
+
+Current structural direction:
+
+- quote still keeps a project link for compatibility
+- quote is now also prepared to link to a simulation
+
+Why:
+
+- the migration path must not break the current flow
+- future proposals should be generated from a chosen scenario, not from the raw project

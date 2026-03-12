@@ -27,21 +27,27 @@
         'not_requested' => 'Aguardando CEP',
         default => 'Buscando melhor localizacao',
     };
-    $kitCost = $sizingService->estimateKitCost($project->suggested_price ?: $suggestedCommercialPrice, $companySetting?->margin_percent);
-    $grossProfit = $sizingService->estimateGrossProfit($project->suggested_price ?: $suggestedCommercialPrice, $kitCost);
+    $activeSimulation = $defaultSimulation;
+    $displaySystemPower = $activeSimulation?->system_power_kwp ?: ($project->system_power_kwp ?: $estimatedRequiredPowerKwp);
+    $displayGeneration = $activeSimulation?->estimated_generation_kwh ?: ($project->estimated_generation_kwh ?: $suggestedGenerationKwh);
+    $displaySuggestedPrice = $activeSimulation?->suggested_price ?: ($project->suggested_price ?: $suggestedCommercialPrice);
+    $displayMonthlySavings = $activeSimulation?->estimated_monthly_savings ?: $estimatedMonthlySavings;
+    $displayAnnualSavings = $activeSimulation?->estimated_annual_savings ?: $estimatedAnnualSavings;
+    $displayLifetimeSavings = $activeSimulation?->estimated_lifetime_savings ?: $estimatedLifetimeSavings;
+    $displayPaybackMonths = $activeSimulation?->estimated_payback_months ?: $estimatedPaybackMonths;
+    $displayEstimatedRoi = $activeSimulation?->estimated_roi ?: $estimatedRoiPercentage;
+    $kitCost = $sizingService->estimateKitCost($displaySuggestedPrice, $companySetting?->margin_percent);
+    $grossProfit = $sizingService->estimateGrossProfit($displaySuggestedPrice, $kitCost);
     $kitBreakdown = $sizingService->estimateKitCostBreakdown($kitCost);
-    $systemComposition = $sizingService->resolveSystemComposition(
-        $project->module_quantity ?: $suggestedModuleQuantity,
-        $project->module_power,
-        $project->inverter_model ?: $companySetting?->default_inverter_model,
-        $project->system_power_kwp ?: $estimatedRequiredPowerKwp,
+    $systemComposition = $activeSimulation?->system_composition_json ?: $sizingService->resolveSystemComposition(
+        $activeSimulation?->module_quantity ?: ($project->module_quantity ?: $suggestedModuleQuantity),
+        $activeSimulation?->module_power ?: $project->module_power,
+        $activeSimulation?->inverter_model ?: ($project->inverter_model ?: $companySetting?->default_inverter_model),
+        $displaySystemPower,
     );
-    $estimatedAreaSquareMeters = $estimatedAreaSquareMeters
-        ?? $sizingService->estimateAreaFromModules($project->module_quantity ?: $suggestedModuleQuantity);
-    $displaySystemPower = $project->system_power_kwp ?: $estimatedRequiredPowerKwp;
-    $displayGeneration = $project->estimated_generation_kwh ?: $suggestedGenerationKwh;
-    $displaySuggestedPrice = $project->suggested_price ?: $suggestedCommercialPrice;
-    $readyForProposal = $displaySuggestedPrice && $estimatedMonthlySavings !== null;
+    $estimatedAreaSquareMeters = $activeSimulation?->area_estimated
+        ?: ($estimatedAreaSquareMeters ?? $sizingService->estimateAreaFromModules($project->module_quantity ?: $suggestedModuleQuantity));
+    $readyForProposal = $displaySuggestedPrice && $displayMonthlySavings !== null;
     $displayAddress = $project->address ?: collect([
         $project->street ?: null,
         $project->number ?: null,
@@ -112,15 +118,15 @@
 
                 <article class="solar-project-showcase-metric solar-project-showcase-metric--energy">
                     <span class="solar-project-showcase-metric__label">Economia mensal</span>
-                    <strong class="solar-project-showcase-metric__value" data-show-animate-number data-show-format="currency" data-show-value="{{ $estimatedMonthlySavings ?: '' }}">
-                        {{ $estimatedMonthlySavings !== null ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') : 'Aguardando conta' }}
+                    <strong class="solar-project-showcase-metric__value" data-show-animate-number data-show-format="currency" data-show-value="{{ $displayMonthlySavings ?: '' }}">
+                        {{ $displayMonthlySavings !== null ? 'R$ ' . number_format((float) $displayMonthlySavings, 2, ',', '.') : 'Aguardando conta' }}
                     </strong>
                 </article>
 
                 <article class="solar-project-showcase-metric">
                     <span class="solar-project-showcase-metric__label">Retorno estimado</span>
-                    <strong class="solar-project-showcase-metric__value" data-show-animate-number data-show-format="months" data-show-value="{{ $estimatedPaybackMonths ?: '' }}">
-                        {{ $estimatedPaybackMonths !== null ? $estimatedPaybackMonths . ' meses' : 'Aguardando simulacao' }}
+                    <strong class="solar-project-showcase-metric__value" data-show-animate-number data-show-format="months" data-show-value="{{ $displayPaybackMonths ?: '' }}">
+                        {{ $displayPaybackMonths !== null ? $displayPaybackMonths . ' meses' : 'Aguardando simulacao' }}
                     </strong>
                 </article>
             </div>
@@ -190,6 +196,44 @@
             </article>
         </div>
 
+        <article class="hub-card hub-card--subtle solar-project-show__card">
+            <div class="solar-flow-section__header">
+                <div>
+                    <p class="solar-section-eyebrow">Simulacoes</p>
+                    <h2>Cenarios do projeto</h2>
+                </div>
+                <form method="POST" action="{{ route('solar.projects.simulations.store', $project->id) }}">
+                    @csrf
+                    <button type="submit" class="hub-btn">Criar nova simulacao</button>
+                </form>
+            </div>
+
+            <p class="hub-note">O projeto guarda o local e o contexto. Cada simulacao representa um cenario tecnico/comercial pronto para evoluir em orcamento.</p>
+
+            <div class="solar-sizing-panel__highlights">
+                @forelse ($simulations as $simulation)
+                    <article class="solar-sizing-chip {{ $loop->first ? 'solar-sizing-chip--featured solar-sizing-chip--commercial' : '' }}">
+                        <span class="solar-sizing-chip__label">{{ $simulation->name }}</span>
+                        <strong class="solar-sizing-chip__value">
+                            {{ $simulation->system_power_kwp ? number_format((float) $simulation->system_power_kwp, 2, ',', '.') . ' kWp' : 'Potencia pendente' }}
+                        </strong>
+                        <span class="hub-note">
+                            {{ $simulation->suggested_price ? 'R$ ' . number_format((float) $simulation->suggested_price, 2, ',', '.') : 'Preco em construcao' }}
+                            ·
+                            {{ $simulation->estimated_generation_kwh ? number_format((float) $simulation->estimated_generation_kwh, 2, ',', '.') . ' kWh/mes' : 'Geracao pendente' }}
+                        </span>
+                        <a href="{{ route('solar.simulations.show', $simulation->id) }}" class="hub-link">Abrir simulacao</a>
+                    </article>
+                @empty
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Simulacoes</span>
+                        <strong class="solar-sizing-chip__value">Nenhuma simulacao criada</strong>
+                        <span class="hub-note">Crie a primeira simulacao para separar o contexto do projeto do cenario comercial.</span>
+                    </article>
+                @endforelse
+            </div>
+        </article>
+
         <article class="hub-card hub-card--subtle solar-sizing-panel solar-project-show__card">
             <h2>Sistema sugerido</h2>
             <div class="solar-sizing-panel__highlights">
@@ -224,8 +268,8 @@
             </div>
 
             <div class="solar-project-show__inline-specs">
-                <span><strong>Modulo</strong>{{ $project->module_power ? number_format((int) $project->module_power, 0, ',', '.') . ' W' : '-' }}</span>
-                <span><strong>Inversor</strong>{{ $project->inverter_model ?: ($companySetting?->default_inverter_model ?: '-') }}</span>
+                <span><strong>Modulo</strong>{{ ($activeSimulation?->module_power ?: $project->module_power) ? number_format((int) ($activeSimulation?->module_power ?: $project->module_power), 0, ',', '.') . ' W' : '-' }}</span>
+                <span><strong>Inversor</strong>{{ $activeSimulation?->inverter_model ?: ($project->inverter_model ?: ($companySetting?->default_inverter_model ?: '-')) }}</span>
                 <span><strong>Conexao</strong>{{ match ($project->connection_type) {
                     'mono' => 'Monofasico',
                     'bi' => 'Bifasico',
@@ -248,7 +292,7 @@
                 <article class="solar-sizing-chip solar-sizing-chip--featured">
                     <span class="solar-sizing-chip__label">Economia estimada</span>
                     <strong class="solar-sizing-chip__value">
-                        {{ $estimatedMonthlySavings ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') . '/mes' : 'Nao informada' }}
+                        {{ $displayMonthlySavings ? 'R$ ' . number_format((float) $displayMonthlySavings, 2, ',', '.') . '/mes' : 'Nao informada' }}
                     </strong>
                 </article>
 
@@ -275,7 +319,7 @@
 
                 <article class="solar-sizing-chip">
                     <span class="solar-sizing-chip__label">ROI aproximado ao ano</span>
-                    <strong class="solar-sizing-chip__value">{{ $estimatedRoiPercentage !== null ? number_format((float) $estimatedRoiPercentage, 1, ',', '.') . '%' : '-' }}</strong>
+                    <strong class="solar-sizing-chip__value">{{ $displayEstimatedRoi !== null ? number_format((float) $displayEstimatedRoi, 1, ',', '.') . '%' : '-' }}</strong>
                 </article>
             </div>
 
@@ -314,27 +358,27 @@
             <div class="solar-sizing-panel__highlights solar-financial-panel__highlights">
                 <article class="solar-sizing-chip solar-sizing-chip--featured solar-sizing-chip--commercial">
                     <span class="solar-sizing-chip__label">Economia mensal estimada</span>
-                    <strong class="solar-sizing-chip__value">{{ $estimatedMonthlySavings !== null ? 'R$ ' . number_format((float) $estimatedMonthlySavings, 2, ',', '.') : 'Informe a conta de energia' }}</strong>
+                    <strong class="solar-sizing-chip__value">{{ $displayMonthlySavings !== null ? 'R$ ' . number_format((float) $displayMonthlySavings, 2, ',', '.') : 'Informe a conta de energia' }}</strong>
                 </article>
 
                 <article class="solar-sizing-chip">
                     <span class="solar-sizing-chip__label">Economia anual</span>
-                    <strong class="solar-sizing-chip__value">{{ $estimatedAnnualSavings !== null ? 'R$ ' . number_format((float) $estimatedAnnualSavings, 2, ',', '.') : 'Aguardando simulacao' }}</strong>
+                    <strong class="solar-sizing-chip__value">{{ $displayAnnualSavings !== null ? 'R$ ' . number_format((float) $displayAnnualSavings, 2, ',', '.') : 'Aguardando simulacao' }}</strong>
                 </article>
 
                 <article class="solar-sizing-chip">
                     <span class="solar-sizing-chip__label">Economia em 25 anos</span>
-                    <strong class="solar-sizing-chip__value">{{ $estimatedLifetimeSavings !== null ? 'R$ ' . number_format((float) $estimatedLifetimeSavings, 2, ',', '.') : 'Aguardando simulacao' }}</strong>
+                    <strong class="solar-sizing-chip__value">{{ $displayLifetimeSavings !== null ? 'R$ ' . number_format((float) $displayLifetimeSavings, 2, ',', '.') : 'Aguardando simulacao' }}</strong>
                 </article>
 
                 <article class="solar-sizing-chip">
                     <span class="solar-sizing-chip__label">Retorno estimado</span>
-                    <strong class="solar-sizing-chip__value">{{ $estimatedPaybackMonths !== null ? $estimatedPaybackMonths . ' meses' : 'Aguardando simulacao' }}</strong>
+                    <strong class="solar-sizing-chip__value">{{ $displayPaybackMonths !== null ? $displayPaybackMonths . ' meses' : 'Aguardando simulacao' }}</strong>
                 </article>
 
                 <article class="solar-sizing-chip">
                     <span class="solar-sizing-chip__label">ROI aproximado</span>
-                    <strong class="solar-sizing-chip__value">{{ $estimatedRoiPercentage !== null ? number_format((float) $estimatedRoiPercentage, 1, ',', '.') . '%' : 'Aguardando simulacao' }}</strong>
+                    <strong class="solar-sizing-chip__value">{{ $displayEstimatedRoi !== null ? number_format((float) $displayEstimatedRoi, 1, ',', '.') . '%' : 'Aguardando simulacao' }}</strong>
                 </article>
             </div>
 

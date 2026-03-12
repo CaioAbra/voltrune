@@ -19,6 +19,7 @@ class SolarQuote extends Model
     protected $fillable = [
         'company_id',
         'solar_project_id',
+        'solar_simulation_id',
         'title',
         'total_value',
         'estimated_savings',
@@ -47,6 +48,11 @@ class SolarQuote extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(SolarProject::class, 'solar_project_id');
+    }
+
+    public function simulation(): BelongsTo
+    {
+        return $this->belongsTo(SolarSimulation::class, 'solar_simulation_id');
     }
 
     public function items(): HasMany

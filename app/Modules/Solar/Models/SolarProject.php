@@ -92,4 +92,9 @@ class SolarProject extends Model
     {
         return $this->hasMany(SolarQuote::class);
     }
+
+    public function simulations(): HasMany
+    {
+        return $this->hasMany(SolarSimulation::class)->orderBy('id');
+    }
 }

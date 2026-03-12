@@ -12,6 +12,7 @@ use App\Modules\Solar\Services\EnergyUtilityResolverService;
 use App\Modules\Solar\Services\SolarGeocodingService;
 use App\Modules\Solar\Services\SolarNavigationService;
 use App\Modules\Solar\Services\SolarRadiationService;
+use App\Modules\Solar\Services\SolarSimulationService;
 use App\Modules\Solar\Services\SolarSizingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -26,6 +27,7 @@ class ProjectController extends Controller
         private readonly EnergyUtilityResolverService $utilityResolver,
         private readonly SolarGeocodingService $geocoding,
         private readonly SolarRadiationService $radiation,
+        private readonly SolarSimulationService $simulations,
     ) {
     }
 
@@ -80,7 +82,7 @@ class ProjectController extends Controller
     public function show(Request $request, int $project): View
     {
         $company = $this->resolveCurrentCompany($request);
-        $projectRecord = $this->resolveProject($company, $project, ['customer']);
+        $projectRecord = $this->resolveProject($company, $project, ['customer', 'simulations']);
         $companySetting = $this->companySetting($company);
         $projectRecord = $this->hydrateProjectAutomationState($projectRecord, $companySetting, false);
         $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $projectRecord->state);
@@ -89,6 +91,8 @@ class ProjectController extends Controller
         return view('solar.projects.show', $this->viewData('Projeto solar', [
             'company' => $company,
             'project' => $projectRecord,
+            'defaultSimulation' => $projectRecord->simulations->first(),
+            'simulations' => $projectRecord->simulations,
             'companySetting' => $companySetting,
             'effectivePricePerKwp' => $pricingContext['value'],
             'pricingReferenceSource' => $pricingContext['source'],
@@ -132,7 +136,8 @@ class ProjectController extends Controller
         $data['company_id'] = $company->id;
 
         $projectRecord = SolarProject::create($data);
-        $this->refreshProjectRadiationAndSizing($projectRecord, $companySetting);
+        $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord, $companySetting);
+        $this->simulations->syncDefaultForProject($projectRecord, $companySetting);
 
         return redirect()
             ->route('solar.projects.index')
@@ -262,7 +267,8 @@ class ProjectController extends Controller
                 $pricingContext['value'],
             )
         );
-        $this->refreshProjectRadiationAndSizing($projectRecord->refresh(), $companySetting);
+        $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord->refresh(), $companySetting);
+        $this->simulations->syncDefaultForProject($projectRecord, $companySetting);
 
         return redirect()
             ->route('solar.projects.index')

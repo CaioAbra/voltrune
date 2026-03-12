@@ -11,6 +11,8 @@ Solar is already strong in:
 - market fallback pricing
 - guided project editing
 - commercial reading of saved projects
+- simulation snapshots linked to projects
+- simulation-level composition and cost visibility
 
 ## Current Limitations
 
@@ -32,6 +34,7 @@ Current workaround:
 - company defaults
 - descriptive composition
 - estimated kit breakdown
+- simulation-level persisted cost groups and gross profit
 
 ### 2. External dependency sensitivity
 
@@ -78,6 +81,19 @@ Why:
 
 - the current goal is a clear and fast first commercial estimate
 
+### 5. Transition between project and simulation is incremental
+
+Today:
+
+- project still persists much of the calculated snapshot
+- simulation is synchronized from project as a real entity
+- quote is prepared to point to simulation, but the full proposal workflow is not complete yet
+
+Why:
+
+- the module needs continuity while the domain model matures
+- this avoids breaking current project editing and show flows
+
 ## Why These Tradeoffs Were Accepted
 
 The current product strategy values:
@@ -100,8 +116,8 @@ When the product needs the next maturity step, the most coherent sequence is:
 
 1. structured equipment catalog by company
 2. supplier and cost source integration
-3. richer financial models
-4. proposal conversion workflow
+3. quote workflow fully driven by simulation
+4. richer financial models
 5. engineering validation depth
 
 Why this order:
