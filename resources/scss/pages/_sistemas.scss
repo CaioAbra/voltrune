@@ -3,6 +3,194 @@
   gap: 1rem;
 }
 
+.solar-lp-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.solar-lp-hero::after {
+  content: '';
+  position: absolute;
+  inset: auto 4% -60px auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(208, 173, 104, 0.18), transparent 72%);
+  pointer-events: none;
+}
+
+.solar-lp-hero__grid,
+.solar-section-heading--split,
+.solar-final-cta {
+  display: grid;
+  gap: 1rem;
+}
+
+.solar-lp-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.solar-lp-proof span {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(208, 173, 104, 0.24);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(243, 229, 196, 0.9);
+  font-size: 0.82rem;
+}
+
+.solar-lp-preview,
+.solar-lp-card,
+.solar-benefit-card,
+.solar-step-card,
+.solar-preview-card,
+.solar-final-cta {
+  border: 1px solid rgba(208, 173, 104, 0.18);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.solar-lp-preview {
+  padding: 1.35rem;
+  background:
+    radial-gradient(circle at top right, rgba(208, 173, 104, 0.14), transparent 32%),
+    linear-gradient(145deg, rgba(49, 39, 28, 0.96), rgba(28, 22, 17, 0.98));
+}
+
+.solar-lp-preview__eyebrow {
+  margin-bottom: 0.65rem;
+  color: var(--accent);
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.solar-lp-preview ul {
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.solar-lp-preview li {
+  position: relative;
+  padding-left: 1rem;
+  color: rgba(245, 239, 227, 0.88);
+}
+
+.solar-lp-preview li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.72rem;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.solar-lp-preview__metrics {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.solar-lp-preview__metrics article {
+  padding: 0.8rem 0.9rem;
+  border-radius: calc(var(--radius) - 8px);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(208, 173, 104, 0.14);
+}
+
+.solar-lp-preview__metrics strong,
+.solar-benefit-card strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.solar-section-heading {
+  margin-bottom: 1rem;
+}
+
+.solar-pain-grid,
+.solar-solution-grid,
+.solar-benefit-grid,
+.solar-flow-grid,
+.solar-preview-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.solar-lp-card,
+.solar-benefit-card,
+.solar-step-card,
+.solar-preview-card {
+  padding: 1.15rem;
+  background: linear-gradient(145deg, rgba(45, 36, 28, 0.92), rgba(28, 22, 18, 0.96));
+}
+
+.solar-lp-card--accent {
+  background:
+    linear-gradient(145deg, rgba(49, 39, 28, 0.94), rgba(30, 24, 18, 0.96)),
+    linear-gradient(180deg, rgba(208, 173, 104, 0.04), transparent);
+}
+
+.solar-step-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.solar-step-card span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin-bottom: 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(208, 173, 104, 0.32);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.solar-benefit-card {
+  background:
+    radial-gradient(circle at top right, rgba(208, 173, 104, 0.1), transparent 28%),
+    linear-gradient(145deg, rgba(47, 38, 28, 0.94), rgba(28, 22, 18, 0.96));
+}
+
+.solar-preview-card .system-badge {
+  margin-bottom: 0.7rem;
+}
+
+.solar-final-cta {
+  align-items: center;
+  padding: 1.35rem;
+  background:
+    radial-gradient(circle at top left, rgba(208, 173, 104, 0.14), transparent 30%),
+    linear-gradient(145deg, rgba(48, 39, 28, 0.94), rgba(28, 22, 17, 0.98));
+}
+
+.solar-final-cta p:last-child {
+  margin-bottom: 0;
+}
+
+.solar-final-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.solar-final-cta__actions form {
+  display: flex;
+}
+
 .system-card {
   background: linear-gradient(145deg, rgba(48, 39, 28, 0.92), rgba(34, 28, 21, 0.95));
   border: 1px solid rgba(208, 173, 104, 0.2);
@@ -34,6 +222,29 @@
   margin-bottom: 0.3rem;
 }
 
+.system-card form {
+  margin: 0;
+}
+
+.system-card__actions,
+.launch-queue-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.system-card__actions form,
+.launch-queue-panel__actions form {
+  display: flex;
+}
+
+.system-card__actions .btn,
+.launch-queue-panel__actions .btn {
+  min-width: 0;
+}
+
 .system-badge {
   display: inline-flex;
   margin-bottom: 0.9rem;
@@ -59,8 +270,64 @@
     0 0 18px rgba(208, 173, 104, 0.06);
 }
 
+.launch-queue-panel {
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+  padding: 1.35rem;
+  border: 1px solid rgba(208, 173, 104, 0.18);
+  border-radius: calc(var(--radius) + 2px);
+  background:
+    linear-gradient(145deg, rgba(47, 38, 28, 0.92), rgba(27, 21, 16, 0.96)),
+    linear-gradient(180deg, rgba(208, 173, 104, 0.04), transparent);
+  box-shadow: var(--shadow);
+}
+
+.launch-queue-panel p:last-child {
+  margin-bottom: 0;
+}
+
 @media (min-width: 920px) {
+  .solar-lp-hero__grid,
+  .solar-section-heading--split,
+  .solar-final-cta {
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    align-items: start;
+  }
+
+  .solar-pain-grid,
+  .solar-solution-grid,
+  .solar-benefit-grid,
+  .solar-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .solar-flow-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .systems-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .launch-queue-panel {
+    grid-template-columns: minmax(0, 1.35fr) auto;
+  }
+}
+
+@media (max-width: 859px) {
+  .solar-final-cta__actions,
+  .system-card__actions,
+  .launch-queue-panel__actions {
+    display: grid;
+  }
+
+  .solar-final-cta__actions form,
+  .solar-final-cta__actions .btn,
+  .system-card__actions form,
+  .launch-queue-panel__actions form,
+  .system-card__actions .btn,
+  .launch-queue-panel__actions .btn {
+    width: 100%;
   }
 }

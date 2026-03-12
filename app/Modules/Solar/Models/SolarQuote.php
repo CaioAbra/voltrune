@@ -19,7 +19,9 @@ class SolarQuote extends Model
     protected $fillable = [
         'company_id',
         'solar_project_id',
+        'solar_simulation_id',
         'title',
+        'final_price',
         'total_value',
         'estimated_savings',
         'payback_months',
@@ -33,6 +35,7 @@ class SolarQuote extends Model
     protected function casts(): array
     {
         return [
+            'final_price' => 'decimal:2',
             'total_value' => 'decimal:2',
             'estimated_savings' => 'decimal:2',
             'payback_months' => 'integer',
@@ -47,6 +50,11 @@ class SolarQuote extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(SolarProject::class, 'solar_project_id');
+    }
+
+    public function simulation(): BelongsTo
+    {
+        return $this->belongsTo(SolarSimulation::class, 'solar_simulation_id');
     }
 
     public function items(): HasMany
