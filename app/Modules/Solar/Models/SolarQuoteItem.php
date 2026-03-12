@@ -16,10 +16,14 @@ class SolarQuoteItem extends Model
      */
     protected $fillable = [
         'solar_quote_id',
+        'type',
+        'category',
         'name',
         'description',
         'quantity',
+        'unit_cost',
         'unit_price',
+        'total_cost',
         'total_price',
     ];
 
@@ -29,8 +33,12 @@ class SolarQuoteItem extends Model
     protected function casts(): array
     {
         return [
+            'type' => 'string',
+            'category' => 'string',
             'quantity' => 'decimal:2',
+            'unit_cost' => 'decimal:2',
             'unit_price' => 'decimal:2',
+            'total_cost' => 'decimal:2',
             'total_price' => 'decimal:2',
         ];
     }

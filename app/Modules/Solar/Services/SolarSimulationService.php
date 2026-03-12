@@ -56,6 +56,20 @@ class SolarSimulationService
         return $simulation->refresh();
     }
 
+    public function duplicate(SolarSimulation $simulation): SolarSimulation
+    {
+        $duplicate = $simulation->replicate([
+            'created_at',
+            'updated_at',
+        ]);
+
+        $duplicate->name = $this->resolveDuplicateName($simulation);
+        $duplicate->status = 'draft';
+        $duplicate->save();
+
+        return $duplicate->refresh();
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -132,5 +146,20 @@ class SolarSimulationService
             3 => 'Simulacao premium',
             default => 'Simulacao ' . $nextPosition,
         };
+    }
+
+    private function resolveDuplicateName(SolarSimulation $simulation): string
+    {
+        $baseName = trim((string) $simulation->name);
+
+        if ($baseName === '') {
+            return 'Simulacao duplicada';
+        }
+
+        if (! str_contains(mb_strtolower($baseName), 'copia')) {
+            return $baseName . ' - copia';
+        }
+
+        return $baseName . ' 2';
     }
 }

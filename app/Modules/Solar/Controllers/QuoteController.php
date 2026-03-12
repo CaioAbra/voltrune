@@ -5,6 +5,7 @@ namespace App\Modules\Solar\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Modules\Solar\Models\SolarQuote;
+use App\Modules\Solar\Models\SolarQuoteItem;
 use App\Modules\Solar\Models\SolarSimulation;
 use App\Modules\Solar\Services\SolarNavigationService;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,7 @@ class QuoteController extends Controller
     {
         $company = $this->resolveCurrentCompany($request);
         $quotes = SolarQuote::query()
-            ->with(['project.customer', 'simulation'])
+            ->with(['project.customer', 'simulation', 'items'])
             ->where('company_id', $company->id)
             ->latest()
             ->get();
@@ -65,7 +66,7 @@ class QuoteController extends Controller
     {
         $company = $this->resolveCurrentCompany($request);
         $quoteRecord = SolarQuote::query()
-            ->with(['project.customer', 'simulation'])
+            ->with(['project.customer', 'simulation', 'items'])
             ->where('company_id', $company->id)
             ->findOrFail($quote);
 
@@ -76,6 +77,7 @@ class QuoteController extends Controller
             'quote' => $quoteRecord,
             'simulation' => $quoteRecord->simulation,
             'project' => $quoteRecord->project,
+            'quoteSummary' => $this->quoteSummary($quoteRecord),
         ]);
     }
 
@@ -93,7 +95,11 @@ class QuoteController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $finalPrice = $data['final_price'] ?? null;
+        $quoteRecord->loadMissing('items');
+        $hasItems = $quoteRecord->items->isNotEmpty();
+        $finalPrice = $hasItems
+            ? $this->quoteSummary($quoteRecord)['total_price']
+            : ($data['final_price'] ?? null);
 
         $quoteRecord->update([
             'title' => $data['title'],
@@ -106,6 +112,104 @@ class QuoteController extends Controller
         return redirect()
             ->route('solar.quotes.edit', $quoteRecord->id)
             ->with('solar_status', 'Proposta atualizada com sucesso.');
+    }
+
+    public function duplicate(Request $request, int $quote): RedirectResponse
+    {
+        $company = $this->resolveCurrentCompany($request);
+        $quoteRecord = $this->resolveQuote($company, $quote);
+        $duplicate = $quoteRecord->replicate([
+            'created_at',
+            'updated_at',
+        ]);
+        $duplicate->title = $this->duplicateQuoteTitle($quoteRecord->title);
+        $duplicate->status = 'draft';
+        $duplicate->save();
+
+        foreach ($quoteRecord->items as $item) {
+            $newItem = $item->replicate([
+                'created_at',
+                'updated_at',
+            ]);
+            $newItem->solar_quote_id = $duplicate->id;
+            $newItem->save();
+        }
+
+        $this->syncQuoteTotals($duplicate->refresh()->load('items'));
+
+        return redirect()
+            ->route('solar.quotes.edit', $duplicate->id)
+            ->with('solar_status', 'Orcamento duplicado com sucesso.');
+    }
+
+    public function updateStatus(Request $request, int $quote): RedirectResponse
+    {
+        $company = $this->resolveCurrentCompany($request);
+        $quoteRecord = $this->resolveQuote($company, $quote);
+        $data = $request->validate([
+            'status' => ['required', 'in:draft,review,sent,approved,won,lost'],
+        ]);
+
+        $quoteRecord->update([
+            'status' => $data['status'],
+        ]);
+
+        return redirect()
+            ->route('solar.quotes.edit', $quoteRecord->id)
+            ->with('solar_status', 'Status da proposta atualizado para ' . $this->statusLabel($data['status']) . '.');
+    }
+
+    public function storeItem(Request $request, int $quote): RedirectResponse
+    {
+        $company = $this->resolveCurrentCompany($request);
+        $quoteRecord = $this->resolveQuote($company, $quote);
+        $data = $request->validate([
+            'type' => ['required', 'in:material,service'],
+            'category' => ['required', 'in:module,inverter,structure,installation,cabling,approval,electrical_design,art,other'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'quantity' => ['required', 'numeric', 'min:0.01'],
+            'unit_cost' => ['required', 'numeric', 'min:0'],
+            'unit_price' => ['required', 'numeric', 'min:0'],
+        ]);
+
+        $quantity = (float) $data['quantity'];
+        $unitCost = (float) $data['unit_cost'];
+        $unitPrice = (float) $data['unit_price'];
+
+        $quoteRecord->items()->create([
+            'type' => $data['type'],
+            'category' => $data['category'],
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'quantity' => $quantity,
+            'unit_cost' => $unitCost,
+            'unit_price' => $unitPrice,
+            'total_cost' => round($quantity * $unitCost, 2),
+            'total_price' => round($quantity * $unitPrice, 2),
+        ]);
+
+        $this->syncQuoteTotals($quoteRecord);
+
+        return redirect()
+            ->route('solar.quotes.edit', $quoteRecord->id)
+            ->with('solar_status', 'Item adicionado ao orcamento com sucesso.');
+    }
+
+    public function destroyItem(Request $request, int $quote, int $item): RedirectResponse
+    {
+        $company = $this->resolveCurrentCompany($request);
+        $quoteRecord = $this->resolveQuote($company, $quote);
+        $itemRecord = $quoteRecord->items()
+            ->whereKey($item)
+            ->firstOrFail();
+
+        $itemRecord->delete();
+        $this->syncQuoteTotals($quoteRecord);
+
+        return redirect()
+            ->route('solar.quotes.edit', $quoteRecord->id)
+            ->with('solar_status', 'Item removido do orcamento com sucesso.');
     }
 
     private function resolveCurrentCompany(Request $request): Company
@@ -145,5 +249,69 @@ class QuoteController extends Controller
         ]);
 
         return implode("\n", $lines);
+    }
+
+    private function resolveQuote(Company $company, int $quoteId): SolarQuote
+    {
+        return SolarQuote::query()
+            ->with(['project.customer', 'simulation', 'items'])
+            ->where('company_id', $company->id)
+            ->findOrFail($quoteId);
+    }
+
+    /**
+     * @return array{total_cost: float, total_price: float, gross_profit: float, margin_percent: float, item_count: int}
+     */
+    private function quoteSummary(SolarQuote $quote): array
+    {
+        $quote->loadMissing('items');
+
+        return [
+            'total_cost' => round($quote->itemsTotalCost(), 2),
+            'total_price' => round($quote->itemsTotalPrice(), 2),
+            'gross_profit' => round($quote->itemsGrossProfit(), 2),
+            'margin_percent' => round($quote->itemsMarginPercent(), 2),
+            'item_count' => $quote->items->count(),
+        ];
+    }
+
+    private function syncQuoteTotals(SolarQuote $quote): void
+    {
+        $summary = $this->quoteSummary($quote);
+
+        if ($summary['item_count'] === 0) {
+            return;
+        }
+
+        $quote->update([
+            'final_price' => $summary['total_price'],
+            'total_value' => $summary['total_price'],
+        ]);
+    }
+
+    private function duplicateQuoteTitle(string $title): string
+    {
+        $trimmedTitle = trim($title);
+
+        if ($trimmedTitle === '') {
+            return 'Proposta solar - copia';
+        }
+
+        return str_contains(mb_strtolower($trimmedTitle), 'copia')
+            ? $trimmedTitle . ' 2'
+            : $trimmedTitle . ' - copia';
+    }
+
+    private function statusLabel(string $status): string
+    {
+        return match ($status) {
+            'draft' => 'Rascunho',
+            'review' => 'Em analise',
+            'sent' => 'Enviado',
+            'approved' => 'Aprovado',
+            'won' => 'Fechado',
+            'lost' => 'Perdido',
+            default => strtoupper($status),
+        };
     }
 }

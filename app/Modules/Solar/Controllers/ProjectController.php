@@ -82,7 +82,7 @@ class ProjectController extends Controller
     public function show(Request $request, int $project): View
     {
         $company = $this->resolveCurrentCompany($request);
-        $projectRecord = $this->resolveProject($company, $project, ['customer', 'simulations']);
+        $projectRecord = $this->resolveProject($company, $project, ['customer', 'simulations.quotes', 'quotes.simulation', 'quotes.items']);
         $companySetting = $this->companySetting($company);
         $projectRecord = $this->hydrateProjectAutomationState($projectRecord, $companySetting, false);
         $pricingContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $projectRecord->state);
@@ -93,6 +93,7 @@ class ProjectController extends Controller
             'project' => $projectRecord,
             'defaultSimulation' => $projectRecord->simulations->first(),
             'simulations' => $projectRecord->simulations,
+            'quotes' => $projectRecord->quotes,
             'companySetting' => $companySetting,
             'effectivePricePerKwp' => $pricingContext['value'],
             'pricingReferenceSource' => $pricingContext['source'],
