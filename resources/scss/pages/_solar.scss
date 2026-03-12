@@ -820,6 +820,200 @@
   padding: 1.35rem;
 }
 
+.solar-project-shell {
+  background:
+    linear-gradient(180deg, rgba(12, 18, 20, 0.9), rgba(10, 15, 18, 0.94)),
+    rgba(10, 15, 18, 0.88);
+}
+
+.solar-project-context-hero {
+  padding: 1.2rem;
+  border-color: rgba(130, 192, 181, 0.22);
+  background:
+    radial-gradient(circle at top left, rgba(83, 178, 178, 0.14), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(246, 187, 65, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(14, 24, 28, 0.94), rgba(10, 16, 19, 0.96));
+}
+
+.solar-project-context-hero__header {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.solar-project-context-hero__focus {
+  display: grid;
+  gap: 0.42rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(130, 192, 181, 0.2);
+  background: rgba(8, 14, 16, 0.44);
+}
+
+.solar-project-context-hero__focus strong {
+  color: #fff2ce;
+  font-size: 1.05rem;
+}
+
+.solar-project-context-hero__focus p {
+  margin: 0;
+  color: #dcebdd;
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.solar-project-context-hero__focus .hub-btn {
+  width: fit-content;
+  margin-top: 0.25rem;
+}
+
+.solar-project-context-hero__grid {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.solar-project-context-tile {
+  display: grid;
+  gap: 0.26rem;
+  min-height: 94px;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.solar-project-context-tile__label {
+  color: rgba(226, 237, 231, 0.66);
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-project-context-tile__value {
+  color: #fff2ce;
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.solar-project-simulations-panel__grid {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  align-items: stretch;
+}
+
+.solar-project-simulation-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.95rem;
+  padding: 1.05rem;
+  border-radius: 18px;
+  border: 1px solid rgba(246, 187, 65, 0.14);
+  background: rgba(8, 14, 16, 0.44);
+  min-height: 100%;
+}
+
+.solar-project-simulation-card.is-primary {
+  border-color: rgba(246, 187, 65, 0.32);
+  background:
+    radial-gradient(circle at top right, rgba(246, 187, 65, 0.12), transparent 34%),
+    linear-gradient(145deg, rgba(40, 30, 12, 0.3), rgba(10, 17, 21, 0.76));
+}
+
+.solar-project-simulation-card--empty {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.solar-project-simulation-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.solar-project-simulation-card__header h3 {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.05rem, 1.8vw, 1.42rem);
+  line-height: 1.08;
+  max-width: 13ch;
+}
+
+.solar-project-simulation-card__eyebrow {
+  color: rgba(226, 237, 231, 0.62);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.solar-project-simulation-card__body {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.solar-project-simulation-card__summary {
+  margin: 0;
+  color: rgba(220, 235, 221, 0.78);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.solar-project-simulation-card__metrics {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.solar-project-simulation-card__metrics span {
+  display: grid;
+  gap: 0.22rem;
+  min-height: 88px;
+  padding: 0.78rem 0.82rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.solar-project-simulation-card__metrics strong {
+  color: rgba(226, 237, 231, 0.66);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.solar-project-simulation-card__metrics span {
+  color: #fff2ce;
+  font-size: clamp(0.96rem, 1.05vw, 1.1rem);
+  line-height: 1.28;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.solar-project-simulation-card__metrics span:nth-child(3),
+.solar-project-simulation-card__metrics span:nth-child(4) {
+  white-space: nowrap;
+}
+
+.solar-project-simulation-card__header .solar-mini-badge {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.solar-project-simulation-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: stretch;
+  margin-top: auto;
+}
+
+.solar-project-simulation-card__footer .hub-btn {
+  width: 100%;
+  justify-content: center;
+}
+
 .solar-project-showcase {
   padding: 1.2rem;
   margin-bottom: 0;
@@ -1489,6 +1683,14 @@
     grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.8fr);
   }
 
+  .solar-project-context-hero__header {
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.8fr);
+  }
+
+  .solar-project-context-hero__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .solar-project-showcase__hero-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1538,6 +1740,10 @@
   .solar-project-show__grid {
     gap: 1rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .solar-project-simulations-panel__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .solar-sizing-panel__highlights {
