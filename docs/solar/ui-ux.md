@@ -1,121 +1,84 @@
-# UI And UX Decisions
+# UI E UX Do Solar
 
-## General Direction
+## Direcao Geral
 
-The Solar UI is designed as a commercial SaaS interface with technical support data.
+O Solar deve se comportar como um SaaS comercial para instaladores, com apoio tecnico suficiente para dar confianca na venda.
 
-The order of importance is:
+A hierarquia visual principal e:
 
-1. commercial outcome
-2. project context
-3. technical explanation
+1. resultado comercial
+2. contexto do projeto
+3. explicacao tecnica
 
-This priority is visible in both edit and show screens.
+## Papel Das Telas
 
-## Project Edit Screen
+### Projeto
 
-Main goal:
+A tela de projeto foi simplificada para concentrar:
 
-- help an installer build a pre-budget quickly
+- cliente
+- local de instalacao
+- consumo base
+- simulacoes relacionadas
+- orcamentos relacionados
 
-Why the edit screen is structured as a guided flow:
+Ela nao deve competir com a simulacao em leitura financeira.
 
-- users think in stages
-- commercial work is easier when the interface follows that sequence
+### Simulacao
 
-Current sequence:
+A tela de simulacao e a principal tela de analise do cenario.
 
-1. system summary
-2. client and location
-3. energy consumption
-4. suggested system
-5. pre-budget
-6. financial simulation
-7. notes and status
+Ela prioriza:
 
-References:
-
-- [form.blade.php](/d:/projects/voltrune/resources/views/solar/projects/partials/form.blade.php)
-- [app.js](/d:/projects/voltrune/resources/js/app.js)
-
-## Project Show Screen
-
-Main goal:
-
-- provide an immediate commercial reading of a persisted project
-
-Why the show screen was recently refined:
-
-- the previous structure gave equal weight to too many cards
-- the commercial outcome needed stronger hierarchy
-- technical context needed separation from business result
-
-Current reading order:
-
-1. commercial hero
-2. technical base
-3. project context
-4. technical system summary
-5. pre-budget
-6. financial simulation
-
-Reference:
-
-- [show.blade.php](/d:/projects/voltrune/resources/views/solar/projects/show.blade.php)
-
-## Microinteractions
-
-Current microinteraction strategy:
-
-- lightweight number animation
-- subtle hover on primary cards
-- status feedback for automations
-- small badges instead of large explanatory text when possible
-
-Why:
-
-- the product must feel responsive
-- visual motion should reinforce meaning, not distract
-
-## Visual Rules
-
-### Stronger for commercial metrics
-
-Large cards are used for:
-
-- power
-- price
-- savings
+- potencia
+- geracao
+- preco sugerido
+- economia mensal
 - payback
+- ROI
 
-Why:
+Os dados tecnicos continuam presentes, mas com peso visual menor.
 
-- these are the values most likely to be discussed with the client
+### Orcamento
 
-### Lighter for technical indicators
+A tela de orcamento e a principal tela de proposta.
 
-Technical signals stay visible, but visually quieter.
+Ela prioriza:
 
-Why:
+- itens de materiais e servicos
+- custo total
+- preco final
+- lucro bruto
+- margem
+- status comercial
 
-- they support credibility
-- they should not compete with the sales message
+## Acoes E Proximos Passos
 
-### Progressive disclosure instead of text walls
+A interface sempre deve indicar o proximo passo natural:
 
-Long helper texts were reduced where possible.
+- no Projeto: criar ou abrir simulacao
+- na Simulacao: gerar orcamento
+- no Orcamento: adicionar itens e avancar o status da proposta
 
-Why:
+## Regras De Densidade Visual
 
-- heavy explanatory copy slows scanning
-- installers need quick interpretation first
+- nao repetir a mesma informacao com o mesmo peso em telas diferentes
+- manter cards principais para os indicadores mais importantes
+- usar badges curtos para status e contexto rapido
+- preferir mensagens enxutas a blocos longos de texto
 
-## UX Principle Behind The Module
+## Microinteracoes
 
-The Solar module is not trying to be a dense engineering console.
+As microinteracoes atuais devem continuar discretas:
 
-It is trying to behave like:
+- hover suave em cards
+- animacao leve em numeros
+- foco visivel em campos e botoes
+- tooltips simples via `title` em badges e acoes quando ajudam na leitura
 
-- a commercial assistant for solar installers
+## Referencias
 
-That single principle explains many UI decisions.
+- Projeto: [show.blade.php](/d:/projects/voltrune/resources/views/solar/projects/show.blade.php)
+- Simulacao: [show.blade.php](/d:/projects/voltrune/resources/views/solar/simulations/show.blade.php)
+- Orcamento: [edit.blade.php](/d:/projects/voltrune/resources/views/solar/quotes/edit.blade.php)
+- Estilos: [_solar.scss](/d:/projects/voltrune/resources/scss/pages/_solar.scss)

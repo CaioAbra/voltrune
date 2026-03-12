@@ -89,6 +89,21 @@ class SimulationController extends Controller
             ->with('solar_status', 'Nova simulacao criada: ' . $simulation->name . '.');
     }
 
+    public function duplicate(Request $request, int $simulation): RedirectResponse
+    {
+        $company = $this->resolveCurrentCompany($request);
+        $simulationRecord = SolarSimulation::query()
+            ->with('project')
+            ->where('company_id', $company->id)
+            ->findOrFail($simulation);
+
+        $duplicate = $this->simulations->duplicate($simulationRecord);
+
+        return redirect()
+            ->route('solar.simulations.show', $duplicate->id)
+            ->with('solar_status', 'Simulacao duplicada com sucesso: ' . $duplicate->name . '.');
+    }
+
     private function resolveCurrentCompany(Request $request): Company
     {
         $user = $request->user();

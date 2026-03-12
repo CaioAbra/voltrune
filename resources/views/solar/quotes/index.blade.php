@@ -2,6 +2,17 @@
 
 @section('title', 'Orcamentos | Solar')
 
+@php
+    $statusLabels = [
+        'draft' => 'Rascunho',
+        'review' => 'Em analise',
+        'sent' => 'Enviado',
+        'approved' => 'Aprovado',
+        'won' => 'Fechado',
+        'lost' => 'Perdido',
+    ];
+@endphp
+
 @section('solar-content')
     <section class="hub-card solar-project-show solar-project-shell">
         <section class="hub-card hub-card--subtle solar-project-context-hero">
@@ -41,7 +52,7 @@
                                 <span class="solar-project-simulation-card__eyebrow">Proposta</span>
                                 <h3>{{ $quote->title }}</h3>
                             </div>
-                            <span class="solar-mini-badge solar-mini-badge--automatic">{{ strtoupper((string) $quote->status) }}</span>
+                            <span class="solar-mini-badge solar-mini-badge--automatic">{{ $statusLabels[$quote->status] ?? strtoupper((string) $quote->status) }}</span>
                         </div>
 
                         <div class="solar-project-simulation-card__body">
@@ -53,6 +64,7 @@
                             </p>
 
                             <div class="solar-project-simulation-card__metrics">
+                                <span><strong>Itens</strong>{{ $quote->items->count() }}</span>
                                 <span><strong>Preco final</strong>{{ $quote->final_price ? 'R$ ' . number_format((float) $quote->final_price, 2, ',', '.') : '-' }}</span>
                                 <span><strong>Economia</strong>{{ $quote->estimated_savings ? 'R$ ' . number_format((float) $quote->estimated_savings, 2, ',', '.') . '/mes' : '-' }}</span>
                                 <span><strong>Payback</strong>{{ $quote->payback_months ? $quote->payback_months . ' meses' : '-' }}</span>

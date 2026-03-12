@@ -61,4 +61,38 @@ class SolarQuote extends Model
     {
         return $this->hasMany(SolarQuoteItem::class);
     }
+
+    public function itemsTotalCost(): float
+    {
+        if ($this->relationLoaded('items')) {
+            return (float) $this->items->sum(fn (SolarQuoteItem $item) => (float) ($item->total_cost ?? 0));
+        }
+
+        return (float) $this->items()->sum('total_cost');
+    }
+
+    public function itemsTotalPrice(): float
+    {
+        if ($this->relationLoaded('items')) {
+            return (float) $this->items->sum(fn (SolarQuoteItem $item) => (float) ($item->total_price ?? 0));
+        }
+
+        return (float) $this->items()->sum('total_price');
+    }
+
+    public function itemsGrossProfit(): float
+    {
+        return $this->itemsTotalPrice() - $this->itemsTotalCost();
+    }
+
+    public function itemsMarginPercent(): float
+    {
+        $totalPrice = $this->itemsTotalPrice();
+
+        if ($totalPrice <= 0) {
+            return 0;
+        }
+
+        return ($this->itemsGrossProfit() / $totalPrice) * 100;
+    }
 }

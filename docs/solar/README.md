@@ -1,102 +1,50 @@
-# Solar Module Documentation
+# Documentacao Do Modulo Solar
 
-## Purpose
+## Visao Geral
 
-This folder documents the current state of the Solar module inside Voltrune.
+O modulo Solar da Voltrune atende o fluxo comercial e operacional de instaladores solares.
 
-The goal of this documentation is to support:
+Hoje ele cobre:
 
-- internal maintenance
-- onboarding of new developers
-- product alignment
-- architectural review
-- future case-study material
+- clientes
+- projetos
+- simulacoes
+- orcamentos
+- itens de orcamento
+- geocodificacao e fator solar
+- pre-dimensionamento
+- custos e indicadores financeiros
 
-This documentation reflects what exists in code today. It is not a roadmap document.
+O objetivo desta documentacao e registrar o que ja existe no codigo, como as telas se organizam e quais decisoes estruturais orientam a evolucao do produto.
 
-## What The Solar Module Is
+## Principios Do Modulo
 
-Solar is a Laravel module focused on commercial pre-budgeting for solar installers.
+- valor rapido para operacao comercial
+- automacao com ajuste manual
+- separacao clara entre contexto, cenario e proposta
+- degradacao segura quando servicos externos falham
 
-It already supports:
+## Estrutura Recomendada Do Fluxo
 
-- customer registration
-- project creation and editing
-- CEP-assisted address input
-- geocoding with latitude and longitude
-- solar factor lookup through PVGIS
-- automatic utility suggestion
-- suggested system sizing
-- suggested price generation
-- financial simulation
-- project read mode with commercial emphasis
+1. Projeto: contexto do cliente e do local.
+2. Simulacao: leitura do cenario tecnico/comercial.
+3. Orcamento: montagem da proposta com materiais, servicos e margem.
 
-The module is intentionally practical:
+## Guias Disponiveis
 
-- first it enables fast commercial output
-- then it allows manual adjustment
-- it does not depend on a full equipment catalog to operate
+- [Arquitetura](./architecture.md)
+- [Modelo de dados](./data-model.md)
+- [Fluxos de automacao](./automation-flows.md)
+- [UI e UX](./ui-ux.md)
+- [Organizacao das telas](./organizacao-das-telas.md)
+- [Operacao e comandos](./operations.md)
+- [Estado atual](./current-state.md)
 
-## Core Design Principles
+## Referencias Principais
 
-### 1. Fast first value
-
-New installers must be able to generate a budget quickly, even without complete commercial setup.
-
-Because of that, Solar uses layered fallbacks:
-
-- company configuration when available
-- market/regional defaults when company data is missing
-- national fallback when regional data is unavailable
-
-### 2. Automation with override
-
-Solar suggests values automatically, but does not lock the user into them.
-
-This is why most fields remain editable in the project form.
-
-### 3. Commercial-first interface
-
-The module is not only technical sizing software.
-
-Its UI prioritizes:
-
-- suggested power
-- suggested price
-- monthly savings
-- estimated payback
-
-Technical data remains visible, but with lower visual weight.
-
-### 4. Safe degradation
-
-External dependencies can fail.
-
-The system is designed to keep working when:
-
-- PVGIS is unavailable
-- geocoding is slow or incomplete
-- a company has no configured commercial defaults
-- utilities are not manually configured yet
-
-## Documentation Structure
-
-- [Architecture](./architecture.md)
-- [Data Model](./data-model.md)
-- [Automation Flows](./automation-flows.md)
-- [UI And UX Decisions](./ui-ux.md)
-- [Operations And Commands](./operations.md)
-- [Current State And Limitations](./current-state.md)
-
-## Main Source References
-
-- Routes: [routes/solar.php](/d:/projects/voltrune/routes/solar.php)
-- Project controller: [ProjectController.php](/d:/projects/voltrune/app/Modules/Solar/Controllers/ProjectController.php)
-- Sizing engine: [SolarSizingService.php](/d:/projects/voltrune/app/Modules/Solar/Services/SolarSizingService.php)
-- Geocoding engine: [SolarGeocodingService.php](/d:/projects/voltrune/app/Modules/Solar/Services/SolarGeocodingService.php)
-- Radiation engine: [SolarRadiationService.php](/d:/projects/voltrune/app/Modules/Solar/Services/SolarRadiationService.php)
-- Utility resolution: [EnergyUtilityResolverService.php](/d:/projects/voltrune/app/Modules/Solar/Services/EnergyUtilityResolverService.php)
-- Project form view: [form.blade.php](/d:/projects/voltrune/resources/views/solar/projects/partials/form.blade.php)
-- Project show view: [show.blade.php](/d:/projects/voltrune/resources/views/solar/projects/show.blade.php)
-- Frontend behavior: [app.js](/d:/projects/voltrune/resources/js/app.js)
-- Styles: [_solar.scss](/d:/projects/voltrune/resources/scss/pages/_solar.scss)
+- Rotas: [solar.php](/d:/projects/voltrune/routes/solar.php)
+- Projeto: [ProjectController.php](/d:/projects/voltrune/app/Modules/Solar/Controllers/ProjectController.php)
+- Simulacao: [SimulationController.php](/d:/projects/voltrune/app/Modules/Solar/Controllers/SimulationController.php)
+- Orcamento: [QuoteController.php](/d:/projects/voltrune/app/Modules/Solar/Controllers/QuoteController.php)
+- Servico de simulacao: [SolarSimulationService.php](/d:/projects/voltrune/app/Modules/Solar/Services/SolarSimulationService.php)
+- UI do Solar: [_solar.scss](/d:/projects/voltrune/resources/scss/pages/_solar.scss)

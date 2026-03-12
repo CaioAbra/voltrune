@@ -32,8 +32,13 @@ Route::middleware(['auth', 'company.active', 'product:solar'])
         Route::put('/settings', [SolarCompanySettingController::class, 'update'])->name('settings.update');
         Route::get('/simulations', [SimulationController::class, 'index'])->name('simulations.index');
         Route::get('/simulations/{simulation}', [SimulationController::class, 'show'])->name('simulations.show');
+        Route::post('/simulations/{simulation}/duplicate', [SimulationController::class, 'duplicate'])->name('simulations.duplicate');
         Route::post('/simulations/{simulation}/quotes', [QuoteController::class, 'storeFromSimulation'])->name('simulations.quotes.store');
         Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
         Route::get('/quotes/{quote}/edit', [QuoteController::class, 'edit'])->name('quotes.edit');
         Route::put('/quotes/{quote}', [QuoteController::class, 'update'])->name('quotes.update');
+        Route::post('/quotes/{quote}/duplicate', [QuoteController::class, 'duplicate'])->name('quotes.duplicate');
+        Route::patch('/quotes/{quote}/status', [QuoteController::class, 'updateStatus'])->name('quotes.status.update');
+        Route::post('/quotes/{quote}/items', [QuoteController::class, 'storeItem'])->name('quotes.items.store');
+        Route::delete('/quotes/{quote}/items/{item}', [QuoteController::class, 'destroyItem'])->name('quotes.items.destroy');
     });
