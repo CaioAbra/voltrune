@@ -1073,6 +1073,15 @@
   font-size: 0.86rem;
 }
 
+.solar-project-showcase__cta {
+  margin-top: 0.35rem;
+}
+
+.solar-project-showcase__status .hub-btn + .hub-btn,
+.solar-project-showcase__status .solar-project-showcase__cta + .hub-btn {
+  margin-top: 0.5rem;
+}
+
 .solar-project-showcase__hero-grid {
   display: grid;
   gap: 0.85rem;
@@ -1128,7 +1137,8 @@
 }
 
 .solar-project-showcase-metric__value[data-show-format="currency"],
-.solar-project-showcase-metric__value[data-show-format="months"] {
+.solar-project-showcase-metric__value[data-show-format="months"],
+.solar-project-showcase-metric__value[data-show-format="percent"] {
   font-size: clamp(1.1rem, 1.8vw, 1.68rem);
 }
 
@@ -1640,6 +1650,18 @@
   line-height: 1.6;
 }
 
+.solar-inline-tip--hero {
+  margin-bottom: 0;
+  border-color: rgba(246, 187, 65, 0.16);
+  background:
+    linear-gradient(145deg, rgba(46, 33, 10, 0.24), rgba(12, 20, 23, 0.6)),
+    rgba(246, 187, 65, 0.05);
+}
+
+.solar-quote-editor-hero {
+  border-color: rgba(246, 187, 65, 0.26);
+}
+
 .solar-composition-list {
   display: grid;
   gap: 0.75rem;
@@ -1692,7 +1714,7 @@
   }
 
   .solar-project-showcase__hero-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .solar-system-hero__header {

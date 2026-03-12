@@ -32,5 +32,8 @@ Route::middleware(['auth', 'company.active', 'product:solar'])
         Route::put('/settings', [SolarCompanySettingController::class, 'update'])->name('settings.update');
         Route::get('/simulations', [SimulationController::class, 'index'])->name('simulations.index');
         Route::get('/simulations/{simulation}', [SimulationController::class, 'show'])->name('simulations.show');
+        Route::post('/simulations/{simulation}/quotes', [QuoteController::class, 'storeFromSimulation'])->name('simulations.quotes.store');
         Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
+        Route::get('/quotes/{quote}/edit', [QuoteController::class, 'edit'])->name('quotes.edit');
+        Route::put('/quotes/{quote}', [QuoteController::class, 'update'])->name('quotes.update');
     });

@@ -60,7 +60,7 @@
                     <strong>{{ $primarySimulation?->name ?: 'Crie a primeira simulacao' }}</strong>
                     <p>
                         @if ($primarySimulation)
-                            Use a simulacao como centro tecnico/comercial para revisar sistema, custo e resultado.
+                            Use a simulacao como centro tecnico/comercial para revisar sistema, retorno, proposta e comparacao entre cenarios.
                         @else
                             Assim que a primeira simulacao for criada, ela passa a concentrar o cenario tecnico/comercial do projeto.
                         @endif
@@ -129,7 +129,7 @@
                 </form>
             </div>
 
-            <p class="hub-note">Cada simulacao concentra sistema, geracao, composicao, custos, lucro e indicadores financeiros. O projeto fica como base do local.</p>
+            <p class="hub-note">Cada simulacao concentra resultado, sistema, custos, retorno e proposta. O projeto fica como base do local e do consumo.</p>
 
             <div class="solar-project-simulations-panel__grid">
                 @forelse ($simulations as $simulation)

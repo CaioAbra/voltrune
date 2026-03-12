@@ -1965,7 +1965,9 @@ const initSolarProjectShowcase = () => {
   const formatters = {
     currency: (value) => currencyFormatter.format(value),
     kwp: (value) => `${value.toFixed(2).replace('.', ',')} kWp`,
+    kwh: (value) => `${value.toFixed(2).replace('.', ',')} kWh/mes`,
     months: (value) => `${Math.round(value)} meses`,
+    percent: (value) => `${value.toFixed(1).replace('.', ',')}%`,
   };
 
   showcases.forEach((showcase) => {

@@ -44,7 +44,11 @@ class SimulationController extends Controller
     {
         $company = $this->resolveCurrentCompany($request);
         $simulationRecord = SolarSimulation::query()
-            ->with(['project.customer', 'project.energyUtility'])
+            ->with([
+                'project.customer',
+                'project.energyUtility',
+                'quotes' => fn ($query) => $query->latest(),
+            ])
             ->where('company_id', $company->id)
             ->findOrFail($simulation);
 
@@ -55,6 +59,7 @@ class SimulationController extends Controller
             'company' => $company,
             'simulation' => $simulationRecord,
             'project' => $simulationRecord->project,
+            'latestQuote' => $simulationRecord->quotes->first(),
             'sizingService' => $this->sizing,
         ]);
     }
