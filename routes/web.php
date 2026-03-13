@@ -13,10 +13,6 @@ Route::get('/', function (Request $request) {
         return redirect()->route('hub.dashboard');
     }
 
-    if (! app()->environment('local') && $solarDomain !== '' && $request->getHost() === $solarDomain) {
-        return redirect()->route('solar.dashboard');
-    }
-
     return view('pages.home');
 })->name('home');
 Route::view('/servicos', 'pages.servicos')->name('servicos');
