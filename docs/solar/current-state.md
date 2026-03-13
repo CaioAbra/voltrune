@@ -1,126 +1,122 @@
-# Current State And Limitations
+# Estado Atual E Limitacoes
 
-## What Is Mature Enough Today
+## O Que Ja Esta Maduro Hoje
 
-Solar is already strong in:
+O Solar ja esta forte em:
 
-- pre-budget generation
-- first commercial conversation support
-- location-assisted automation
-- regional solar factor usage
-- market fallback pricing
-- guided project editing
-- commercial reading of saved projects
-- simulation snapshots linked to projects
-- simulation-level composition and cost visibility
+- geracao de pre-orcamento
+- apoio a primeira conversa comercial
+- automacao orientada por localizacao
+- uso de fator solar regional
+- fallback comercial por mercado
+- edicao guiada de projetos
+- leitura comercial de cenarios por simulacao
+- simulacoes ligadas a projetos
+- orcamentos com composicao real de itens
 
-## Current Limitations
+## Limitacoes Atuais
 
-### 1. No real equipment catalog yet
+### 1. Ainda nao existe catalogo estruturado de equipamentos
 
-Today the module does not manage:
+Hoje o modulo ainda nao gerencia:
 
-- inverter brands as structured data
-- module brands as structured data
-- supplier stock
-- SKU-level costs
+- marcas de inversor como entidade estruturada
+- marcas de modulo como entidade estruturada
+- estoque de fornecedor
+- custos por SKU
 
-Why:
+Workaround atual:
 
-- product focus has been on commercial velocity, not procurement depth
+- defaults da empresa
+- composicao descritiva
+- detalhamento estimado do kit
+- itens manuais no orcamento
 
-Current workaround:
+### 2. Sensibilidade a dependencias externas
 
-- company defaults
-- descriptive composition
-- estimated kit breakdown
-- simulation-level persisted cost groups and gross profit
+O Solar ainda depende de servicos publicos para:
 
-### 2. External dependency sensitivity
+- enriquecimento de CEP
+- geocodificacao
+- fator PVGIS
 
-Solar still depends on public services for:
+O que ja foi feito:
 
-- CEP enrichment
-- geocoding
-- PVGIS factor
+- cache
+- fallback de fator solar
+- reuso de fator persistido
+- degradacao segura
 
-What has already been done:
+Impacto pratico:
 
-- caching
-- fallback factor
-- persisted factor reuse
-- safe degradation
+- o sistema continua utilizavel
+- mas a automacao em tempo real ainda pode sofrer com latencia de terceiros
 
-What this means:
+### 3. Simulacao financeira ainda e propositalmente simples
 
-- the system remains usable
-- but real-time automation can still be affected by third-party latency
+Hoje a simulacao nao modela:
 
-### 3. Utility data is strong but not magical
+- inflacao tarifaria
+- financiamento
+- complexidade tributaria
+- cenarios avancados de payback
 
-The utility catalog now covers Brazil using public sources, but it still depends on:
+Isso foi uma escolha intencional para priorizar:
 
-- source data consistency
-- correct city and state inference
+- velocidade comercial
+- clareza de leitura
+- simplicidade operacional
 
-Why this matters:
+### 4. A transicao entre projeto e simulacao ainda e incremental
 
-- location mistakes can create wrong utility suggestions
-- UX reliability depends on clean location data
+Hoje:
 
-### 4. Financial simulation is intentionally simple
+- o projeto ainda persiste parte do snapshot calculado
+- a simulacao foi fortalecida como entidade real
+- o orcamento ja nasce da simulacao, mas o fluxo de proposta ainda nao esta completo em profundidade
 
-Current simulation does not model:
+Essa transicao foi aceita para evitar ruptura do fluxo existente.
 
-- tariff inflation
-- financing
-- tax complexity
-- advanced payback scenarios
+### 5. Publicacao do Solar em subdominio ainda depende de padrao operacional
 
-Why:
+O Solar ja esta funcionando em `solar.voltrune.com`, mas a publicacao correta depende de:
 
-- the current goal is a clear and fast first commercial estimate
+- variaveis de ambiente corretas
+- registro correto das rotas por dominio
+- sessao compartilhada com o Hub
+- links simbolicos para assets publicos na pasta do subdominio
 
-### 5. Transition between project and simulation is incremental
+Sem isso, os erros mais provaveis sao:
 
-Today:
+- Solar cair no dominio do Hub
+- loop de redirecionamento
+- home institucional abrir no lugar do produto
+- tela do Solar carregar sem CSS/JS
 
-- project still persists much of the calculated snapshot
-- simulation is synchronized from project as a real entity
-- quote is prepared to point to simulation, but the full proposal workflow is not complete yet
+## Por Que Essas Trocas Foram Aceitas
 
-Why:
+A estrategia atual privilegia:
 
-- the module needs continuity while the domain model matures
-- this avoids breaking current project editing and show flows
+- utilidade rapida
+- clareza comercial
+- simplicidade de operacao
 
-## Why These Tradeoffs Were Accepted
+acima de:
 
-The current product strategy values:
+- detalhe profundo de engenharia
+- catalogo de compras completo
+- modelagem financeira avancada
 
-- fast usefulness
-- commercial clarity
-- operational simplicity
+Para o momento atual do produto, essa troca continua coerente.
 
-over:
+## Evolucao Recomendada
 
-- deep engineering detail
-- procurement-grade catalog management
-- highly complex financial modeling
+Quando o produto precisar de mais maturidade, a sequencia mais consistente e:
 
-This is the correct tradeoff for the current stage of the module.
+1. catalogo estruturado de equipamentos por empresa
+2. integracao com fornecedor e origem de custo
+3. fluxo de proposta mais completo a partir da simulacao
+4. modelos financeiros mais ricos
+5. profundidade de validacao de engenharia
 
-## Recommended Future Evolution
-
-When the product needs the next maturity step, the most coherent sequence is:
-
-1. structured equipment catalog by company
-2. supplier and cost source integration
-3. quote workflow fully driven by simulation
-4. richer financial models
-5. engineering validation depth
-
-Why this order:
-
-- it preserves the current commercial-first identity
-- it adds depth without destroying usability
+Essa ordem preserva a identidade comercial do produto sem destruir a usabilidade atual.
