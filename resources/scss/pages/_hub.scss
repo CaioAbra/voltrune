@@ -393,6 +393,10 @@
   flex-wrap: wrap;
 }
 
+.hub-table-actions form {
+  display: flex;
+}
+
 .hub-grid--billing-options {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
@@ -799,6 +803,31 @@ textarea.hub-auth-input {
 }
 
 @media (max-width: 720px) {
+  .hub-sidebar {
+    padding: 0.45rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .hub-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hub-nav {
+    display: flex;
+    gap: 0.45rem;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .hub-nav__link {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-height: 40px;
+    align-items: center;
+  }
+
   .hub-topbar__inner {
     align-items: flex-start;
     justify-content: flex-start;
@@ -831,19 +860,94 @@ textarea.hub-auth-input {
     flex-wrap: wrap;
   }
 
+  .hub-actions,
+  .hub-table-actions {
+    display: grid;
+  }
+
+  .hub-actions .hub-btn,
+  .hub-actions form,
+  .hub-actions form .hub-btn,
+  .hub-table-actions .hub-btn,
+  .hub-table-actions form,
+  .hub-table-actions form .hub-btn,
+  .hub-btn-disabled {
+    width: 100%;
+  }
+
   .hub-filter-actions .hub-btn {
     flex: 0 1 auto;
     min-width: 96px;
   }
 
-  .hub-table {
-    min-width: 680px;
-  }
-
   .hub-table-wrap {
-    max-height: 52vh;
     border: 1px solid rgba(208, 173, 104, 0.16);
     border-radius: 10px;
+    max-height: none;
+  }
+
+  .hub-table--responsive,
+  .hub-table--operational {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .hub-table--responsive thead,
+  .hub-table--operational thead {
+    display: none;
+  }
+
+  .hub-table--responsive,
+  .hub-table--responsive tbody,
+  .hub-table--responsive tr,
+  .hub-table--responsive td,
+  .hub-table--operational,
+  .hub-table--operational tbody,
+  .hub-table--operational tr,
+  .hub-table--operational td {
+    display: block;
+    width: 100%;
+  }
+
+  .hub-table--responsive tbody,
+  .hub-table--operational tbody {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .hub-table--responsive tr,
+  .hub-table--operational tr {
+    border: 1px solid rgba(208, 173, 104, 0.16);
+    border-radius: 14px;
+    background: linear-gradient(160deg, rgba(24, 19, 14, 0.96), rgba(17, 13, 10, 0.94));
+    overflow: hidden;
+  }
+
+  .hub-table--responsive td,
+  .hub-table--operational td {
+    display: grid;
+    gap: 0.28rem;
+    padding: 0.78rem 0.88rem;
+    border-bottom: 1px solid rgba(208, 173, 104, 0.12);
+  }
+
+  .hub-table--responsive td:last-child,
+  .hub-table--operational td:last-child {
+    border-bottom: 0;
+  }
+
+  .hub-table--responsive td::before,
+  .hub-table--operational td::before {
+    content: attr(data-label);
+    color: #d8c39a;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .hub-table--responsive td[colspan]::before,
+  .hub-table--operational td[colspan]::before {
+    content: none;
   }
 }
 

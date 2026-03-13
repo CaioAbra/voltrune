@@ -14,6 +14,16 @@ O Solar ja esta forte em:
 - simulacoes ligadas a projetos
 - orcamentos com composicao real de itens
 
+## Refinos Recentes De Interface
+
+As ultimas rodadas consolidaram alguns comportamentos importantes de UX:
+
+- projeto, simulacao e orcamento agora compartilham uma linguagem visual mais consistente
+- listagens e cards principais respondem melhor a larguras intermediarias e notebooks com escala de exibicao
+- titulos, metricas e valores financeiros passaram a quebrar de forma mais controlada
+- estados com um unico card deixaram de ocupar largura excessiva sem necessidade
+- a hierarquia entre acao principal, secundaria e terciaria ficou mais explicita nas areas de simulacao
+
 ## Limitacoes Atuais
 
 ### 1. Ainda nao existe catalogo estruturado de equipamentos

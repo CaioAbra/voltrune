@@ -66,8 +66,8 @@ Prioridades visuais:
 Acoes principais:
 
 - voltar ao projeto
-- duplicar simulacao
 - gerar orcamento
+- duplicar simulacao
 - ajustar base do cenario
 
 Observacao:
@@ -125,6 +125,30 @@ Nesta rodada, a UX passou a seguir estas regras:
 - O hero de cada tela destaca apenas o que mais importa naquele momento.
 - Badges curtos substituem textos longos quando a informacao e simples.
 - A interface sempre tenta indicar o proximo passo natural.
+- Em larguras intermediarias, cabecalhos internos empilham antes de comprimir titulos de forma agressiva.
+- Grids de cards devem responder a largura util real da janela, inclusive em notebooks com escala de exibicao.
+- Estados com um unico card usam ocupacao mais contida para preservar leitura e percepcao premium.
+- A hierarquia de botoes deve permanecer clara mesmo quando as acoes quebram em mais de uma linha.
+
+## Regras Visuais Especificas Do Fluxo Atual
+
+### Projeto
+
+- a lista de simulacoes usa card principal com largura controlada quando existir apenas um cenario
+- a acao `Ver simulacao` deve liderar o card
+- a acao `Gerar orcamento` deve aparecer como secundaria
+- a acao `Duplicar` deve ter menor contraste e menor disputa visual
+
+### Simulacao
+
+- os paineis tecnico e financeiro podem dividir a tela apenas quando ambos mantiverem leitura saudavel
+- em faixas intermediarias, status e blocos auxiliares devem descer de linha antes de esmagar o titulo
+- cards financeiros internos devem aceitar reflow por `auto-fit` em vez de grades fixas
+
+### Orcamento
+
+- o resumo financeiro deve continuar dominante, mas sem ocupar largura excessiva quando houver poucos blocos
+- a composicao de itens nao deve competir com o bloco principal de fechamento comercial
 
 ## Referencias Em Codigo
 

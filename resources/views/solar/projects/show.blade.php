@@ -22,119 +22,105 @@
     $simulationCount = $simulations->count();
     $primarySimulation = $defaultSimulation;
     $quoteCount = $quotes->count();
+    $nextStepLabel = $primarySimulation ? 'Abrir simulacao principal' : 'Criar a primeira simulacao';
+    $nextStepMessage = $primarySimulation
+        ? 'Abra a simulacao principal para revisar potencia, geracao, preco e indicadores financeiros antes de montar a proposta.'
+        : 'O projeto concentra cliente, local e consumo. A primeira simulacao abre a leitura tecnica e comercial do cenario.';
 @endphp
 
 @section('solar-content')
-    <section class="space-y-8">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Projeto solar</p>
-                <h1 class="text-3xl font-semibold text-slate-900">{{ $project->name }}</h1>
-                <p class="mt-2 max-w-3xl text-sm text-slate-600">
-                    Esta tela concentra cliente, local e consumo. As leituras de cenarios ficam nas simulacoes e a composicao comercial fica nos orcamentos.
-                </p>
-            </div>
+    <section class="hub-card solar-project-show solar-project-shell">
+        <div class="hub-actions solar-project-show__actions">
+            <form method="POST" action="{{ route('solar.projects.simulations.store', $project->id) }}">
+                @csrf
+                <button type="submit" class="hub-btn">Nova simulacao</button>
+            </form>
 
-            <div class="flex flex-wrap gap-3">
-                <form method="POST" action="{{ route('solar.projects.simulations.store', $project->id) }}">
+            @if ($primarySimulation)
+                <form method="POST" action="{{ route('solar.simulations.quotes.store', $primarySimulation->id) }}">
                     @csrf
-                    <button type="submit" class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800">
-                        Nova simulacao
-                    </button>
+                    <button type="submit" class="hub-btn hub-btn--subtle">Novo orcamento</button>
                 </form>
+            @endif
 
-                @if ($primarySimulation)
-                    <form method="POST" action="{{ route('solar.simulations.quotes.store', $primarySimulation->id) }}">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                            Novo orcamento
-                        </button>
-                    </form>
-                @endif
-
-                <a href="{{ route('solar.projects.edit', $project->id) }}" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                    Editar projeto
-                </a>
-                <a href="{{ route('solar.projects.index') }}" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                    Voltar para projetos
-                </a>
-            </div>
+            <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn hub-btn--subtle">Editar projeto</a>
+            <a href="{{ route('solar.projects.index') }}" class="hub-btn hub-btn--subtle">Voltar para projetos</a>
         </div>
 
-        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)]">
-                <div class="space-y-5">
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{{ $statusLabel }}</span>
-                        <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">{{ $simulationCount }} {{ $simulationCount === 1 ? 'simulacao' : 'simulacoes' }}</span>
-                        <span class="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">{{ $quoteCount }} {{ $quoteCount === 1 ? 'orcamento' : 'orcamentos' }}</span>
-                    </div>
+        <section class="hub-card hub-card--subtle solar-project-showcase">
+            <div class="solar-project-showcase__header">
+                <div>
+                    <p class="solar-section-eyebrow">Projeto solar</p>
+                    <h2>{{ $project->name }}</h2>
+                    <p class="hub-note">
+                        Esta tela concentra cliente, local e consumo. As leituras de cenarios ficam nas simulacoes e a composicao comercial fica nos orcamentos.
+                    </p>
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cliente</span>
-                            <p class="mt-2 text-base font-semibold text-slate-900">{{ $project->customer?->name ?: '-' }}</p>
-                        </article>
-                        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Endereco</span>
-                            <p class="mt-2 text-base font-semibold text-slate-900">{{ $displayAddress !== '' ? $displayAddress : 'Endereco em preparacao' }}</p>
-                        </article>
-                        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Cidade / Estado</span>
-                            <p class="mt-2 text-base font-semibold text-slate-900">{{ $locationSummary !== '' ? $locationSummary : '-' }}</p>
-                        </article>
-                        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Concessionaria</span>
-                            <p class="mt-2 text-base font-semibold text-slate-900">{{ $project->utility_company ?: '-' }}</p>
-                        </article>
-                        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Consumo mensal</span>
-                            <p class="mt-2 text-base font-semibold text-slate-900">
-                                {{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh/mes' : '-' }}
-                            </p>
-                        </article>
+                    <div class="solar-project-showcase__chips">
+                        <span class="solar-mini-badge solar-mini-badge--editable">{{ $statusLabel }}</span>
+                        <span class="solar-mini-badge solar-mini-badge--automatic">{{ $simulationCount }} {{ $simulationCount === 1 ? 'simulacao' : 'simulacoes' }}</span>
+                        <span class="solar-mini-badge">{{ $quoteCount }} {{ $quoteCount === 1 ? 'orcamento' : 'orcamentos' }}</span>
                     </div>
                 </div>
 
-                <aside class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Proximo passo</p>
-                    <h2 class="mt-3 text-xl font-semibold">
-                        {{ $primarySimulation?->name ?: 'Crie a primeira simulacao' }}
-                    </h2>
-                    <p class="mt-3 text-sm leading-6 text-slate-300">
-                        @if ($primarySimulation)
-                            Abra a simulacao principal para revisar potencia, geracao, preco e indicadores financeiros antes de montar a proposta.
-                        @else
-                            O projeto organiza o contexto. A primeira simulacao abre a leitura tecnica e comercial do cenario.
-                        @endif
-                    </p>
+                <div class="solar-project-showcase__status {{ $primarySimulation ? 'is-ready' : 'is-market' }}">
+                    <span class="solar-project-showcase__status-label">Proximo passo</span>
+                    <strong>{{ $nextStepLabel }}</strong>
+                    <p>{{ $nextStepMessage }}</p>
 
                     @if ($primarySimulation)
-                        <a href="{{ route('solar.simulations.show', $primarySimulation->id) }}" class="mt-5 inline-flex items-center rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100">
-                            Ver simulacao principal
-                        </a>
+                        <a href="{{ route('solar.simulations.show', $primarySimulation->id) }}" class="hub-btn solar-project-showcase__cta">Ver simulacao principal</a>
+                    @else
+                        <form method="POST" action="{{ route('solar.projects.simulations.store', $project->id) }}">
+                            @csrf
+                            <button type="submit" class="hub-btn solar-project-showcase__cta">Criar simulacao</button>
+                        </form>
                     @endif
-                </aside>
+                </div>
+            </div>
+
+            <div class="solar-project-context-hero__grid">
+                <article class="solar-project-context-tile">
+                    <span class="solar-project-context-tile__label">Cliente</span>
+                    <strong class="solar-project-context-tile__value">{{ $project->customer?->name ?: '-' }}</strong>
+                </article>
+                <article class="solar-project-context-tile">
+                    <span class="solar-project-context-tile__label">Endereco</span>
+                    <strong class="solar-project-context-tile__value">{{ $displayAddress !== '' ? $displayAddress : 'Endereco em preparacao' }}</strong>
+                </article>
+                <article class="solar-project-context-tile">
+                    <span class="solar-project-context-tile__label">Cidade / Estado</span>
+                    <strong class="solar-project-context-tile__value">{{ $locationSummary !== '' ? $locationSummary : '-' }}</strong>
+                </article>
+                <article class="solar-project-context-tile">
+                    <span class="solar-project-context-tile__label">Concessionaria</span>
+                    <strong class="solar-project-context-tile__value">{{ $project->utility_company ?: '-' }}</strong>
+                </article>
+                <article class="solar-project-context-tile">
+                    <span class="solar-project-context-tile__label">Consumo mensal</span>
+                    <strong class="solar-project-context-tile__value">
+                        {{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh/mes' : '-' }}
+                    </strong>
+                </article>
             </div>
         </section>
 
-        <section class="space-y-4">
-            <div class="flex flex-wrap items-end justify-between gap-3">
+        <article class="hub-card hub-card--subtle solar-project-show__card solar-project-simulations-panel">
+            <div class="solar-flow-section__header">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Simulacoes</p>
-                    <h2 class="text-2xl font-semibold text-slate-900">Cenarios tecnico-comerciais</h2>
-                    <p class="mt-1 text-sm text-slate-600">Use esta lista para comparar alternativas e seguir para o orcamento certo.</p>
+                    <p class="solar-section-eyebrow">Simulacoes</p>
+                    <h2>Cenarios tecnico-comerciais</h2>
+                    <p class="hub-note">Use esta lista para comparar alternativas e seguir para o orcamento certo.</p>
                 </div>
 
-                <form method="POST" action="{{ route('solar.projects.simulations.store', $project->id) }}">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800">
-                        Nova simulacao
-                    </button>
-                </form>
+                <div class="solar-project-showcase__status is-ready">
+                    <span class="solar-project-showcase__status-label">Leitura operacional</span>
+                    <strong>{{ $simulationCount }} {{ $simulationCount === 1 ? 'cenario ativo' : 'cenarios ativos' }}</strong>
+                    <p>O projeto organiza o contexto. A simulacao e a tela principal de analise do Solar.</p>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div class="solar-project-simulations-panel__grid {{ $simulationCount === 1 ? 'is-single' : '' }}">
                 @forelse ($simulations as $simulation)
                     @php
                         $simulationStatusLabel = match ($simulation->status) {
@@ -145,99 +131,76 @@
                             default => strtoupper((string) $simulation->status),
                         };
                     @endphp
-                    <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md">
-                        <div class="flex flex-wrap items-start justify-between gap-3">
+                    <article class="solar-project-simulation-card {{ $loop->first ? 'is-primary' : '' }}">
+                        <div class="solar-project-simulation-card__header">
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                                    {{ $loop->first ? 'Simulacao principal' : 'Simulacao' }}
-                                </p>
-                                <h3 class="mt-2 text-xl font-semibold text-slate-900">{{ $simulation->name }}</h3>
-                                <p class="mt-2 text-sm text-slate-600">
-                                    Cenário de leitura técnica e comercial pronto para revisão e conversão em orçamento.
-                                </p>
+                                <span class="solar-project-simulation-card__eyebrow">{{ $loop->first ? 'Simulacao principal' : 'Simulacao' }}</span>
+                                <h3>{{ $simulation->name }}</h3>
                             </div>
-
-                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{{ $simulationStatusLabel }}</span>
+                            <span class="solar-mini-badge {{ $loop->first ? 'solar-mini-badge--editable' : 'solar-mini-badge--automatic' }}">{{ $simulationStatusLabel }}</span>
                         </div>
 
-                        <div class="mt-6 grid grid-cols-2 gap-3">
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Potencia</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">
-                                    {{ $simulation->system_power_kwp ? number_format((float) $simulation->system_power_kwp, 2, ',', '.') . ' kWp' : '-' }}
-                                </p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Geracao estimada</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">
-                                    {{ $simulation->estimated_generation_kwh ? number_format((float) $simulation->estimated_generation_kwh, 2, ',', '.') . ' kWh/mes' : '-' }}
-                                </p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Preco sugerido</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">
-                                    {{ $simulation->suggested_price ? 'R$ ' . number_format((float) $simulation->suggested_price, 2, ',', '.') : '-' }}
-                                </p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Economia mensal</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">
-                                    {{ $simulation->estimated_monthly_savings ? 'R$ ' . number_format((float) $simulation->estimated_monthly_savings, 2, ',', '.') : '-' }}
-                                </p>
+                        <div class="solar-project-simulation-card__body">
+                            <p class="hub-note solar-project-simulation-card__summary">
+                                Cenario de leitura tecnica e comercial pronto para revisao e conversao em orcamento.
+                            </p>
+
+                            <div class="solar-project-simulation-card__metrics">
+                                <span><strong>Potencia</strong>{{ $simulation->system_power_kwp ? number_format((float) $simulation->system_power_kwp, 2, ',', '.') . ' kWp' : '-' }}</span>
+                                <span><strong>Geracao estimada</strong>{{ $simulation->estimated_generation_kwh ? number_format((float) $simulation->estimated_generation_kwh, 2, ',', '.') . ' kWh/mes' : '-' }}</span>
+                                <span><strong>Preco sugerido</strong>{{ $simulation->suggested_price ? 'R$ ' . number_format((float) $simulation->suggested_price, 2, ',', '.') : '-' }}</span>
+                                <span><strong>Economia mensal</strong>{{ $simulation->estimated_monthly_savings ? 'R$ ' . number_format((float) $simulation->estimated_monthly_savings, 2, ',', '.') : '-' }}</span>
                             </div>
                         </div>
 
-                        <div class="mt-6 flex flex-wrap gap-3">
-                            <a href="{{ route('solar.simulations.show', $simulation->id) }}" class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800">
-                                Ver simulacao
-                            </a>
+                        <div class="solar-project-simulation-card__footer">
+                            <a href="{{ route('solar.simulations.show', $simulation->id) }}" class="hub-btn">Ver simulacao</a>
 
-                            <form action="{{ route('solar.simulations.duplicate', $simulation->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
-                                    Duplicar simulacao
-                                </button>
-                            </form>
+                            <div class="solar-project-simulation-card__footer-secondary">
+                                <form action="{{ route('solar.simulations.quotes.store', $simulation->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="hub-btn hub-btn--subtle">Gerar orcamento</button>
+                                </form>
 
-                            <form action="{{ route('solar.simulations.quotes.store', $simulation->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
-                                    Gerar orcamento
-                                </button>
-                            </form>
+                                <form action="{{ route('solar.simulations.duplicate', $simulation->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="hub-link-secondary">Duplicar</button>
+                                </form>
+                            </div>
                         </div>
                     </article>
                 @empty
-                    <article class="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
-                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Sem simulacoes</p>
-                        <h3 class="mt-3 text-xl font-semibold text-slate-900">Crie o primeiro cenario deste projeto</h3>
-                        <p class="mt-2 text-sm text-slate-600">
+                    <article class="solar-project-simulation-card solar-project-simulation-card--empty">
+                        <div class="solar-project-simulation-card__header">
+                            <div>
+                                <span class="solar-project-simulation-card__eyebrow">Sem simulacoes</span>
+                                <h3>Crie o primeiro cenario deste projeto</h3>
+                            </div>
+                        </div>
+                        <p class="hub-note solar-project-simulation-card__summary">
                             A simulacao vira a tela principal de leitura do Solar. Comece por ela para sair do contexto e entrar na analise.
                         </p>
                     </article>
                 @endforelse
             </div>
-        </section>
+        </article>
 
-        <section class="space-y-4">
-            <div class="flex flex-wrap items-end justify-between gap-3">
+        <article class="hub-card hub-card--subtle solar-project-show__card solar-project-simulations-panel">
+            <div class="solar-flow-section__header">
                 <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Orcamentos</p>
-                    <h2 class="text-2xl font-semibold text-slate-900">Propostas relacionadas</h2>
-                    <p class="mt-1 text-sm text-slate-600">Os orcamentos consolidam materiais, servicos, preco final e margem para envio ao cliente.</p>
+                    <p class="solar-section-eyebrow">Orcamentos</p>
+                    <h2>Propostas relacionadas</h2>
+                    <p class="hub-note">Os orcamentos consolidam materiais, servicos, preco final e margem para envio ao cliente.</p>
                 </div>
 
-                @if ($primarySimulation)
-                    <form method="POST" action="{{ route('solar.simulations.quotes.store', $primarySimulation->id) }}">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                            Novo orcamento
-                        </button>
-                    </form>
-                @endif
+                <div class="solar-project-showcase__status is-market">
+                    <span class="solar-project-showcase__status-label">Pipeline comercial</span>
+                    <strong>{{ $quoteCount }} {{ $quoteCount === 1 ? 'proposta vinculada' : 'propostas vinculadas' }}</strong>
+                    <p>Valide uma simulacao e siga para o orcamento quando o cenario estiver pronto.</p>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+            <div class="solar-project-simulations-panel__grid">
                 @forelse ($quotes as $quote)
                     @php
                         $quoteStatusLabel = match ($quote->status) {
@@ -250,67 +213,67 @@
                             default => strtoupper((string) $quote->status),
                         };
                     @endphp
-                    <article class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-md">
-                        <div class="flex items-start justify-between gap-3">
+                    <article class="solar-project-simulation-card">
+                        <div class="solar-project-simulation-card__header">
                             <div>
-                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Orcamento</p>
-                                <h3 class="mt-2 text-xl font-semibold text-slate-900">{{ $quote->title }}</h3>
-                                <p class="mt-2 text-sm text-slate-600">{{ $quote->simulation?->name ?: 'Sem simulacao vinculada' }}</p>
+                                <span class="solar-project-simulation-card__eyebrow">Orcamento</span>
+                                <h3>{{ $quote->title }}</h3>
                             </div>
-                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{{ $quoteStatusLabel }}</span>
+                            <span class="solar-mini-badge solar-mini-badge--automatic">{{ $quoteStatusLabel }}</span>
                         </div>
 
-                        <div class="mt-6 grid grid-cols-2 gap-3">
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Preco final</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">{{ $quote->final_price ? 'R$ ' . number_format((float) $quote->final_price, 2, ',', '.') : '-' }}</p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Itens</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">{{ $quote->items->count() }}</p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Economia</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">
-                                    {{ $quote->estimated_savings ? 'R$ ' . number_format((float) $quote->estimated_savings, 2, ',', '.') . '/mes' : '-' }}
-                                </p>
-                            </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Status</span>
-                                <p class="mt-2 text-lg font-semibold text-slate-900">{{ $quoteStatusLabel }}</p>
+                        <div class="solar-project-simulation-card__body">
+                            <p class="hub-note solar-project-simulation-card__summary">{{ $quote->simulation?->name ?: 'Sem simulacao vinculada' }}</p>
+
+                            <div class="solar-project-simulation-card__metrics">
+                                <span><strong>Preco final</strong>{{ $quote->final_price ? 'R$ ' . number_format((float) $quote->final_price, 2, ',', '.') : '-' }}</span>
+                                <span><strong>Itens</strong>{{ $quote->items->count() }}</span>
+                                <span><strong>Economia</strong>{{ $quote->estimated_savings ? 'R$ ' . number_format((float) $quote->estimated_savings, 2, ',', '.') . '/mes' : '-' }}</span>
+                                <span><strong>Status</strong>{{ $quoteStatusLabel }}</span>
                             </div>
                         </div>
 
-                        <div class="mt-6">
-                            <a href="{{ route('solar.quotes.edit', $quote->id) }}" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
-                                Abrir orcamento
-                            </a>
+                        <div class="solar-project-simulation-card__footer">
+                            <a href="{{ route('solar.quotes.edit', $quote->id) }}" class="hub-btn">Abrir orcamento</a>
                         </div>
                     </article>
                 @empty
-                    <article class="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm">
-                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Sem orcamentos</p>
-                        <h3 class="mt-3 text-xl font-semibold text-slate-900">Nenhuma proposta criada ainda</h3>
-                        <p class="mt-2 text-sm text-slate-600">Valide uma simulacao e gere o primeiro orcamento quando o cenario estiver pronto.</p>
+                    <article class="solar-project-simulation-card solar-project-simulation-card--empty">
+                        <div class="solar-project-simulation-card__header">
+                            <div>
+                                <span class="solar-project-simulation-card__eyebrow">Sem orcamentos</span>
+                                <h3>Nenhuma proposta criada ainda</h3>
+                            </div>
+                        </div>
+                        <p class="hub-note solar-project-simulation-card__summary">
+                            Valide uma simulacao e gere o primeiro orcamento quando o cenario estiver pronto.
+                        </p>
                     </article>
                 @endforelse
             </div>
-        </section>
+        </article>
 
         @if ($project->pricing_notes || $project->notes)
-            <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Observacoes</p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900">Anotacoes do projeto base</h2>
+            <article class="hub-card hub-card--subtle solar-project-show__card">
+                <p class="solar-section-eyebrow">Observacoes</p>
+                <h2>Anotacoes do projeto base</h2>
 
-                <div class="mt-5 space-y-4 text-sm leading-6 text-slate-700">
+                <div class="solar-project-show__info-grid">
                     @if ($project->pricing_notes)
-                        <p><strong class="text-slate-900">Notas comerciais:</strong> {{ $project->pricing_notes }}</p>
+                        <p>
+                            <strong>Notas comerciais</strong>
+                            <span>{{ $project->pricing_notes }}</span>
+                        </p>
                     @endif
+
                     @if ($project->notes)
-                        <p><strong class="text-slate-900">Notas gerais:</strong> {{ $project->notes }}</p>
+                        <p>
+                            <strong>Notas gerais</strong>
+                            <span>{{ $project->notes }}</span>
+                        </p>
                     @endif
                 </div>
-            </section>
+            </article>
         @endif
     </section>
 @endsection

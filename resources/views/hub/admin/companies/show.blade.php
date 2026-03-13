@@ -102,7 +102,7 @@
         </div>
 
         <div class="hub-table-wrap">
-            <table class="hub-table">
+            <table class="hub-table hub-table--responsive">
                 <thead>
                     <tr>
                         <th>Usuário</th>
@@ -114,9 +114,9 @@
                 <tbody>
                     @forelse ($visibleUsers as $user)
                         <tr>
-                            <td>{{ $user->name }}</td>
-                            <td>{{ $user->email }}</td>
-                            <td>{{ $user->pivot->role ?? '-' }}</td>
+                            <td data-label="Usuario">{{ $user->name }}</td>
+                            <td data-label="E-mail">{{ $user->email }}</td>
+                            <td data-label="Funcao">{{ $user->pivot->role ?? '-' }}</td>
                             <td>{{ $user->pivot->is_owner ? 'Sim' : 'Não' }}</td>
                         </tr>
                     @empty

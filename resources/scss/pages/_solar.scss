@@ -565,6 +565,16 @@
   margin-bottom: 0.9rem;
 }
 
+.solar-flow-section__header > :first-child {
+  min-width: 0;
+}
+
+.solar-flow-section__header h2,
+.solar-flow-section__header h3 {
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
 .solar-flow-section__subhead {
   display: flex;
   align-items: flex-start;
@@ -903,6 +913,10 @@
   align-items: stretch;
 }
 
+.solar-project-simulations-panel__grid.is-single {
+  justify-content: start;
+}
+
 .solar-project-simulation-card {
   display: grid;
   grid-template-rows: auto 1fr auto;
@@ -912,6 +926,7 @@
   border: 1px solid rgba(246, 187, 65, 0.14);
   background: rgba(8, 14, 16, 0.44);
   min-height: 100%;
+  max-width: 100%;
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
 
@@ -943,8 +958,9 @@
 .solar-project-simulation-card__header h3 {
   margin: 0.2rem 0 0;
   font-size: clamp(1.05rem, 1.8vw, 1.42rem);
-  line-height: 1.08;
-  max-width: 13ch;
+  line-height: 1.12;
+  max-width: 16ch;
+  text-wrap: balance;
 }
 
 .solar-project-simulation-card__eyebrow {
@@ -965,6 +981,8 @@
   color: rgba(220, 235, 221, 0.78);
   font-size: 0.9rem;
   line-height: 1.65;
+  max-width: 42ch;
+  text-wrap: pretty;
 }
 
 .solar-project-simulation-card__metrics {
@@ -994,13 +1012,9 @@
   color: #fff2ce;
   font-size: clamp(0.96rem, 1.05vw, 1.1rem);
   line-height: 1.28;
-  word-break: keep-all;
-  overflow-wrap: normal;
-}
-
-.solar-project-simulation-card__metrics span:nth-child(3),
-.solar-project-simulation-card__metrics span:nth-child(4) {
-  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 
 .solar-project-simulation-card__header .solar-mini-badge {
@@ -1009,15 +1023,39 @@
 }
 
 .solar-project-simulation-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: stretch;
+  display: grid;
+  gap: 0.7rem;
   margin-top: auto;
 }
 
-.solar-project-simulation-card__footer .hub-btn {
+.solar-project-simulation-card__footer > .hub-btn,
+.solar-project-simulation-card__footer > form,
+.solar-project-simulation-card__footer > form .hub-btn {
   width: 100%;
   justify-content: center;
+}
+
+.solar-project-simulation-card__footer-secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.solar-project-simulation-card__footer-secondary form {
+  display: flex;
+}
+
+.solar-project-simulation-card__footer-secondary .hub-btn {
+  min-width: 180px;
+}
+
+.solar-project-simulation-card__footer-secondary .hub-link-secondary {
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding-inline: 0.2rem;
 }
 
 .solar-project-showcase {
@@ -1124,6 +1162,14 @@
     linear-gradient(150deg, rgba(13, 31, 33, 0.78), rgba(9, 16, 19, 0.9));
 }
 
+.solar-project-showcase-metric--commercial {
+  border-color: rgba(130, 192, 181, 0.28);
+  background:
+    radial-gradient(circle at top right, rgba(83, 178, 178, 0.16), transparent 42%),
+    linear-gradient(150deg, rgba(15, 34, 35, 0.8), rgba(9, 16, 19, 0.9));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
+}
+
 .solar-project-showcase-metric__label {
   color: rgba(226, 237, 231, 0.68);
   font-size: 0.74rem;
@@ -1137,9 +1183,9 @@
   font-weight: 800;
   line-height: 1.04;
   letter-spacing: -0.03em;
-  white-space: nowrap;
-  overflow-wrap: normal;
-  word-break: keep-all;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .solar-project-showcase-metric__value[data-show-format="currency"],
@@ -1385,7 +1431,7 @@
 }
 
 .solar-financial-panel__highlights {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .solar-pricing-panel__note {
@@ -1716,7 +1762,7 @@
 
 @media (min-width: 960px) {
   .solar-workspace {
-    grid-template-columns: minmax(240px, 270px) 1fr;
+    grid-template-columns: minmax(220px, 250px) minmax(0, 1fr);
     align-items: start;
   }
 
@@ -1729,11 +1775,11 @@
   }
 
   .solar-project-context-hero__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .solar-project-showcase__hero-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
   .solar-system-hero__header {
@@ -1741,11 +1787,11 @@
   }
 
   .solar-system-hero__metrics {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .solar-technical-panel__grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   }
 
   .solar-project-command__header,
@@ -1753,12 +1799,16 @@
     grid-template-columns: minmax(0, 1.35fr) minmax(240px, 0.8fr);
   }
 
+  .solar-flow-section__header--stacked-md {
+    grid-template-columns: 1fr;
+  }
+
   .solar-project-command__highlights {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .solar-project-command__summary-board {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .solar-project-command__summary-board--compact {
@@ -1780,15 +1830,23 @@
 
   .solar-project-show__grid {
     gap: 1rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
   }
 
   .solar-project-simulations-panel__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .solar-project-simulations-panel__grid.is-single {
+    grid-template-columns: minmax(320px, 760px);
+  }
+
+  .solar-project-simulations-panel__grid.is-single .solar-project-simulation-card {
+    max-width: 760px;
   }
 
   .solar-sizing-panel__highlights {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   }
 
   .solar-composition-list {
@@ -1796,16 +1854,26 @@
   }
 
   .solar-project-show__info-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
 
   .solar-project-show__inline-specs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .solar-flow-section__header--stacked-md .solar-project-showcase__status {
+    max-width: 420px;
   }
 
   .solar-sidebar {
     position: sticky;
     top: 1rem;
+  }
+}
+
+@media (min-width: 1480px) {
+  .solar-flow-section__header--stacked-md {
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
   }
 }
 
@@ -1906,5 +1974,20 @@
   .solar-table__actions form,
   .solar-table__actions form .hub-btn {
     width: 100%;
+  }
+
+  .solar-project-simulation-card__footer-secondary,
+  .solar-project-simulation-card__footer-secondary form,
+  .solar-project-simulation-card__footer-secondary .hub-btn {
+    width: 100%;
+  }
+
+  .solar-project-simulation-card__footer-secondary {
+    display: grid;
+  }
+
+  .solar-project-simulation-card__footer-secondary .hub-link-secondary {
+    width: fit-content;
+    padding-inline: 0;
   }
 }

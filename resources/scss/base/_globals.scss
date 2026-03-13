@@ -123,6 +123,10 @@ textarea:focus-visible {
   margin-top: 1.2rem;
 }
 
+.hero-actions > * {
+  flex: 0 1 auto;
+}
+
 .page-hero .eyebrow,
 .page-hero h1,
 .page-hero .lead,
@@ -591,8 +595,23 @@ textarea:focus-visible {
   }
 
   .hero-actions .btn,
-  .hero-actions .btn-ghost {
+  .hero-actions .btn-ghost,
+  .hero-actions form,
+  .hero-actions form .btn,
+  .hero-actions form .btn-ghost {
     width: 100%;
+  }
+
+  .main-nav {
+    padding: 0.65rem;
+    gap: 0.4rem;
+    max-height: min(calc(100dvh - 78px), 32rem);
+  }
+
+  .nav-link,
+  .nav-cta {
+    width: 100%;
+    justify-content: center;
   }
 
   .section-head {
@@ -631,6 +650,18 @@ textarea:focus-visible {
 }
 
 @media (max-width: 560px) {
+  .container {
+    width: min(var(--container), calc(100% - 1rem));
+  }
+
+  .hero-actions {
+    gap: 0.7rem;
+  }
+
+  .section-head .text-link {
+    width: 100%;
+  }
+
   .site-footer {
     padding: 2rem 0 1.1rem;
   }

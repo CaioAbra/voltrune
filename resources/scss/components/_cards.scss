@@ -149,6 +149,25 @@
   flex-shrink: 0;
 }
 
+@media (max-width: 719px) {
+  .service-card,
+  .portfolio-card,
+  .mission-card,
+  .steps-grid article,
+  .hosting-box {
+    padding: 1rem;
+  }
+
+  .service-card .btn,
+  .hosting-box .btn {
+    width: 100%;
+  }
+
+  .section-head {
+    margin-bottom: 1rem;
+  }
+}
+
 @media (min-width: 720px) {
   .services-grid,
   .steps-grid,
