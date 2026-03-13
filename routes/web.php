@@ -7,9 +7,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (Request $request) {
     $hubDomain = (string) env('HUB_DOMAIN', 'hub.voltrune.com');
+    $solarDomain = trim((string) env('SOLAR_DOMAIN', 'solar.voltrune.com'));
 
     if (! app()->environment('local') && $request->getHost() === $hubDomain) {
         return redirect()->route('hub.dashboard');
+    }
+
+    if (! app()->environment('local') && $solarDomain !== '' && $request->getHost() === $solarDomain) {
+        return redirect()->route('solar.dashboard');
     }
 
     return view('pages.home');
