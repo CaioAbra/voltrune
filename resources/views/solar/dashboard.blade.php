@@ -22,6 +22,44 @@
 
         <section class="solar-page-grid solar-page-grid--cards">
             <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Base ativa</span>
+                <div>
+                    <h3>{{ $kpis['customers'] }}</h3>
+                    <p>{{ $kpis['customers'] === 1 ? 'cliente cadastrado' : 'clientes cadastrados' }}</p>
+                </div>
+                <a href="{{ route('solar.customers.index') }}" class="hub-btn hub-btn--subtle">Abrir clientes</a>
+            </article>
+
+            <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Entrada do funil</span>
+                <div>
+                    <h3>{{ $kpis['projects'] }}</h3>
+                    <p>{{ $pipeline['projects_draft'] }} {{ $pipeline['projects_draft'] === 1 ? 'projeto em rascunho' : 'projetos em rascunho' }}</p>
+                </div>
+                <a href="{{ route('solar.projects.index') }}" class="hub-btn hub-btn--subtle">Abrir projetos</a>
+            </article>
+
+            <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Analise tecnica</span>
+                <div>
+                    <h3>{{ $kpis['simulations'] }}</h3>
+                    <p>{{ $pipeline['simulations_without_quotes'] }} {{ $pipeline['simulations_without_quotes'] === 1 ? 'simulacao sem orcamento' : 'simulacoes sem orcamento' }}</p>
+                </div>
+                <a href="{{ route('solar.simulations.index') }}" class="hub-btn hub-btn--subtle">Abrir simulacoes</a>
+            </article>
+
+            <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Fechamento</span>
+                <div>
+                    <h3>{{ $kpis['quotes'] }}</h3>
+                    <p>{{ $pipeline['quotes_review'] }} em revisao, {{ $pipeline['quotes_sent'] }} enviadas e {{ $pipeline['quotes_won'] }} fechadas</p>
+                </div>
+                <a href="{{ route('solar.quotes.index') }}" class="hub-btn hub-btn--subtle">Abrir orcamentos</a>
+            </article>
+        </section>
+
+        <section class="solar-page-grid solar-page-grid--cards">
+            <article class="hub-card hub-card--subtle solar-quick-card">
                 <span class="solar-quick-card__eyebrow">Base comercial</span>
                 <div>
                     <h3>Clientes</h3>

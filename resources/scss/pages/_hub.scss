@@ -224,6 +224,34 @@
   background: rgba(22, 18, 13, 0.48);
 }
 
+.hub-product-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.72rem;
+  height: 100%;
+}
+
+.hub-product-card > h2,
+.hub-product-card > h3,
+.hub-product-card > p {
+  margin: 0;
+}
+
+.hub-product-card > .hub-badge {
+  margin-top: 0.15rem;
+}
+
+.hub-product-card > .hub-actions,
+.hub-product-card > .hub-btn,
+.hub-product-card > .hub-btn-disabled {
+  margin-top: 0.35rem;
+}
+
+.hub-product-card > .hub-actions {
+  width: 100%;
+}
+
 .hub-badge {
   display: inline-flex;
   align-items: center;

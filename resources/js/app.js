@@ -979,6 +979,7 @@ const initSolarSizingForm = () => {
     const streetInput = root.querySelector('[data-cep-street]');
     const numberInput = root.querySelector('#number');
     const districtInput = root.querySelector('[data-cep-district]');
+    const utilitySelect = root.querySelector('[data-utility-select]');
     const solarFactorDisplay = root.querySelector('[data-solar-factor-display]');
     const solarRadiationDisplay = root.querySelector('[data-solar-radiation-display]');
     const solarFactorSourceDisplay = root.querySelector('[data-solar-factor-source-display]');
@@ -1373,6 +1374,20 @@ const initSolarSizingForm = () => {
 
       if (typeof payload.geocoding_status === 'string') {
         updateGeocodingDisplays(payload.geocoding_status, payload.geocoding_precision_label || '');
+      }
+
+      if (
+        utilitySelect instanceof HTMLSelectElement
+        && payload.energy_utility_id !== null
+        && typeof payload.energy_utility_id !== 'undefined'
+      ) {
+        const utilityId = String(payload.energy_utility_id);
+        const hasOption = Array.from(utilitySelect.options).some((option) => option.value === utilityId);
+
+        if (hasOption) {
+          utilitySelect.value = utilityId;
+          utilitySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       }
 
       if (solarFactorMessage instanceof HTMLElement) {
@@ -2060,7 +2075,22 @@ const initEnergyUtilityAutoSelect = () => {
     if (!(cityInput instanceof HTMLInputElement)) return;
     if (!(stateInput instanceof HTMLInputElement)) return;
 
-    const lookup = JSON.parse(select.dataset.utilityLookup || '[]');
+    const lookupScript = select.parentElement?.querySelector('[data-utility-lookup-json]');
+    const initialOptions = Array.from(select.options).map((option) => ({
+      value: option.value,
+      label: option.textContent || '',
+    }));
+
+    let lookup = [];
+    try {
+      const rawLookup = lookupScript instanceof HTMLScriptElement
+        ? lookupScript.textContent || '[]'
+        : select.dataset.utilityLookup || '[]';
+      const parsedLookup = JSON.parse(rawLookup);
+      lookup = Array.isArray(parsedLookup) ? parsedLookup : [];
+    } catch (error) {
+      lookup = [];
+    }
     let manualOverride = select.value !== '';
     const placeholderLabel = select.options[0]?.textContent?.trim() || 'Selecionar automaticamente';
 
@@ -2136,11 +2166,27 @@ const initEnergyUtilityAutoSelect = () => {
     };
 
     const resolveUtility = () => {
+      if (!lookup.length) {
+        if (select.options.length <= 1 && initialOptions.length > 1) {
+          select.innerHTML = '';
+          initialOptions.forEach((option) => {
+            select.append(new Option(option.label, option.value));
+          });
+        }
+
+        setFeedback('Nao foi possivel automatizar a concessionaria neste carregamento. A selecao manual continua disponivel.', 'is-error');
+        return;
+      }
+
       const utilities = filteredUtilities();
       renderUtilityOptions(utilities);
 
       if (manualOverride && select.value !== '') {
-        if (selectedUtilityMatchesLocation()) return;
+        if (selectedUtilityMatchesLocation()) {
+          const selectedLabel = select.options[select.selectedIndex]?.textContent?.trim() || 'Concessionaria selecionada.';
+          setFeedback(`${selectedLabel} mantida manualmente.`, 'is-success');
+          return;
+        }
 
         // Endereco mudou e invalida a escolha anterior.
         manualOverride = false;
@@ -2176,11 +2222,26 @@ const initEnergyUtilityAutoSelect = () => {
         select.value = String(matched.id);
         manualOverride = false;
         setFeedback(`Concessionaria sugerida automaticamente: ${matched.name}.`, 'is-success');
-      } else if (!manualOverride) {
+      } else if (utilities.length === 1) {
+        select.value = String(utilities[0].id);
+        manualOverride = false;
+        setFeedback(`Concessionaria sugerida pela UF atual: ${utilities[0].name}.`, 'is-success');
+      } else {
+        const stateFallback = utilities.find((utility) => !Array.isArray(utility.cities) || utility.cities.length === 0);
+
+        if (!manualOverride && stateFallback) {
+          select.value = String(stateFallback.id);
+          setFeedback(`Concessionaria sugerida pela UF atual: ${stateFallback.name}.`, 'is-success');
+          return;
+        }
+
         select.value = '';
-        setFeedback('Nenhuma concessionaria do catalogo foi encontrada para esta cidade. Ajuste manualmente se necessario.', 'is-error');
-      } else if (select.value === '') {
-        setFeedback('Selecione manualmente uma concessionaria da mesma UF.', 'is-error');
+        setFeedback(
+          manualOverride
+            ? 'Selecione manualmente uma concessionaria da mesma UF.'
+            : 'Nenhuma concessionaria do catalogo foi encontrada para esta cidade. Ajuste manualmente se necessario.',
+          'is-error',
+        );
       }
     };
 

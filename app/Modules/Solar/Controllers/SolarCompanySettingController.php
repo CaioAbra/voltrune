@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Modules\Solar\Models\SolarCompanySetting;
 use App\Modules\Solar\Services\SolarNavigationService;
 use App\Modules\Solar\Services\SolarSizingService;
+use App\Support\CurrentCompanyContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -261,9 +262,7 @@ class SolarCompanySettingController extends Controller
 
         abort_unless($user, 403);
 
-        $company = $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        $company = CurrentCompanyContext::resolve($user, $request->session());
 
         abort_unless($company instanceof Company, 403, 'Empresa ativa nao encontrada.');
 

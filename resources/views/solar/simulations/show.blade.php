@@ -57,7 +57,7 @@
                 <button type="submit" class="hub-btn hub-btn--subtle">Duplicar simulacao</button>
             </form>
 
-            <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn hub-btn--subtle">Editar simulacao</a>
+            <a href="{{ route('solar.simulations.edit', $simulation->id) }}" class="hub-btn hub-btn--subtle">Editar simulacao</a>
             <a href="{{ route('solar.projects.show', $project->id) }}" class="hub-btn hub-btn--subtle">Voltar ao projeto</a>
         </div>
 

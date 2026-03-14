@@ -213,6 +213,7 @@
                             default => strtoupper((string) $quote->status),
                         };
                         $resolvedFinalPrice = $quote->items->isNotEmpty() ? $quote->itemsTotalPrice() : $quote->final_price;
+                        $simulationSnapshot = is_array($quote->simulation_snapshot_json) ? $quote->simulation_snapshot_json : [];
                     @endphp
                     <article class="solar-project-simulation-card">
                         <div class="solar-project-simulation-card__header">
@@ -224,7 +225,7 @@
                         </div>
 
                         <div class="solar-project-simulation-card__body">
-                            <p class="hub-note solar-project-simulation-card__summary">{{ $quote->simulation?->name ?: 'Sem simulacao vinculada' }}</p>
+                            <p class="hub-note solar-project-simulation-card__summary">{{ $simulationSnapshot['name'] ?? $quote->simulation?->name ?: 'Sem simulacao vinculada' }}</p>
 
                             <div class="solar-project-simulation-card__metrics">
                                 <span><strong>Preco final</strong>{{ $resolvedFinalPrice ? 'R$ ' . number_format((float) $resolvedFinalPrice, 2, ',', '.') : '-' }}</span>

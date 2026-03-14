@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hub;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Support\CurrentCompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -63,15 +64,7 @@ class HubController extends Controller
 
     private function resolveCurrentCompany(): ?Company
     {
-        $user = Auth::user();
-
-        if (! $user) {
-            return null;
-        }
-
-        return $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        return CurrentCompanyContext::resolve(Auth::user(), request()->session());
     }
 
     /**

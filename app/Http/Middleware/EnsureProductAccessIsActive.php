@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Company;
+use App\Support\CurrentCompanyContext;
 use App\Support\HubAdminAccess;
 use Closure;
 use Illuminate\Http\Request;
@@ -24,9 +25,7 @@ class EnsureProductAccessIsActive
 
         abort_unless(in_array($productKey, Company::PRODUCT_KEYS, true), 404);
 
-        $company = $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        $company = CurrentCompanyContext::resolve($user, $request->session());
 
         if (! $company || $company->status !== 'active') {
             return redirect()->route('hub.activation-pending');
@@ -42,4 +41,3 @@ class EnsureProductAccessIsActive
         return $next($request);
     }
 }
-

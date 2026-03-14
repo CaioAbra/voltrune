@@ -48,6 +48,7 @@
                 @forelse ($quotes as $quote)
                     @php
                         $resolvedFinalPrice = $quote->items->isNotEmpty() ? $quote->itemsTotalPrice() : $quote->final_price;
+                        $simulationSnapshot = is_array($quote->simulation_snapshot_json) ? $quote->simulation_snapshot_json : [];
                     @endphp
                     <article class="solar-project-simulation-card">
                         <div class="solar-project-simulation-card__header">
@@ -61,8 +62,8 @@
                         <div class="solar-project-simulation-card__body">
                             <p class="hub-note solar-project-simulation-card__summary">
                                 {{ $quote->project?->customer?->name ?: 'Cliente nao vinculado' }}
-                                @if ($quote->simulation)
-                                    | origem: {{ $quote->simulation->name }}
+                                @if ($simulationSnapshot['name'] ?? $quote->simulation)
+                                    | origem: {{ $simulationSnapshot['name'] ?? $quote->simulation?->name }}
                                 @endif
                             </p>
 
@@ -87,7 +88,7 @@
                                 <h3>Nenhum orcamento criado</h3>
                             </div>
                         </div>
-                        <p class="hub-note">Abra uma simulacao e use a acao principal "Gerar proposta" para iniciar o fluxo comercial.</p>
+                        <p class="hub-note">Abra uma simulacao e gere o primeiro orcamento para iniciar o fluxo comercial.</p>
                     </article>
                 @endforelse
             </div>

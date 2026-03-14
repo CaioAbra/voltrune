@@ -71,6 +71,94 @@ class SolarSimulationService
     }
 
     /**
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    public function rebuildPayload(
+        SolarSimulation $simulation,
+        SolarProject $project,
+        ?SolarCompanySetting $companySetting = null,
+        array $overrides = [],
+    ): array {
+        $payload = array_merge(
+            $simulation->only([
+                'system_power_kwp',
+                'module_power',
+                'module_quantity',
+                'estimated_generation_kwh',
+                'inverter_model',
+                'solar_factor_used',
+                'solar_factor_source',
+                'suggested_price',
+                'status',
+                'notes',
+            ]),
+            $overrides,
+        );
+
+        $solarFactor = $payload['solar_factor_used'] ?? $simulation->solar_factor_used ?? $project->solar_factor_used;
+        $systemPower = $payload['system_power_kwp'] ?? $simulation->system_power_kwp;
+        $modulePower = $payload['module_power'] ?? $simulation->module_power ?? $companySetting?->default_module_power;
+        $moduleQuantity = $payload['module_quantity'] ?? $simulation->module_quantity;
+        $generation = $payload['estimated_generation_kwh'] ?? $simulation->estimated_generation_kwh;
+        $price = $payload['suggested_price'] ?? $simulation->suggested_price;
+        $inverterModel = $payload['inverter_model'] ?? $simulation->inverter_model ?? $companySetting?->default_inverter_model;
+
+        if (($systemPower === null || $systemPower === '') && $project->monthly_consumption_kwh !== null) {
+            $systemPower = $this->sizing->estimateRequiredPowerKwp($project->monthly_consumption_kwh, $solarFactor);
+        }
+
+        if (($moduleQuantity === null || $moduleQuantity === '') && $systemPower !== null) {
+            $moduleQuantity = $this->sizing->estimateModuleQuantity($systemPower, $modulePower);
+        }
+
+        if (($generation === null || $generation === '') && $systemPower !== null) {
+            $generation = $this->sizing->estimateGenerationKwh($systemPower, $solarFactor);
+        }
+
+        if (($price === null || $price === '') && $systemPower !== null) {
+            $priceContext = $this->sizing->resolveContextualPricePerKwp($companySetting?->price_per_kwp, $project->state);
+            $price = $this->sizing->estimateSuggestedPrice($systemPower, $priceContext['value']);
+        }
+
+        $marginContext = $this->sizing->resolveMarginContext($companySetting, $systemPower);
+        $kitCost = $this->sizing->estimateKitCostForMarginContext($price, $marginContext);
+        $kitBreakdown = $this->sizing->estimateKitCostBreakdown($kitCost);
+
+        return [
+            'system_power_kwp' => $systemPower,
+            'module_power' => $modulePower,
+            'module_quantity' => $moduleQuantity,
+            'estimated_generation_kwh' => $generation,
+            'area_estimated' => $this->sizing->estimateAreaFromModules($moduleQuantity)
+                ?: $this->sizing->estimateAreaSquareMeters($systemPower),
+            'inverter_model' => $inverterModel,
+            'solar_factor_used' => $solarFactor,
+            'solar_factor_source' => $payload['solar_factor_source'] ?? $simulation->solar_factor_source ?? $project->solar_factor_source,
+            'suggested_price' => $price,
+            'estimated_module_cost' => $kitBreakdown['modules'],
+            'estimated_inverter_cost' => $kitBreakdown['inverter'],
+            'estimated_structure_cost' => $kitBreakdown['structure'],
+            'estimated_installation_cost' => $kitBreakdown['installation'],
+            'estimated_kit_cost' => $kitCost,
+            'estimated_gross_profit' => $this->sizing->estimateGrossProfit($price, $kitCost),
+            'estimated_monthly_savings' => $this->sizing->estimateMonthlySavings($project->energy_bill_value),
+            'estimated_annual_savings' => $this->sizing->estimateAnnualSavings($project->energy_bill_value),
+            'estimated_lifetime_savings' => $this->sizing->estimateLifetimeSavings($project->energy_bill_value),
+            'estimated_roi' => $this->sizing->estimateRoiPercentage($price, $project->energy_bill_value),
+            'estimated_payback_months' => $this->sizing->estimatePaybackMonths($price, $project->energy_bill_value),
+            'system_composition_json' => $this->sizing->resolveSystemComposition(
+                $moduleQuantity,
+                $modulePower,
+                $inverterModel,
+                $systemPower,
+            ),
+            'status' => $payload['status'] ?? $simulation->status ?? 'draft',
+            'notes' => $payload['notes'] ?? $simulation->notes,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function buildPayloadFromProject(SolarProject $project, ?SolarCompanySetting $companySetting = null): array

@@ -9,6 +9,10 @@
 <body>
     @php
         $isHubAdmin = \App\Support\HubAdminAccess::isAdmin(auth()->user());
+        $currentCompany = \App\Support\CurrentCompanyContext::resolve(auth()->user(), request()->session());
+        $availableCompanies = auth()->check()
+            ? \App\Support\CurrentCompanyContext::available(auth()->user())
+            : collect();
     @endphp
 
     <div class="hub-shell">
@@ -19,10 +23,26 @@
                 </a>
 
                 @if (auth()->check())
-                    <form action="{{ route('hub.logout') }}" method="post">
-                        @csrf
-                        <button type="submit" class="hub-btn">Encerrar sessão</button>
-                    </form>
+                    <div class="hub-actions">
+                        @if ($availableCompanies->count() > 1)
+                            <form action="{{ route('workspace.company.update') }}" method="post">
+                                @csrf
+                                <label class="sr-only" for="hub-active-company">Empresa ativa</label>
+                                <select id="hub-active-company" name="company_id" class="hub-auth-input" onchange="this.form.submit()">
+                                    @foreach ($availableCompanies as $companyOption)
+                                        <option value="{{ $companyOption->id }}" @selected($currentCompany?->id === $companyOption->id)>
+                                            {{ $companyOption->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        @endif
+
+                        <form action="{{ route('hub.logout') }}" method="post">
+                            @csrf
+                            <button type="submit" class="hub-btn">Encerrar sessão</button>
+                        </form>
+                    </div>
                 @else
                     <a href="{{ route('hub.login') }}" class="hub-btn">Entrar</a>
                 @endif

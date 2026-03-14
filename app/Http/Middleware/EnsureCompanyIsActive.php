@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Company;
+use App\Support\CurrentCompanyContext;
 use App\Support\HubAdminAccess;
 use Closure;
 use Illuminate\Http\Request;
@@ -43,9 +44,6 @@ class EnsureCompanyIsActive
 
     private function resolveCurrentCompany($user): ?Company
     {
-        return $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        return CurrentCompanyContext::resolve($user, request()->session());
     }
 }
-

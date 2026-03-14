@@ -30,6 +30,7 @@
     $itemsLockedPrice = $quoteSummary['item_count'] > 0;
     $statusLabel = $statusOptions[$quote->status] ?? strtoupper((string) $quote->status);
     $resolvedFinalPrice = $quoteSummary['item_count'] > 0 ? $quoteSummary['total_price'] : $quote->final_price;
+    $simulationSnapshot = is_array($quote->simulation_snapshot_json) ? $quote->simulation_snapshot_json : [];
 @endphp
 
 @section('solar-content')
@@ -46,7 +47,7 @@
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="status" value="review">
-                <button type="submit" class="hub-btn hub-btn--subtle">Gerar proposta</button>
+                <button type="submit" class="hub-btn hub-btn--subtle">Enviar para revisao</button>
             </form>
 
             @if ($simulation)
@@ -66,7 +67,7 @@
                     <div class="solar-project-showcase__chips">
                         <span class="solar-mini-badge solar-mini-badge--editable">{{ $statusLabel }}</span>
                         <span class="solar-mini-badge solar-mini-badge--automatic">{{ $quoteSummary['item_count'] }} {{ $quoteSummary['item_count'] === 1 ? 'item' : 'itens' }}</span>
-                        <span class="solar-mini-badge">{{ $simulation?->name ?: 'Proposta manual' }}</span>
+                        <span class="solar-mini-badge">{{ $simulationSnapshot['name'] ?? $simulation?->name ?: 'Proposta manual' }}</span>
                     </div>
                 </div>
 
@@ -106,10 +107,10 @@
                 <div class="solar-project-show__info-grid">
                     <p><strong>Projeto</strong><span>{{ $project?->name ?: '-' }}</span></p>
                     <p><strong>Cliente</strong><span>{{ $customerName }}</span></p>
-                    <p><strong>Simulacao</strong><span>{{ $simulation?->name ?: 'Nao vinculada' }}</span></p>
-                    <p><strong>Preco sugerido</strong><span>{{ $simulation?->suggested_price ? 'R$ ' . number_format((float) $simulation->suggested_price, 2, ',', '.') : '-' }}</span></p>
-                    <p><strong>Potencia da simulacao</strong><span>{{ $simulation?->system_power_kwp ? number_format((float) $simulation->system_power_kwp, 2, ',', '.') . ' kWp' : '-' }}</span></p>
-                    <p><strong>Payback estimado</strong><span>{{ $simulation?->estimated_payback_months ? $simulation->estimated_payback_months . ' meses' : '-' }}</span></p>
+                    <p><strong>Simulacao</strong><span>{{ $simulationSnapshot['name'] ?? $simulation?->name ?: 'Nao vinculada' }}</span></p>
+                    <p><strong>Preco sugerido</strong><span>{{ ($simulationSnapshot['suggested_price'] ?? $simulation?->suggested_price) ? 'R$ ' . number_format((float) ($simulationSnapshot['suggested_price'] ?? $simulation?->suggested_price), 2, ',', '.') : '-' }}</span></p>
+                    <p><strong>Potencia da simulacao</strong><span>{{ ($simulationSnapshot['system_power_kwp'] ?? $simulation?->system_power_kwp) ? number_format((float) ($simulationSnapshot['system_power_kwp'] ?? $simulation?->system_power_kwp), 2, ',', '.') . ' kWp' : '-' }}</span></p>
+                    <p><strong>Payback estimado</strong><span>{{ ($simulationSnapshot['estimated_payback_months'] ?? $simulation?->estimated_payback_months) ? ($simulationSnapshot['estimated_payback_months'] ?? $simulation?->estimated_payback_months) . ' meses' : '-' }}</span></p>
                 </div>
             </section>
 

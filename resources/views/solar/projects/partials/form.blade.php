@@ -363,7 +363,7 @@
                     name="energy_utility_id"
                     class="hub-auth-input"
                     data-utility-select
-                    data-utility-lookup='@json($utilityLookup, JSON_UNESCAPED_UNICODE)'
+                    data-utility-lookup="{{ e(json_encode($utilityLookup, JSON_UNESCAPED_UNICODE)) }}"
                 >
                     <option value="">Selecionar automaticamente</option>
                     @foreach ($utilities as $utility)
@@ -372,6 +372,7 @@
                         </option>
                     @endforeach
                 </select>
+                <script type="application/json" data-utility-lookup-json>@json($utilityLookup, JSON_UNESCAPED_UNICODE)</script>
                 @error('energy_utility_id')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
