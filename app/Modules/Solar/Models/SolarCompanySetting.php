@@ -5,9 +5,13 @@ namespace App\Modules\Solar\Models;
 use App\Models\Company;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SolarCompanySetting extends Model
 {
+    public const MARGIN_MODE_FIXED = 'fixed';
+    public const MARGIN_MODE_RANGE = 'range';
+
     protected $connection = 'solar_mysql';
 
     protected $table = 'solar_company_settings';
@@ -20,6 +24,7 @@ class SolarCompanySetting extends Model
         'default_module_power',
         'price_per_kwp',
         'margin_percent',
+        'margin_mode',
         'default_inverter_model',
     ];
 
@@ -39,5 +44,12 @@ class SolarCompanySetting extends Model
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function marginRanges(): HasMany
+    {
+        return $this->hasMany(SolarCompanyMarginRange::class, 'solar_company_setting_id')
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 }

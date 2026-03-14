@@ -22,6 +22,26 @@
     $radiationDaily = $sizingService->estimateEquivalentSolarRadiationDaily($simulation->solar_factor_used);
     $quoteCount = $simulation->quotes->count();
     $readyForProposal = $simulation->suggested_price && $simulation->system_power_kwp;
+    $marginLabel = match ($marginContext['source']) {
+        'range' => $marginContext['requires_negotiation']
+            ? 'Negociacao manual'
+            : number_format((float) $marginContext['margin_percent'], 2, ',', '.') . '%',
+        'unmatched' => 'Sem faixa',
+        'pending' => 'Aguardando potencia',
+        'default' => number_format((float) \App\Modules\Solar\Services\SolarSizingService::DEFAULT_GROSS_MARGIN_PERCENT, 2, ',', '.') . '%',
+        default => $marginContext['margin_percent'] !== null
+            ? number_format((float) $marginContext['margin_percent'], 2, ',', '.') . '%'
+            : 'Nao configurada',
+    };
+    $marginNote = match ($marginContext['source']) {
+        'range' => $marginContext['requires_negotiation']
+            ? 'A configuracao comercial da empresa exige tratativa manual nesta faixa de potencia.'
+            : 'Margem vinda da faixa de potencia configurada pela empresa.',
+        'unmatched' => 'A potencia atual nao encontrou nenhuma faixa cadastrada para margem automatica.',
+        'pending' => 'A margem por faixa depende da potencia calculada do sistema.',
+        'default' => 'Sem margem fixa cadastrada. O Solar usa o padrao interno como referencia.',
+        default => 'Margem de referencia da configuracao comercial da empresa.',
+    };
 @endphp
 
 @section('solar-content')
@@ -144,11 +164,12 @@
                     <article class="solar-sizing-chip"><span class="solar-sizing-chip__label">Economia anual</span><strong class="solar-sizing-chip__value">{{ $simulation->estimated_annual_savings ? 'R$ ' . number_format((float) $simulation->estimated_annual_savings, 2, ',', '.') : '-' }}</strong></article>
                     <article class="solar-sizing-chip"><span class="solar-sizing-chip__label">ROI</span><strong class="solar-sizing-chip__value">{{ $simulation->estimated_roi ? number_format((float) $simulation->estimated_roi, 1, ',', '.') . '%' : '-' }}</strong></article>
                     <article class="solar-sizing-chip"><span class="solar-sizing-chip__label">Payback</span><strong class="solar-sizing-chip__value">{{ $simulation->estimated_payback_months ? $simulation->estimated_payback_months . ' meses' : '-' }}</strong></article>
+                    <article class="solar-sizing-chip"><span class="solar-sizing-chip__label">Margem aplicada</span><strong class="solar-sizing-chip__value">{{ $marginLabel }}</strong></article>
                     <article class="solar-sizing-chip solar-sizing-chip--featured"><span class="solar-sizing-chip__label">Economia em 25 anos</span><strong class="solar-sizing-chip__value">{{ $simulation->estimated_lifetime_savings ? 'R$ ' . number_format((float) $simulation->estimated_lifetime_savings, 2, ',', '.') : '-' }}</strong></article>
                 </div>
 
                 <p class="solar-sizing-panel__note solar-financial-panel__note">
-                    Compare cenarios antes de enviar ao cliente para manter a proposta enxuta, coerente e defendida por indicadores claros.
+                    {{ $marginNote }} Compare cenarios antes de enviar ao cliente para manter a proposta enxuta, coerente e defendida por indicadores claros.
                 </p>
             </section>
         </div>

@@ -94,6 +94,14 @@ const initNumberSteppers = () => {
     });
 
     syncDisabledState();
+
+    if ('MutationObserver' in window) {
+      const observer = new MutationObserver(syncDisabledState);
+      observer.observe(input, {
+        attributes: true,
+        attributeFilter: ['disabled'],
+      });
+    }
   });
 };
 
@@ -937,6 +945,7 @@ const initSolarSizingForm = () => {
     const pricingTotalPreview = root.querySelector('[data-pricing-preview="total"]');
     const pricingSavingsPreview = root.querySelector('[data-pricing-preview="savings"]');
     const pricingMarginPreview = root.querySelector('[data-pricing-preview="margin"]');
+    const pricingMarginDetailPreview = root.querySelector('[data-pricing-preview="margin-detail"]');
     const pricingSourcePreview = root.querySelector('[data-pricing-preview="source"]');
     const pricingKitCostPreview = root.querySelector('[data-pricing-preview="kit-cost"]');
     const pricingGrossProfitPreview = root.querySelector('[data-pricing-preview="gross-profit"]');
@@ -993,7 +1002,28 @@ const initSolarSizingForm = () => {
     let pricingPerKwp = effectivePricingPerKwp;
     let pricingSource = root.getAttribute('data-pricing-source') || 'fallback';
     const regionalPriceLookup = JSON.parse(root.getAttribute('data-regional-price-lookup') || '{}');
-    const marginPercent = Number(root.getAttribute('data-margin-percent')?.replace(',', '.') || 0);
+    const fixedMarginPercent = Number(root.getAttribute('data-margin-percent')?.replace(',', '.') || 0);
+    const marginMode = root.getAttribute('data-margin-mode') || 'fixed';
+    const defaultMarginPercent = Number(root.getAttribute('data-margin-default-percent')?.replace(',', '.') || '22');
+    const marginRanges = (() => {
+      try {
+        const parsed = JSON.parse(root.getAttribute('data-margin-ranges') || '[]');
+        if (!Array.isArray(parsed)) return [];
+
+        return parsed.map((range) => ({
+          minKwp: Number(range?.min_kwp ?? 0),
+          maxKwp: range?.max_kwp === null || range?.max_kwp === '' || typeof range?.max_kwp === 'undefined'
+            ? null
+            : Number(range.max_kwp),
+          marginPercent: range?.margin_percent === null || range?.margin_percent === '' || typeof range?.margin_percent === 'undefined'
+            ? null
+            : Number(range.margin_percent),
+          requiresNegotiation: Boolean(range?.requires_negotiation),
+        }));
+      } catch (error) {
+        return [];
+      }
+    })();
     const defaultInverterModel = root.getAttribute('data-default-inverter-model') || '';
     const residualMinimumCost = Number(root.getAttribute('data-residual-minimum-cost')?.replace(',', '.') || 70);
     let solarFactorUsed = Number(root.getAttribute('data-solar-factor-used')?.replace(',', '.') || 130);
@@ -1034,6 +1064,7 @@ const initSolarSizingForm = () => {
     };
 
     const formatNumber = (value, suffix = '', decimals = 2) => `${value.toFixed(decimals).replace('.', ',')}${suffix}`;
+    const formatPercent = (value) => `${Number(value).toFixed(2).replace('.', ',')}%`;
     const writeNumber = (input, value, decimals = 2) => {
       if (!(input instanceof HTMLInputElement) || value === null || !Number.isFinite(value)) return;
       input.value = decimals === 0 ? String(Math.round(value)) : value.toFixed(decimals);
@@ -1194,9 +1225,91 @@ const initSolarSizingForm = () => {
       if (!Number.isFinite(systemPower) || systemPower <= 0) return null;
       return roundTo(systemPower * 4.5, 2);
     };
-    const estimateKitCost = (suggestedPrice) => {
+    const resolveMarginContext = (systemPower) => {
+      if (marginMode !== 'range') {
+        if (fixedMarginPercent > 0) {
+          return {
+            mode: 'fixed',
+            source: 'fixed',
+            marginPercent: fixedMarginPercent,
+            label: formatPercent(fixedMarginPercent),
+            detail: 'Indicador interno com menor peso visual.',
+            requiresNegotiation: false,
+            hasMatch: true,
+          };
+        }
+
+        return {
+          mode: 'fixed',
+          source: 'default',
+          marginPercent: defaultMarginPercent,
+          label: formatPercent(defaultMarginPercent),
+          detail: 'Sem margem fixa cadastrada. O Solar usa o padrao interno como referencia.',
+          requiresNegotiation: false,
+          hasMatch: true,
+        };
+      }
+
+      if (!Number.isFinite(systemPower) || systemPower <= 0) {
+        return {
+          mode: 'range',
+          source: 'pending',
+          marginPercent: null,
+          label: 'Aguardando potencia',
+          detail: 'A margem por faixa aparece depois que a potencia for calculada.',
+          requiresNegotiation: false,
+          hasMatch: false,
+        };
+      }
+
+      const matchedRange = marginRanges.find((range) => {
+        if (!Number.isFinite(range.minKwp)) return false;
+        if (systemPower < range.minKwp) return false;
+        if (range.maxKwp !== null && Number.isFinite(range.maxKwp) && systemPower > range.maxKwp) return false;
+
+        return true;
+      });
+
+      if (!matchedRange) {
+        return {
+          mode: 'range',
+          source: 'unmatched',
+          marginPercent: null,
+          label: 'Sem faixa',
+          detail: 'Nenhuma faixa cobre a potencia atual do sistema.',
+          requiresNegotiation: false,
+          hasMatch: false,
+        };
+      }
+
+      if (matchedRange.requiresNegotiation) {
+        return {
+          mode: 'range',
+          source: 'range',
+          marginPercent: null,
+          label: 'Negociacao manual',
+          detail: 'Faixa configurada para negociacao manual.',
+          requiresNegotiation: true,
+          hasMatch: true,
+        };
+      }
+
+      return {
+        mode: 'range',
+        source: 'range',
+        marginPercent: matchedRange.marginPercent,
+        label: matchedRange.marginPercent !== null ? formatPercent(matchedRange.marginPercent) : 'Sem margem',
+        detail: 'Faixa de potencia aplicada automaticamente.',
+        requiresNegotiation: false,
+        hasMatch: true,
+      };
+    };
+    const estimateKitCost = (suggestedPrice, marginContext) => {
       if (!Number.isFinite(suggestedPrice) || suggestedPrice <= 0) return null;
-      const effectiveMargin = marginPercent > 0 ? marginPercent : 22;
+      if (marginContext?.mode === 'range' && (marginContext.requiresNegotiation || !marginContext.hasMatch)) {
+        return null;
+      }
+      const effectiveMargin = Number.isFinite(marginContext?.marginPercent) ? marginContext.marginPercent : defaultMarginPercent;
       return roundTo(suggestedPrice / (1 + (effectiveMargin / 100)), 2);
     };
     const estimateGrossProfit = (suggestedPrice, kitCost) => {
@@ -1488,7 +1601,8 @@ const initSolarSizingForm = () => {
       const currentLifetimeSavings = currentAnnualSavings !== null ? roundTo(currentAnnualSavings * 25, 2) : null;
       currentModulesValue = currentModules;
       const currentArea = estimateArea(currentPower);
-      const currentKitCost = estimateKitCost(currentSuggestedPrice);
+      const currentMarginContext = resolveMarginContext(currentPower);
+      const currentKitCost = estimateKitCost(currentSuggestedPrice, currentMarginContext);
       const currentGrossProfit = estimateGrossProfit(currentSuggestedPrice, currentKitCost);
       const currentPaybackMonths = estimatePaybackMonths(currentSuggestedPrice, currentMonthlySavings);
       const currentRoi = estimateRoi(currentSuggestedPrice, currentAnnualSavings);
@@ -1561,13 +1675,21 @@ const initSolarSizingForm = () => {
       if (pricingKitCostPreview instanceof HTMLElement) {
         pricingKitCostPreview.textContent = currentKitCost !== null
           ? formatCurrency(currentKitCost)
-          : 'Aguardando sistema';
+          : currentMarginContext.requiresNegotiation
+            ? 'Negociacao manual'
+            : currentMarginContext.mode === 'range' && !currentMarginContext.hasMatch
+              ? 'Sem faixa'
+              : 'Aguardando sistema';
       }
 
       if (pricingGrossProfitPreview instanceof HTMLElement) {
         pricingGrossProfitPreview.textContent = currentGrossProfit !== null
           ? formatCurrency(currentGrossProfit)
-          : 'Aguardando sistema';
+          : currentMarginContext.requiresNegotiation
+            ? 'Negociacao manual'
+            : currentMarginContext.mode === 'range' && !currentMarginContext.hasMatch
+              ? 'Sem faixa'
+              : 'Aguardando sistema';
       }
 
       if (pricingRoiPreview instanceof HTMLElement) {
@@ -1629,9 +1751,11 @@ const initSolarSizingForm = () => {
       }
 
       if (pricingMarginPreview instanceof HTMLElement) {
-        pricingMarginPreview.textContent = marginPercent > 0
-          ? `${marginPercent.toFixed(2).replace('.', ',')}%`
-          : 'Nao configurada';
+        pricingMarginPreview.textContent = currentMarginContext.label;
+      }
+
+      if (pricingMarginDetailPreview instanceof HTMLElement) {
+        pricingMarginDetailPreview.textContent = currentMarginContext.detail;
       }
 
       if (note instanceof HTMLElement) {
@@ -1645,6 +1769,10 @@ const initSolarSizingForm = () => {
       if (pricingNote instanceof HTMLElement) {
         if (pricingPerKwp <= 0) {
           pricingNote.textContent = 'Preco por kWp indisponivel no momento.';
+        } else if (currentMarginContext.requiresNegotiation) {
+          pricingNote.textContent = 'A potencia atual caiu em uma faixa com negociacao obrigatoria. O preco sugerido continua visivel como referencia, mas custo e lucro precisam de tratativa manual.';
+        } else if (currentMarginContext.mode === 'range' && !currentMarginContext.hasMatch) {
+          pricingNote.textContent = 'Nenhuma faixa de margem cobre a potencia atual. Revise as faixas da empresa ou ajuste a configuracao comercial.';
         } else if (currentSuggestedPrice && currentSuggestedPrice > 0) {
           const savingsSuffix = currentMonthlySavings !== null
             ? ` Economia mensal estimada: ${formatCurrencyMonthly(currentMonthlySavings)}.`
@@ -1652,7 +1780,7 @@ const initSolarSizingForm = () => {
           const sourcePrefix = pricingSource === 'company'
             ? `Pre-orcamento ativo com preco proprio (${formatCurrency(pricingPerKwp)}/kWp): `
             : `Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente. Referencia atual: ${formatCurrency(pricingPerKwp)}/kWp. `;
-          pricingNote.textContent = `${sourcePrefix}${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema.${savingsSuffix}`;
+          pricingNote.textContent = `${sourcePrefix}${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema. Margem considerada: ${currentMarginContext.label}.${savingsSuffix}`;
         } else {
           pricingNote.textContent = 'Informe o consumo mensal para gerar o pre-orcamento automatico.';
         }
@@ -1771,6 +1899,141 @@ const initSolarMarketPriceFill = () => {
       input.value = Number.isFinite(marketValue) ? formatCurrencyBRL(marketValue) : formatCurrencyBRL(4200);
       input.focus();
     });
+  });
+};
+
+const initSolarMarginSettings = () => {
+  const roots = Array.from(document.querySelectorAll('[data-solar-margin-settings]'));
+  if (!roots.length) return;
+
+  roots.forEach((root) => {
+    const form = root.closest('form');
+    const modeInputs = Array.from(root.querySelectorAll('input[name="margin_mode"]'));
+    const modeOptions = Array.from(root.querySelectorAll('[data-margin-mode-option]'));
+    const panels = form ? Array.from(form.querySelectorAll('[data-margin-mode-panel]')) : [];
+    const list = form?.querySelector('[data-margin-ranges-list]');
+    const addButton = form?.querySelector('[data-margin-range-add]');
+    const template = form?.querySelector('[data-margin-range-template]');
+
+    if (!modeInputs.length || !form) return;
+
+    const syncRangeRow = (row) => {
+      if (!(row instanceof HTMLElement)) return;
+
+      const checkbox = row.querySelector('[data-margin-range-negotiation]');
+      const marginInput = row.querySelector('[data-margin-range-margin-input]');
+
+      if (!(checkbox instanceof HTMLInputElement) || !(marginInput instanceof HTMLInputElement)) return;
+
+      marginInput.disabled = checkbox.checked;
+      if (checkbox.checked) {
+        marginInput.value = '';
+      }
+    };
+
+    const syncMode = () => {
+      const selectedMode = modeInputs.find((input) => input instanceof HTMLInputElement && input.checked)?.value || 'fixed';
+
+      modeOptions.forEach((option) => {
+        const input = option.querySelector('input[name="margin_mode"]');
+        option.classList.toggle('is-active', input instanceof HTMLInputElement && input.checked);
+      });
+
+      panels.forEach((panel) => {
+        if (!(panel instanceof HTMLElement)) return;
+        const isActive = panel.getAttribute('data-margin-mode-panel') === selectedMode;
+        panel.hidden = !isActive;
+        panel.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+
+        panel.querySelectorAll('input, select, textarea, button').forEach((field) => {
+          if (!(field instanceof HTMLElement)) return;
+          if (field.closest('[data-margin-mode-option]')) return;
+          if (field.hasAttribute('data-margin-mode-keep-enabled')) return;
+
+          if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement || field instanceof HTMLButtonElement) {
+            field.disabled = !isActive;
+          }
+        });
+      });
+    };
+
+    const reindexRows = () => {
+      if (!(list instanceof HTMLElement)) return;
+
+      Array.from(list.querySelectorAll('[data-margin-range-item]')).forEach((row, index) => {
+        if (!(row instanceof HTMLElement)) return;
+
+        row.querySelectorAll('input, label').forEach((element) => {
+          const currentFor = element.getAttribute('for');
+          if (currentFor) {
+            element.setAttribute('for', currentFor.replace(/margin_ranges_\d+_/g, `margin_ranges_${index}_`));
+          }
+
+          if (!(element instanceof HTMLInputElement)) return;
+
+          const currentName = element.getAttribute('name');
+          if (currentName) {
+            element.setAttribute('name', currentName.replace(/margin_ranges\[\d+\]/g, `margin_ranges[${index}]`));
+          }
+
+          const currentId = element.getAttribute('id');
+          if (currentId) {
+            element.setAttribute('id', currentId.replace(/margin_ranges_\d+_/g, `margin_ranges_${index}_`));
+          }
+        });
+      });
+    };
+
+    const bindRangeRow = (row) => {
+      if (!(row instanceof HTMLElement)) return;
+
+      const checkbox = row.querySelector('[data-margin-range-negotiation]');
+      const removeButton = row.querySelector('[data-margin-range-remove]');
+
+      if (checkbox instanceof HTMLInputElement) {
+        checkbox.addEventListener('change', () => {
+          syncRangeRow(row);
+        });
+      }
+
+      if (removeButton instanceof HTMLButtonElement) {
+        removeButton.addEventListener('click', () => {
+          row.remove();
+          reindexRows();
+        });
+      }
+
+      syncRangeRow(row);
+    };
+
+    modeInputs.forEach((input) => {
+      if (!(input instanceof HTMLInputElement)) return;
+      input.addEventListener('change', syncMode);
+    });
+
+    if (addButton instanceof HTMLButtonElement && list instanceof HTMLElement && template instanceof HTMLTemplateElement) {
+      addButton.setAttribute('data-margin-mode-keep-enabled', 'true');
+      addButton.addEventListener('click', () => {
+        const index = list.querySelectorAll('[data-margin-range-item]').length;
+        const html = template.innerHTML.replaceAll('__INDEX__', String(index));
+        const fragment = document.createRange().createContextualFragment(html);
+        const row = fragment.querySelector('[data-margin-range-item]');
+
+        list.appendChild(fragment);
+
+        if (row instanceof HTMLElement) {
+          bindRangeRow(row);
+        }
+
+        reindexRows();
+      });
+    }
+
+    if (list instanceof HTMLElement) {
+      Array.from(list.querySelectorAll('[data-margin-range-item]')).forEach((row) => bindRangeRow(row));
+    }
+
+    syncMode();
   });
 };
 
@@ -2315,6 +2578,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initZipCodeLookup();
   initSolarSizingForm();
   initSolarMarketPriceFill();
+  initSolarMarginSettings();
   initEnergyUtilityAutoSelect();
   initSolarProjectShowcase();
   initErrorEasterEggs();

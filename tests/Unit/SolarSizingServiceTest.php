@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Modules\Solar\Models\SolarCompanyMarginRange;
+use App\Modules\Solar\Models\SolarCompanySetting;
 use App\Modules\Solar\Services\SolarSizingService;
 use Tests\TestCase;
 
@@ -109,5 +111,78 @@ class SolarSizingServiceTest extends TestCase
         $this->assertSame('module', $blueprint['modules']['category']);
         $this->assertArrayHasKey('inverter', $blueprint);
         $this->assertSame('Inversor', $blueprint['inverter']['label']);
+    }
+
+    public function test_it_resolves_fixed_margin_mode(): void
+    {
+        $service = new SolarSizingService();
+        $setting = new SolarCompanySetting([
+            'margin_mode' => SolarCompanySetting::MARGIN_MODE_FIXED,
+            'margin_percent' => 18,
+        ]);
+
+        $context = $service->resolveMarginContext($setting, 42.5);
+
+        $this->assertSame('fixed', $context['mode']);
+        $this->assertSame('fixed', $context['source']);
+        $this->assertSame(18.0, $context['margin_percent']);
+        $this->assertTrue($context['has_match']);
+        $this->assertFalse($context['requires_negotiation']);
+    }
+
+    public function test_it_resolves_margin_ranges_by_system_power(): void
+    {
+        $service = new SolarSizingService();
+        $setting = new SolarCompanySetting([
+            'margin_mode' => SolarCompanySetting::MARGIN_MODE_RANGE,
+        ]);
+        $setting->setRelation('marginRanges', collect([
+            new SolarCompanyMarginRange([
+                'min_kwp' => 0,
+                'max_kwp' => 50,
+                'margin_percent' => 40,
+                'requires_negotiation' => false,
+                'sort_order' => 0,
+            ]),
+            new SolarCompanyMarginRange([
+                'min_kwp' => 50.01,
+                'max_kwp' => 90,
+                'margin_percent' => 20,
+                'requires_negotiation' => false,
+                'sort_order' => 1,
+            ]),
+        ]));
+
+        $context = $service->resolveMarginContext($setting, 68);
+
+        $this->assertSame('range', $context['mode']);
+        $this->assertSame('range', $context['source']);
+        $this->assertSame(20.0, $context['margin_percent']);
+        $this->assertTrue($context['has_match']);
+        $this->assertFalse($context['requires_negotiation']);
+        $this->assertSame(50.01, $context['range']['min_kwp']);
+    }
+
+    public function test_it_marks_negotiation_ranges_as_manual(): void
+    {
+        $service = new SolarSizingService();
+        $setting = new SolarCompanySetting([
+            'margin_mode' => SolarCompanySetting::MARGIN_MODE_RANGE,
+        ]);
+        $setting->setRelation('marginRanges', collect([
+            new SolarCompanyMarginRange([
+                'min_kwp' => 120,
+                'max_kwp' => null,
+                'margin_percent' => null,
+                'requires_negotiation' => true,
+                'sort_order' => 0,
+            ]),
+        ]));
+
+        $context = $service->resolveMarginContext($setting, 150);
+
+        $this->assertTrue($context['has_match']);
+        $this->assertTrue($context['requires_negotiation']);
+        $this->assertNull($service->estimateKitCostForMarginContext(500000, $context));
     }
 }

@@ -492,6 +492,7 @@ class ProjectController extends Controller
     private function companySetting(Company $company): ?SolarCompanySetting
     {
         return SolarCompanySetting::query()
+            ->with('marginRanges')
             ->where('company_id', $company->id)
             ->first();
     }

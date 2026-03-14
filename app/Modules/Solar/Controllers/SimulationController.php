@@ -43,6 +43,10 @@ class SimulationController extends Controller
     public function show(Request $request, int $simulation): View
     {
         $company = $this->resolveCurrentCompany($request);
+        $companySetting = SolarCompanySetting::query()
+            ->with('marginRanges')
+            ->where('company_id', $company->id)
+            ->first();
         $simulationRecord = SolarSimulation::query()
             ->with([
                 'project.customer',
@@ -57,6 +61,8 @@ class SimulationController extends Controller
             'pageDescription' => 'Leitura tecnica e comercial da simulacao solar selecionada.',
             'navigationItems' => $this->navigation->items(),
             'company' => $company,
+            'companySetting' => $companySetting,
+            'marginContext' => $this->sizing->resolveMarginContext($companySetting, $simulationRecord->system_power_kwp),
             'simulation' => $simulationRecord,
             'project' => $simulationRecord->project,
             'latestQuote' => $simulationRecord->quotes->first(),

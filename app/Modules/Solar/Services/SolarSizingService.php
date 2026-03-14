@@ -2,6 +2,7 @@
 
 namespace App\Modules\Solar\Services;
 
+use App\Modules\Solar\Models\SolarCompanyMarginRange;
 use App\Modules\Solar\Models\SolarCompanySetting;
 use App\Modules\Solar\Models\SolarMarketDefault;
 use Throwable;
@@ -44,7 +45,7 @@ class SolarSizingService
         'SP' => 4310.0,
         'TO' => 4440.0,
     ];
-    private const DEFAULT_GROSS_MARGIN_PERCENT = 22.0;
+    public const DEFAULT_GROSS_MARGIN_PERCENT = 22.0;
     private const MARKET_COMPONENT_SHARE = [
         'modules' => 0.50,
         'inverter' => 0.20,
@@ -286,6 +287,105 @@ class SolarSizingService
         return round($powerKwp * $price, 2);
     }
 
+    /**
+     * @return array{
+     *     mode: string,
+     *     source: string,
+     *     power_kwp: ?float,
+     *     margin_percent: ?float,
+     *     requires_negotiation: bool,
+     *     has_match: bool,
+     *     uses_default_margin: bool,
+     *     range: ?array{
+     *         id: ?int,
+     *         min_kwp: float,
+     *         max_kwp: ?float,
+     *         margin_percent: ?float,
+     *         requires_negotiation: bool
+     *     }
+     * }
+     */
+    public function resolveMarginContext(
+        ?SolarCompanySetting $setting,
+        float|int|string|null $systemPowerKwp,
+    ): array {
+        $power = $systemPowerKwp !== null && $systemPowerKwp !== '' ? round((float) $systemPowerKwp, 2) : null;
+        $mode = $setting?->margin_mode === SolarCompanySetting::MARGIN_MODE_RANGE
+            ? SolarCompanySetting::MARGIN_MODE_RANGE
+            : SolarCompanySetting::MARGIN_MODE_FIXED;
+
+        if ($mode === SolarCompanySetting::MARGIN_MODE_RANGE) {
+            if ($power === null || $power <= 0) {
+                return [
+                    'mode' => $mode,
+                    'source' => 'pending',
+                    'power_kwp' => $power,
+                    'margin_percent' => null,
+                    'requires_negotiation' => false,
+                    'has_match' => false,
+                    'uses_default_margin' => false,
+                    'range' => null,
+                ];
+            }
+
+            $ranges = $this->resolveMarginRanges($setting);
+
+            foreach ($ranges as $range) {
+                $minKwp = round((float) $range->min_kwp, 2);
+                $maxKwp = $range->max_kwp !== null ? round((float) $range->max_kwp, 2) : null;
+
+                if ($power < $minKwp) {
+                    continue;
+                }
+
+                if ($maxKwp !== null && $power > $maxKwp) {
+                    continue;
+                }
+
+                return [
+                    'mode' => $mode,
+                    'source' => 'range',
+                    'power_kwp' => $power,
+                    'margin_percent' => $range->margin_percent !== null ? round((float) $range->margin_percent, 2) : null,
+                    'requires_negotiation' => (bool) $range->requires_negotiation,
+                    'has_match' => true,
+                    'uses_default_margin' => false,
+                    'range' => [
+                        'id' => $range->getKey(),
+                        'min_kwp' => $minKwp,
+                        'max_kwp' => $maxKwp,
+                        'margin_percent' => $range->margin_percent !== null ? round((float) $range->margin_percent, 2) : null,
+                        'requires_negotiation' => (bool) $range->requires_negotiation,
+                    ],
+                ];
+            }
+
+            return [
+                'mode' => $mode,
+                'source' => 'unmatched',
+                'power_kwp' => $power,
+                'margin_percent' => null,
+                'requires_negotiation' => false,
+                'has_match' => false,
+                'uses_default_margin' => false,
+                'range' => null,
+            ];
+        }
+
+        $marginPercent = $setting?->margin_percent !== null ? round((float) $setting->margin_percent, 2) : null;
+
+        return [
+            'mode' => $mode,
+            'source' => $marginPercent !== null ? 'fixed' : 'default',
+            'power_kwp' => $power,
+            'margin_percent' => $marginPercent,
+            'requires_negotiation' => false,
+            'has_match' => true,
+            'uses_default_margin' => $marginPercent === null,
+            'range' => null,
+        ];
+    }
+
     public function estimateMonthlySavings(float|int|string|null $energyBillValue): ?float
     {
         if ($energyBillValue === null || $energyBillValue === '') {
@@ -404,6 +504,27 @@ class SolarSizingService
     }
 
     /**
+     * @param array{
+     *     mode?: string,
+     *     margin_percent?: ?float,
+     *     requires_negotiation?: bool,
+     *     has_match?: bool
+     * } $marginContext
+     */
+    public function estimateKitCostForMarginContext(
+        float|int|string|null $suggestedPrice,
+        array $marginContext,
+    ): ?float {
+        if (($marginContext['mode'] ?? SolarCompanySetting::MARGIN_MODE_FIXED) === SolarCompanySetting::MARGIN_MODE_RANGE) {
+            if (($marginContext['requires_negotiation'] ?? false) || ! ($marginContext['has_match'] ?? false)) {
+                return null;
+            }
+        }
+
+        return $this->estimateKitCost($suggestedPrice, $marginContext['margin_percent'] ?? null);
+    }
+
+    /**
      * @return array{modules: ?float, inverter: ?float, structure: ?float, installation: ?float}
      */
     public function estimateKitCostBreakdown(float|int|string|null $kitCost): array
@@ -439,6 +560,28 @@ class SolarSizingService
         }
 
         return round($price - $cost, 2);
+    }
+
+    /**
+     * @return list<SolarCompanyMarginRange>
+     */
+    private function resolveMarginRanges(?SolarCompanySetting $setting): array
+    {
+        if (! $setting instanceof SolarCompanySetting) {
+            return [];
+        }
+
+        if ($setting->relationLoaded('marginRanges')) {
+            /** @var list<SolarCompanyMarginRange> $ranges */
+            $ranges = $setting->marginRanges->all();
+
+            return $ranges;
+        }
+
+        /** @var list<SolarCompanyMarginRange> $ranges */
+        $ranges = $setting->marginRanges()->get()->all();
+
+        return $ranges;
     }
 
     public function estimatePaybackMonths(

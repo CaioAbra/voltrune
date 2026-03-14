@@ -212,6 +212,7 @@
                             'lost' => 'Perdido',
                             default => strtoupper((string) $quote->status),
                         };
+                        $resolvedFinalPrice = $quote->items->isNotEmpty() ? $quote->itemsTotalPrice() : $quote->final_price;
                     @endphp
                     <article class="solar-project-simulation-card">
                         <div class="solar-project-simulation-card__header">
@@ -226,7 +227,7 @@
                             <p class="hub-note solar-project-simulation-card__summary">{{ $quote->simulation?->name ?: 'Sem simulacao vinculada' }}</p>
 
                             <div class="solar-project-simulation-card__metrics">
-                                <span><strong>Preco final</strong>{{ $quote->final_price ? 'R$ ' . number_format((float) $quote->final_price, 2, ',', '.') : '-' }}</span>
+                                <span><strong>Preco final</strong>{{ $resolvedFinalPrice ? 'R$ ' . number_format((float) $resolvedFinalPrice, 2, ',', '.') : '-' }}</span>
                                 <span><strong>Itens</strong>{{ $quote->items->count() }}</span>
                                 <span><strong>Economia</strong>{{ $quote->estimated_savings ? 'R$ ' . number_format((float) $quote->estimated_savings, 2, ',', '.') . '/mes' : '-' }}</span>
                                 <span><strong>Status</strong>{{ $quoteStatusLabel }}</span>

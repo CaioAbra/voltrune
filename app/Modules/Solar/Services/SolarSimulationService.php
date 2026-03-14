@@ -95,7 +95,8 @@ class SolarSimulationService
         $lifetimeSavings = $this->sizing->estimateLifetimeSavings($project->energy_bill_value);
         $areaEstimated = $this->sizing->estimateAreaFromModules($moduleQuantity)
             ?: $this->sizing->estimateAreaSquareMeters($systemPower);
-        $kitCost = $this->sizing->estimateKitCost($price, $companySetting?->margin_percent);
+        $marginContext = $this->sizing->resolveMarginContext($companySetting, $systemPower);
+        $kitCost = $this->sizing->estimateKitCostForMarginContext($price, $marginContext);
         $kitBreakdown = $this->sizing->estimateKitCostBreakdown($kitCost);
 
         return [

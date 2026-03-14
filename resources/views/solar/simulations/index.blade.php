@@ -39,13 +39,13 @@
                             default => strtoupper((string) $simulation->status),
                         };
                     @endphp
-                    <article class="solar-project-simulation-card {{ $loop->first ? 'is-primary' : '' }}">
+                    <article class="solar-project-simulation-card">
                         <div class="solar-project-simulation-card__header">
                             <div>
-                                <span class="solar-project-simulation-card__eyebrow">{{ $loop->first ? 'Simulacao principal' : 'Simulacao' }}</span>
+                                <span class="solar-project-simulation-card__eyebrow">Simulacao</span>
                                 <h3>{{ $simulation->name }}</h3>
                             </div>
-                            <span class="solar-mini-badge {{ $loop->first ? 'solar-mini-badge--editable' : 'solar-mini-badge--automatic' }}">{{ $simulationStatusLabel }}</span>
+                            <span class="solar-mini-badge solar-mini-badge--automatic">{{ $simulationStatusLabel }}</span>
                         </div>
 
                         <div class="solar-project-simulation-card__body">

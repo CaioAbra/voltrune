@@ -98,7 +98,7 @@
             </div>
         </section>
 
-        <div class="hub-grid solar-project-show__grid">
+        <div class="hub-grid solar-project-show__grid solar-project-show__grid--quote-summary">
             <section class="hub-card hub-card--subtle solar-project-show__card">
                 <p class="solar-section-eyebrow">Resumo da proposta</p>
                 <h2>Dados comerciais e origem</h2>
@@ -114,7 +114,7 @@
             </section>
 
             <section class="hub-card hub-card--subtle solar-flow-section">
-                <div class="solar-flow-section__header">
+                <div class="solar-flow-section__header solar-flow-section__header--stacked-md">
                     <div>
                         <p class="solar-section-eyebrow">Edicao</p>
                         <h2>Ajustes da proposta</h2>
@@ -126,7 +126,7 @@
                     @csrf
                     @method('PUT')
 
-                    <div class="hub-grid">
+                    <div class="hub-grid solar-quote-item-form__grid solar-quote-item-form__grid--duo">
                         <div>
                             <label class="hub-auth-label" for="quote-title">Titulo da proposta</label>
                             <input id="quote-title" name="title" type="text" class="hub-auth-input" value="{{ old('title', $quote->title) }}" required>
@@ -173,20 +173,30 @@
             </section>
         </div>
 
-        <div class="hub-grid solar-project-show__grid">
-            <section id="adicionar-item" class="hub-card hub-card--subtle solar-flow-section solar-pricing-panel">
-                <div class="solar-flow-section__header">
-                    <div>
+        <div class="hub-grid solar-project-show__grid solar-project-show__grid--quote-composer">
+            <section id="adicionar-item" class="hub-card hub-card--subtle solar-flow-section solar-pricing-panel solar-quote-item-panel">
+                <div class="solar-flow-section__header solar-quote-item-panel__header">
+                    <div class="solar-quote-item-panel__lead">
                         <p class="solar-section-eyebrow">Adicionar item</p>
-                        <h2>Material ou servico</h2>
-                        <p class="hub-note">Monte a proposta com modulos, inversor, estrutura, cabeamento, instalacao e servicos complementares.</p>
+                        <div class="solar-quote-item-panel__intro">
+                            <h2 class="solar-quote-item-panel__title">Material ou servico</h2>
+
+                            <div class="solar-quote-item-panel__support">
+                                <p class="hub-note">Monte a proposta com modulos, inversor, estrutura, cabeamento, instalacao e servicos complementares.</p>
+                                <div class="solar-quote-item-panel__tags">
+                                    <span class="solar-mini-badge solar-mini-badge--automatic">Kit</span>
+                                    <span class="solar-mini-badge">Servico</span>
+                                    <span class="solar-mini-badge">Custo e venda</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <form action="{{ route('solar.quotes.items.store', $quote->id) }}" method="POST" class="hub-auth-form">
+                <form action="{{ route('solar.quotes.items.store', $quote->id) }}" method="POST" class="hub-auth-form solar-quote-item-form">
                     @csrf
 
-                    <div class="hub-grid">
+                    <div class="hub-grid solar-quote-item-form__grid solar-quote-item-form__grid--duo">
                         <div>
                             <label class="hub-auth-label" for="item-type">Tipo</label>
                             <select id="item-type" name="type" class="hub-auth-input" required>
@@ -216,7 +226,7 @@
                         <textarea id="item-description" name="description" rows="3" class="hub-auth-input">{{ old('description') }}</textarea>
                     </div>
 
-                    <div class="hub-grid">
+                    <div class="hub-grid solar-quote-item-form__grid solar-quote-item-form__grid--metrics">
                         <div>
                             <label class="hub-auth-label" for="item-quantity">Quantidade</label>
                             <input id="item-quantity" name="quantity" type="number" step="0.01" min="0.01" class="hub-auth-input" value="{{ old('quantity', '1') }}" required>
@@ -238,7 +248,7 @@
             </section>
 
             <section class="hub-card hub-card--subtle solar-project-show__card">
-                <div class="solar-flow-section__header">
+                <div class="solar-flow-section__header solar-flow-section__header--stacked-md">
                     <div>
                         <p class="solar-section-eyebrow">Itens do orcamento</p>
                         <h2>Composicao de materiais e servicos</h2>
@@ -251,7 +261,7 @@
                 </div>
 
                 <div class="solar-table-wrap">
-                    <table class="hub-table solar-table">
+                    <table class="hub-table solar-table solar-table--quote-items">
                         <thead>
                             <tr>
                                 <th>Tipo</th>

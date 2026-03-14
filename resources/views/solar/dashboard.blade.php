@@ -3,29 +3,59 @@
 @section('title', 'Solar | Voltrune')
 
 @section('solar-content')
-    <section class="hub-grid">
-        <article class="hub-card">
-            <h2>Projetos</h2>
-            <p>Organize os locais de instalação por cliente, endereço, consumo e contexto técnico da operação.</p>
-            <a href="{{ route('solar.projects.index') }}" class="hub-btn">Abrir projetos</a>
-        </article>
+    <section class="solar-page-shell">
+        <section class="hub-card hub-card--subtle solar-page-intro">
+            <div class="solar-page-intro__header">
+                <div class="solar-page-intro__copy">
+                    <p class="solar-section-eyebrow">Operacao comercial</p>
+                    <h2>Fluxo de venda para energia solar</h2>
+                    <p class="hub-note">O Solar foi organizado para quem precisa sair do lead ao orcamento com velocidade, leitura tecnica clara e discurso comercial consistente.</p>
+                </div>
 
-        <article class="hub-card">
-            <h2>Clientes</h2>
-            <p>Base comercial dos clientes do Solar para iniciar propostas com mais agilidade.</p>
-            <a href="{{ route('solar.customers.index') }}" class="hub-btn">Abrir clientes</a>
-        </article>
+                <div class="solar-page-intro__meta">
+                    <span class="solar-project-showcase__status-label">Jornada recomendada</span>
+                    <strong>Cliente -> projeto -> simulacao -> proposta</strong>
+                    <p>Entre no modulo certo de acordo com o estagio da venda e mantenha o contexto da operacao em cada etapa.</p>
+                </div>
+            </div>
+        </section>
 
-        <article class="hub-card">
-            <h2>Simulações</h2>
-            <p>Espaço reservado para evoluir simulações técnicas e comerciais da operação solar.</p>
-            <a href="{{ route('solar.simulations.index') }}" class="hub-btn">Abrir simulações</a>
-        </article>
+        <section class="solar-page-grid solar-page-grid--cards">
+            <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Base comercial</span>
+                <div>
+                    <h3>Clientes</h3>
+                    <p>Cadastre contratantes e mantenha a base pronta para abrir novos projetos sem retrabalho.</p>
+                </div>
+                <a href="{{ route('solar.customers.index') }}" class="hub-btn">Abrir clientes</a>
+            </article>
 
-        <article class="hub-card">
-            <h2>Orçamentos</h2>
-            <p>Área inicial para estruturar geração, acompanhamento e fechamento comercial dos orçamentos.</p>
-            <a href="{{ route('solar.quotes.index') }}" class="hub-btn">Abrir orçamentos</a>
-        </article>
+            <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Entrada do funil</span>
+                <div>
+                    <h3>Projetos</h3>
+                    <p>Organize local, consumo e contexto da instalacao para preparar o dimensionamento automatico.</p>
+                </div>
+                <a href="{{ route('solar.projects.index') }}" class="hub-btn">Abrir projetos</a>
+            </article>
+
+            <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Analise tecnica</span>
+                <div>
+                    <h3>Simulacoes</h3>
+                    <p>Compare potencia, economia e preco sugerido antes de transformar um cenario em proposta.</p>
+                </div>
+                <a href="{{ route('solar.simulations.index') }}" class="hub-btn">Abrir simulacoes</a>
+            </article>
+
+            <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Fechamento</span>
+                <div>
+                    <h3>Orcamentos</h3>
+                    <p>Consolide materiais, servicos, preco final e status comercial para avancar a negociacao.</p>
+                </div>
+                <a href="{{ route('solar.quotes.index') }}" class="hub-btn">Abrir orcamentos</a>
+            </article>
+        </section>
     </section>
 @endsection
