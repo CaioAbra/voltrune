@@ -1,8 +1,8 @@
 @php
     $statusLabels = [
-        'draft' => 'Rascunho',
-        'qualified' => 'Qualificado',
-        'proposal' => 'Proposta',
+        'draft' => 'Base em montagem',
+        'qualified' => 'Em revisao',
+        'proposal' => 'Pronto para orcamento',
         'won' => 'Fechado',
     ];
     $sizingService = app(\App\Modules\Solar\Services\SolarSizingService::class);
@@ -96,6 +96,62 @@
         'default' => 'Sem margem fixa cadastrada. O Solar usa o padrao interno como referencia.',
         default => 'Indicador interno com menor peso visual.',
     };
+    $currentMonthlyConsumption = old('monthly_consumption_kwh', $project->monthly_consumption_kwh);
+    $defaultModulePowerValue = $companySetting?->default_module_power ?: 550;
+    $autoSystemPower = $currentMonthlyConsumption !== null && $currentMonthlyConsumption !== ''
+        ? $sizingService->estimateRequiredPowerKwp((float) $currentMonthlyConsumption, $resolvedSolarFactor)
+        : null;
+    $powerReferenceForAutomation = $initialSystemPower ?: $autoSystemPower;
+    $autoModuleQuantity = $powerReferenceForAutomation !== null
+        ? $sizingService->estimateModuleQuantity((float) $powerReferenceForAutomation, (int) $defaultModulePower)
+        : null;
+    $autoGeneration = $powerReferenceForAutomation !== null
+        ? $sizingService->estimateGenerationKwh((float) $powerReferenceForAutomation, $resolvedSolarFactor)
+        : null;
+    $autoSuggestedPrice = $powerReferenceForAutomation !== null
+        ? $sizingService->estimateSuggestedPrice((float) $powerReferenceForAutomation, (float) $effectivePricePerKwp)
+        : null;
+    $defaultInverterReference = $companySetting?->default_inverter_model ?: null;
+    $numbersDiffer = static fn ($left, $right, float $precision = 0.01): bool => $left !== null
+        && $right !== null
+        && abs((float) $left - (float) $right) > $precision;
+    $stringsDiffer = static fn ($left, $right): bool => trim((string) $left) !== ''
+        && trim((string) $right) !== ''
+        && mb_strtolower(trim((string) $left)) !== mb_strtolower(trim((string) $right));
+    $fieldOrigins = [
+        'system_power' => $autoSystemPower === null
+            ? ['label' => 'Potencia do sistema', 'state' => 'pending', 'badge' => 'Aguardando consumo', 'detail' => 'Informe o consumo mensal para liberar a sugestao automatica.']
+            : ($numbersDiffer($initialSystemPower, $autoSystemPower)
+                ? ['label' => 'Potencia do sistema', 'state' => 'manual', 'badge' => 'Manual agora', 'detail' => 'O valor atual nao segue mais a potencia sugerida pelo consumo.']
+                : ['label' => 'Potencia do sistema', 'state' => 'automatic', 'badge' => 'Automatico agora', 'detail' => 'Segue a leitura automatica de consumo e fator solar.']),
+        'module_power' => $stringsDiffer((string) $defaultModulePower, (string) $defaultModulePowerValue)
+            ? ['label' => 'Potencia do modulo', 'state' => 'manual', 'badge' => 'Manual agora', 'detail' => 'A potencia atual do modulo foi alterada em relacao ao padrao da empresa.']
+            : ['label' => 'Potencia do modulo', 'state' => 'base', 'badge' => 'Padrao da empresa', 'detail' => 'Segue o padrao comercial configurado para o modulo.'],
+        'module_quantity' => $autoModuleQuantity === null
+            ? ['label' => 'Quantidade de modulos', 'state' => 'pending', 'badge' => 'Aguardando sistema', 'detail' => 'A quantidade aparece depois do calculo de potencia.']
+            : ($numbersDiffer($initialModuleQuantity, $autoModuleQuantity, 0.5)
+                ? ['label' => 'Quantidade de modulos', 'state' => 'manual', 'badge' => 'Manual agora', 'detail' => 'A quantidade atual nao segue mais a composicao automatica.']
+                : ['label' => 'Quantidade de modulos', 'state' => 'automatic', 'badge' => 'Automatico agora', 'detail' => 'Segue a composicao automatica derivada da potencia atual.']),
+        'generation' => $autoGeneration === null
+            ? ['label' => 'Geracao estimada', 'state' => 'pending', 'badge' => 'Aguardando sistema', 'detail' => 'A geracao estimada depende da potencia calculada.']
+            : ($numbersDiffer($initialGeneration, $autoGeneration)
+                ? ['label' => 'Geracao estimada', 'state' => 'manual', 'badge' => 'Manual agora', 'detail' => 'A geracao atual foi ajustada em relacao a leitura automatica.']
+                : ['label' => 'Geracao estimada', 'state' => 'automatic', 'badge' => 'Automatico agora', 'detail' => 'Segue a leitura automatica de potencia e fator solar.']),
+        'inverter' => $defaultInverterReference !== null && $stringsDiffer($defaultInverterModel, $defaultInverterReference)
+            ? ['label' => 'Modelo do inversor', 'state' => 'manual', 'badge' => 'Manual agora', 'detail' => 'O inversor atual foi trocado em relacao ao padrao da empresa.']
+            : ['label' => 'Modelo do inversor', 'state' => 'base', 'badge' => 'Padrao da empresa', 'detail' => 'Segue o modelo de inversor sugerido como ponto de partida.'],
+        'suggested_price' => $autoSuggestedPrice === null
+            ? ['label' => 'Orcamento inicial', 'state' => 'pending', 'badge' => 'Aguardando sistema', 'detail' => 'O valor sugerido depende da potencia e da referencia por kWp.']
+            : ($numbersDiffer($initialSuggestedPrice, $autoSuggestedPrice)
+                ? ['label' => 'Orcamento inicial', 'state' => 'manual', 'badge' => 'Manual agora', 'detail' => 'O valor atual nao segue mais a leitura automatica de potencia e preco por kWp.']
+                : ['label' => 'Orcamento inicial', 'state' => 'automatic', 'badge' => 'Automatico agora', 'detail' => 'Segue a referencia automatica de potencia, margem e preco por kWp.']),
+    ];
+    $manualOriginCount = collect($fieldOrigins)->where('state', 'manual')->count();
+    $shouldOpenCommercialReview = $project->exists
+        || ($initialSuggestedPrice !== null && $initialSuggestedPrice !== '')
+        || $initialMonthlySavings !== null
+        || old('monthly_consumption_kwh') !== null
+        || old('energy_bill_value') !== null;
 @endphp
 
 <div
@@ -119,9 +175,9 @@
     <section class="hub-card hub-card--subtle solar-system-hero">
         <div class="solar-system-hero__header">
             <div>
-                <p class="solar-section-eyebrow">Resumo do sistema</p>
-                <h3 data-project-summary-name>{{ old('name', $project->name ?: 'Projeto solar em preparacao') }}</h3>
-                <p class="hub-note">Leitura comercial rapida para fechar a proposta com mais confianca.</p>
+                <p class="solar-section-eyebrow">Projeto solar</p>
+                <h3 data-project-summary-name>{{ old('name', $project->name ?: 'Novo projeto em andamento') }}</h3>
+                <p class="hub-note">Preencha o essencial primeiro. Depois revise a sugestao do sistema e a leitura inicial do orcamento.</p>
                 <div class="solar-system-hero__context">
                     <span class="solar-system-hero__context-item">
                         <strong>Cliente</strong>
@@ -135,14 +191,10 @@
             </div>
 
             <div class="solar-system-hero__status {{ $usesMarketPriceFallback ? 'is-market' : 'is-ready' }}">
-                <span class="solar-system-hero__status-label">Automacao comercial</span>
-                <strong>{{ $usesMarketPriceFallback ? 'Media de mercado ativa' : 'Preco proprio ativo' }}</strong>
+                <span class="solar-system-hero__status-label">Passo a passo</span>
+                <strong>Cliente, local e consumo primeiro</strong>
                 <p>
-                    {{ match ($pricingSource) {
-                        'company' => 'O Solar esta usando o preco por kWp da empresa para gerar a previa automatica.',
-                        'regional' => 'Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.',
-                        default => 'Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.',
-                    } }}
+                    O Solar atualiza a sugestao de sistema e a leitura inicial do orcamento conforme voce preenche os dados base do projeto.
                 </p>
                 <a href="{{ route('solar.settings.edit') }}" class="hub-btn hub-btn--subtle">Configuracoes comerciais</a>
             </div>
@@ -164,9 +216,9 @@
             </article>
 
             <article class="solar-system-hero-metric solar-system-hero-metric--highlight">
-                <span class="solar-summary-metric__label">Preco sugerido</span>
+                <span class="solar-summary-metric__label">Orcamento inicial</span>
                 <strong class="solar-summary-metric__value" data-project-summary="price">
-                    {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando pre-orcamento' }}
+                    {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando consumo' }}
                 </strong>
             </article>
 
@@ -179,66 +231,98 @@
         </div>
     </section>
 
-    <section class="hub-card hub-card--subtle solar-technical-panel">
-        <div class="solar-flow-section__header">
+    <section class="hub-card hub-card--subtle solar-flow-section">
+        <div class="solar-flow-section__header solar-flow-section__header--stacked-md">
             <div>
-                <p class="solar-section-eyebrow">Dados tecnicos do dimensionamento</p>
-                <h3>Contexto tecnico e confianca da automacao</h3>
+                <p class="solar-section-eyebrow">Comece pelo essencial</p>
+                <h3>Preencha primeiro o que destrava o restante</h3>
+                <p class="hub-note">Se esta for a primeira passagem pelo projeto, foque nestes tres pontos. O resto pode ser revisado depois.</p>
             </div>
-            <p class="hub-note">Base tecnica da simulacao com menor peso visual.</p>
         </div>
 
-        <div class="solar-technical-panel__grid">
-            <span class="solar-technical-panel__signal">
-                <strong>Fator solar</strong>
-                <span data-solar-factor-display>{{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mes</span>
-            </span>
-            <span class="solar-technical-panel__signal">
-                <strong>Radiacao solar</strong>
-                <span data-solar-radiation-display>{{ number_format($equivalentSolarRadiationDaily, 2, ',', '.') }} kWh/m2/dia</span>
-            </span>
-            <span class="solar-technical-panel__signal">
-                <strong>Origem</strong>
-                <span data-solar-factor-source-display>{{ strtoupper($resolvedSolarFactorSource === 'pvgis' ? 'PVGIS' : 'padrao') }}</span>
-            </span>
-            <span class="solar-technical-panel__signal">
-                <strong>Precisao</strong>
-                <span data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
-            </span>
-            <span class="solar-technical-panel__signal">
-                <strong>Margem aplicada</strong>
-                <span data-pricing-preview="margin">{{ $initialMarginLabel }}</span>
-            </span>
-            <span class="solar-technical-panel__signal">
-                <strong>Preco por kWp</strong>
-                <span data-pricing-preview="rate">{{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}</span>
-            </span>
-            <span class="solar-technical-panel__signal">
-                <strong>Geolocalizacao</strong>
-                <span data-geocoding-status>{{ $geocodingStatusLabel }}</span>
-            </span>
-            <span class="solar-technical-panel__signal">
-                <strong>Status da automacao</strong>
-                <span class="solar-status-pill" data-automation-sync-status>Pronto</span>
-            </span>
-            <span class="solar-technical-panel__fallback solar-technical-panel__signal" data-solar-factor-message @if (($solarFactorData['message'] ?? null) === null) hidden @endif>
-                {{ $solarFactorData['message'] }}
-            </span>
+        <div class="solar-composition-list">
+            <article class="solar-composition-item">
+                <span class="solar-composition-item__label">1. Cliente</span>
+                <strong class="solar-composition-item__value">Selecione quem esta sendo atendido.</strong>
+            </article>
+            <article class="solar-composition-item">
+                <span class="solar-composition-item__label">2. Local</span>
+                <strong class="solar-composition-item__value">Preencha CEP, cidade, UF e dados basicos da instalacao.</strong>
+            </article>
+            <article class="solar-composition-item">
+                <span class="solar-composition-item__label">3. Consumo</span>
+                <strong class="solar-composition-item__value">Informe consumo e conta de energia para destravar a leitura inicial.</strong>
+            </article>
         </div>
     </section>
+
+    <details class="solar-flow-disclosure">
+        <summary class="solar-flow-disclosure__summary">
+            <span>Ver detalhes da automacao</span>
+            <small>Fator solar, geolocalizacao, margem e origem do preco</small>
+        </summary>
+
+        <section class="hub-card hub-card--subtle solar-technical-panel solar-flow-disclosure__panel">
+            <div class="solar-flow-section__header">
+                <div>
+                    <p class="solar-section-eyebrow">Detalhes da automacao</p>
+                    <h3>Contexto tecnico e confianca da leitura inicial</h3>
+                </div>
+                <p class="hub-note">Use este bloco quando precisar validar origem do preco, fator solar e status da geolocalizacao.</p>
+            </div>
+
+            <div class="solar-technical-panel__grid">
+                <span class="solar-technical-panel__signal">
+                    <strong>Fator solar</strong>
+                    <span data-solar-factor-display>{{ number_format($resolvedSolarFactor, 2, ',', '.') }} kWh/kWp/mes</span>
+                </span>
+                <span class="solar-technical-panel__signal">
+                    <strong>Radiacao solar</strong>
+                    <span data-solar-radiation-display>{{ number_format($equivalentSolarRadiationDaily, 2, ',', '.') }} kWh/m2/dia</span>
+                </span>
+                <span class="solar-technical-panel__signal">
+                    <strong>Origem</strong>
+                    <span data-solar-factor-source-display>{{ strtoupper($resolvedSolarFactorSource === 'pvgis' ? 'PVGIS' : 'padrao') }}</span>
+                </span>
+                <span class="solar-technical-panel__signal">
+                    <strong>Precisao</strong>
+                    <span data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
+                </span>
+                <span class="solar-technical-panel__signal">
+                    <strong>Margem aplicada</strong>
+                    <span data-pricing-preview="margin">{{ $initialMarginLabel }}</span>
+                </span>
+                <span class="solar-technical-panel__signal">
+                    <strong>Preco por kWp</strong>
+                    <span data-pricing-preview="rate">{{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}</span>
+                </span>
+                <span class="solar-technical-panel__signal">
+                    <strong>Geolocalizacao</strong>
+                    <span data-geocoding-status>{{ $geocodingStatusLabel }}</span>
+                </span>
+                <span class="solar-technical-panel__signal">
+                    <strong>Status da automacao</strong>
+                    <span class="solar-status-pill" data-automation-sync-status>Pronto</span>
+                </span>
+                <span class="solar-technical-panel__fallback solar-technical-panel__signal" data-solar-factor-message @if (($solarFactorData['message'] ?? null) === null) hidden @endif>
+                    {{ $solarFactorData['message'] }}
+                </span>
+            </div>
+        </section>
+    </details>
 
     <section class="hub-card hub-card--subtle solar-flow-section" data-cep-lookup>
         <div class="solar-flow-section__header">
             <div>
                 <p class="solar-section-eyebrow">1. Cliente e local</p>
-                <h3>Quem e o cliente e onde sera a instalacao?</h3>
+                <h3>Quem vamos atender e onde fica a instalacao?</h3>
             </div>
-            <p class="hub-note">Comece pelo cliente e local. O Solar preenche o restante automaticamente.</p>
+            <p class="hub-note">Comece pelo cliente e pelo local. O Solar preenche o restante automaticamente.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
             <div>
-                <label for="solar_customer_id" class="hub-auth-label">Cliente contratante *</label>
+                <label for="solar_customer_id" class="hub-auth-label">Cliente *</label>
                 <select id="solar_customer_id" name="solar_customer_id" class="hub-auth-input" required data-project-customer-select>
                     <option value="">Selecione um cliente</option>
                     @foreach ($customers as $customer)
@@ -265,7 +349,7 @@
         <div class="solar-flow-section__subhead">
             <div>
                 <h4>Local da instalacao</h4>
-                <p>CEP, cidade, UF e concessionaria ajudam o Solar a montar a previa com menos digitacao.</p>
+                <p>CEP, cidade, UF e concessionaria ajudam o Solar a montar a leitura inicial com menos digitacao.</p>
             </div>
             <div class="solar-flow-section__inline-tags">
                 <span class="solar-mini-badge solar-mini-badge--automatic">Automatico via CEP</span>
@@ -406,7 +490,7 @@
                 <p class="solar-section-eyebrow">2. Consumo energetico</p>
                 <h3>Qual consumo vamos usar como base?</h3>
             </div>
-            <p class="hub-note">Consumo e conta de energia destravam o pre-dimensionamento comercial.</p>
+            <p class="hub-note">Consumo e conta de energia destravam a sugestao do sistema e a leitura inicial do orcamento.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
@@ -416,7 +500,7 @@
                 @error('monthly_consumption_kwh')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="solar-field-note">Esse numero aciona o pre-dimensionamento automatico.</p>
+                <p class="solar-field-note">Esse numero aciona a sugestao inicial do sistema.</p>
             </div>
 
             <div>
@@ -425,8 +509,38 @@
                 @error('energy_bill_value')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="solar-field-note">Esse valor alimenta a economia estimada da previa comercial.</p>
+                <p class="solar-field-note">Esse valor alimenta a economia estimada da leitura comercial.</p>
             </div>
+        </div>
+    </section>
+
+    <div class="solar-inline-tip">
+        <strong>Proximo passo:</strong>
+        <span>com cliente, local e consumo preenchidos, revise a sugestao do sistema abaixo. Os ajustes avancados podem ficar para depois.</span>
+    </div>
+
+    <section class="hub-card hub-card--subtle solar-flow-section solar-origin-panel">
+        <div class="solar-flow-section__header solar-flow-section__header--stacked-md">
+            <div>
+                <p class="solar-section-eyebrow">Origem da leitura</p>
+                <h3>Veja o que segue automatico e o que ja foi ajustado</h3>
+                <p class="hub-note">Essa leitura ajuda a entender, em um relance, quais campos ainda seguem a automacao do Solar e quais ja foram refinados manualmente.</p>
+            </div>
+            <div class="solar-project-showcase__status {{ $manualOriginCount > 0 ? 'is-market' : 'is-ready' }}">
+                <span class="solar-project-showcase__status-label">Leitura atual</span>
+                <strong>{{ $manualOriginCount }} {{ $manualOriginCount === 1 ? 'ajuste manual' : 'ajustes manuais' }}</strong>
+                <p>{{ $manualOriginCount > 0 ? 'Os campos marcados como manuais deixaram de seguir a sugestao automatica atual.' : 'Os principais campos ainda seguem a automacao ou o padrao comercial da empresa.' }}</p>
+            </div>
+        </div>
+
+        <div class="solar-origin-grid">
+            @foreach ($fieldOrigins as $origin)
+                <article class="solar-origin-card solar-origin-card--{{ $origin['state'] }}">
+                    <span class="solar-origin-card__label">{{ $origin['label'] }}</span>
+                    <strong>{{ $origin['badge'] }}</strong>
+                    <p>{{ $origin['detail'] }}</p>
+                </article>
+            @endforeach
         </div>
     </section>
 
@@ -438,9 +552,9 @@
         <div class="solar-flow-section__header">
             <div>
                 <p class="solar-section-eyebrow">3. Sistema sugerido</p>
-                <h3>Veja a solucao sugerida e ajuste se precisar</h3>
+                <h3>Revise a sugestao e ajuste so o necessario</h3>
             </div>
-            <p class="hub-note">Sugestao automatica com edicao manual liberada.</p>
+            <p class="hub-note">Se estiver comecando, valide primeiro potencia, modulos e geracao. O restante pode ser refinado depois.</p>
         </div>
 
         <div class="solar-flow-section__inline-tags">
@@ -504,7 +618,7 @@
                 @error('system_power_kwp')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="solar-field-note solar-field-note--automatic"><span class="solar-mini-badge solar-mini-badge--automatic">Automatico</span> O Solar sugere este valor a partir do consumo.</p>
+                <p class="solar-field-note solar-field-note--automatic"><span class="solar-origin-pill solar-origin-pill--{{ $fieldOrigins['system_power']['state'] }}">{{ $fieldOrigins['system_power']['badge'] }}</span> O Solar sugere este valor a partir do consumo.</p>
             </div>
 
             <div>
@@ -513,7 +627,7 @@
                 @error('module_power')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="solar-field-note"><span class="solar-mini-badge solar-mini-badge--editable">Editavel</span> Ao alterar este campo, modulos e geracao sao recalculados.</p>
+                <p class="solar-field-note"><span class="solar-origin-pill solar-origin-pill--{{ $fieldOrigins['module_power']['state'] }}">{{ $fieldOrigins['module_power']['badge'] }}</span> Ao alterar este campo, modulos e geracao sao recalculados.</p>
             </div>
         </div>
 
@@ -524,7 +638,7 @@
                 @error('module_quantity')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="solar-field-note solar-field-note--automatic"><span class="solar-mini-badge solar-mini-badge--automatic">Automatico</span> Sugestao inicial com edicao manual liberada.</p>
+                <p class="solar-field-note solar-field-note--automatic"><span class="solar-origin-pill solar-origin-pill--{{ $fieldOrigins['module_quantity']['state'] }}">{{ $fieldOrigins['module_quantity']['badge'] }}</span> Sugestao inicial com edicao manual liberada.</p>
             </div>
 
             <div>
@@ -533,7 +647,7 @@
                 @error('estimated_generation_kwh')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
-                <p class="solar-field-note solar-field-note--automatic"><span class="solar-mini-badge solar-mini-badge--automatic">Automatico</span> Estimativa inicial para apoiar a conversa comercial.</p>
+                <p class="solar-field-note solar-field-note--automatic"><span class="solar-origin-pill solar-origin-pill--{{ $fieldOrigins['generation']['state'] }}">{{ $fieldOrigins['generation']['badge'] }}</span> Estimativa inicial para apoiar a conversa comercial.</p>
             </div>
         </div>
 
@@ -543,211 +657,220 @@
             @error('inverter_model')
                 <p class="hub-note">{{ $message }}</p>
             @enderror
-            <p class="solar-field-note"><span class="solar-mini-badge solar-mini-badge--automatic">Automatico</span> O modelo padrao entra como ponto de partida e pode ser trocado.</p>
+            <p class="solar-field-note"><span class="solar-origin-pill solar-origin-pill--{{ $fieldOrigins['inverter']['state'] }}">{{ $fieldOrigins['inverter']['badge'] }}</span> O modelo padrao entra como ponto de partida e pode ser trocado.</p>
         </div>
     </section>
 
-    <section class="hub-card hub-card--subtle solar-flow-section solar-pricing-panel">
-        <div class="solar-flow-section__header">
-            <div>
-                <p class="solar-section-eyebrow">4. Pre-orcamento</p>
-                <h3>Destaque o valor sugerido com leitura comercial</h3>
-            </div>
-            <p class="hub-note">Atualizacao automatica do valor sugerido sem travar sua edicao.</p>
-        </div>
+    <details class="solar-flow-disclosure" @if ($shouldOpenCommercialReview) open @endif>
+        <summary class="solar-flow-disclosure__summary">
+            <span>Revisar leitura comercial</span>
+            <small>Orcamento inicial, economia estimada e retorno</small>
+        </summary>
 
-        <div class="solar-flow-section__inline-tags">
-            <span class="solar-mini-badge solar-mini-badge--automatic">Previa automatica</span>
-            <span class="solar-mini-badge solar-mini-badge--editable">Ajuste manual permitido</span>
-        </div>
+        <div class="solar-flow-disclosure__body">
+            <section class="hub-card hub-card--subtle solar-flow-section solar-pricing-panel">
+                <div class="solar-flow-section__header">
+                    <div>
+                        <p class="solar-section-eyebrow">4. Orcamento inicial</p>
+                        <h3>Revise o valor sugerido do atendimento</h3>
+                    </div>
+                    <p class="hub-note">Atualizacao automatica do valor inicial sem travar sua edicao.</p>
+                </div>
 
-        <div class="solar-sizing-panel__highlights solar-pricing-panel__highlights">
-            <article class="solar-sizing-chip solar-sizing-chip--featured">
-                <span class="solar-sizing-chip__label">Preco sugerido</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="total">
-                    {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando dimensionamento' }}
-                </strong>
-            </article>
+                <div class="solar-flow-section__inline-tags">
+                    <span class="solar-mini-badge solar-mini-badge--automatic">Leitura automatica</span>
+                    <span class="solar-mini-badge solar-mini-badge--editable">Ajuste manual permitido</span>
+                </div>
 
-            <article class="solar-sizing-chip solar-sizing-chip--featured">
-                <span class="solar-sizing-chip__label">Economia mensal</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="savings">
-                    {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') . '/mes' : 'Informe a conta de energia' }}
-                </strong>
-            </article>
+                <div class="solar-sizing-panel__highlights solar-pricing-panel__highlights">
+                    <article class="solar-sizing-chip solar-sizing-chip--featured">
+                        <span class="solar-sizing-chip__label">Orcamento inicial</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="total">
+                            {{ $initialSuggestedPrice ? 'R$ ' . number_format((float) $initialSuggestedPrice, 2, ',', '.') : 'Aguardando dimensionamento' }}
+                        </strong>
+                    </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Preco por kWp</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="rate">
-                    {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}
-                </strong>
-                <span class="solar-sizing-chip__meta">Referencia usada para compor o valor sugerido.</span>
-            </article>
+                    <article class="solar-sizing-chip solar-sizing-chip--featured">
+                        <span class="solar-sizing-chip__label">Economia mensal</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="savings">
+                            {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') . '/mes' : 'Informe a conta de energia' }}
+                        </strong>
+                    </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Margem de referencia</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="margin">
-                    {{ $initialMarginLabel }}
-                </strong>
-                <span class="solar-sizing-chip__meta" data-pricing-preview="margin-detail">{{ $initialMarginDetail }}</span>
-            </article>
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Preco por kWp</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="rate">
+                            {{ 'R$ ' . number_format((float) $effectivePricePerKwp, 2, ',', '.') }}
+                        </strong>
+                        <span class="solar-sizing-chip__meta">Referencia usada para compor o valor sugerido.</span>
+                    </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Origem do preco</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="source">
-                    {{ $pricingSourceLabel }}
-                </strong>
-                <span class="solar-sizing-chip__meta">Prioridade: empresa, media regional e depois fallback padrao.</span>
-            </article>
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Margem de referencia</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="margin">
+                            {{ $initialMarginLabel }}
+                        </strong>
+                        <span class="solar-sizing-chip__meta" data-pricing-preview="margin-detail">{{ $initialMarginDetail }}</span>
+                    </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Custo estimado do kit</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="kit-cost">
-                    {{ $initialKitCost !== null ? 'R$ ' . number_format((float) $initialKitCost, 2, ',', '.') : 'Aguardando sistema' }}
-                </strong>
-                <span class="solar-sizing-chip__meta">Estimativa comercial baseada em modulo, inversor, estrutura e instalacao.</span>
-            </article>
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Origem do preco</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="source">
+                            {{ $pricingSourceLabel }}
+                        </strong>
+                        <span class="solar-sizing-chip__meta">Prioridade: empresa, media regional e depois fallback padrao.</span>
+                    </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Lucro bruto estimado</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="gross-profit">
-                    {{ $initialGrossProfit !== null ? 'R$ ' . number_format((float) $initialGrossProfit, 2, ',', '.') : 'Aguardando sistema' }}
-                </strong>
-                <span class="solar-sizing-chip__meta">Leitura rapida da diferenca entre custo estimado e preco sugerido.</span>
-            </article>
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Custo estimado do kit</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="kit-cost">
+                            {{ $initialKitCost !== null ? 'R$ ' . number_format((float) $initialKitCost, 2, ',', '.') : 'Aguardando sistema' }}
+                        </strong>
+                        <span class="solar-sizing-chip__meta">Estimativa comercial baseada em modulo, inversor, estrutura e instalacao.</span>
+                    </article>
 
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">ROI aproximado ao ano</span>
-                <strong class="solar-sizing-chip__value" data-pricing-preview="roi">
-                    {{ $initialRoiPercentage !== null ? number_format((float) $initialRoiPercentage, 1, ',', '.') . '%' : 'Aguardando simulacao' }}
-                </strong>
-                <span class="solar-sizing-chip__meta">Leitura simples de retorno anual para reforcar a proposta.</span>
-            </article>
-        </div>
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Lucro bruto estimado</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="gross-profit">
+                            {{ $initialGrossProfit !== null ? 'R$ ' . number_format((float) $initialGrossProfit, 2, ',', '.') : 'Aguardando sistema' }}
+                        </strong>
+                        <span class="solar-sizing-chip__meta">Leitura rapida da diferenca entre custo estimado e preco sugerido.</span>
+                    </article>
 
-        <div class="solar-composition-list solar-composition-list--costs">
-            <article class="solar-composition-item">
-                <span class="solar-composition-item__label">Modulos</span>
-                <strong class="solar-composition-item__value">{{ $initialKitBreakdown['modules'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['modules'], 2, ',', '.') : '-' }}</strong>
-            </article>
-            <article class="solar-composition-item">
-                <span class="solar-composition-item__label">Inversor</span>
-                <strong class="solar-composition-item__value">{{ $initialKitBreakdown['inverter'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['inverter'], 2, ',', '.') : '-' }}</strong>
-            </article>
-            <article class="solar-composition-item">
-                <span class="solar-composition-item__label">Estrutura</span>
-                <strong class="solar-composition-item__value">{{ $initialKitBreakdown['structure'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['structure'], 2, ',', '.') : '-' }}</strong>
-            </article>
-            <article class="solar-composition-item">
-                <span class="solar-composition-item__label">Instalacao</span>
-                <strong class="solar-composition-item__value">{{ $initialKitBreakdown['installation'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['installation'], 2, ',', '.') : '-' }}</strong>
-            </article>
-        </div>
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">ROI aproximado ao ano</span>
+                        <strong class="solar-sizing-chip__value" data-pricing-preview="roi">
+                            {{ $initialRoiPercentage !== null ? number_format((float) $initialRoiPercentage, 1, ',', '.') . '%' : 'Aguardando simulacao' }}
+                        </strong>
+                        <span class="solar-sizing-chip__meta">Leitura simples de retorno anual para reforcar o atendimento.</span>
+                    </article>
+                </div>
 
-        <p class="solar-sizing-panel__note solar-pricing-panel__note" data-pricing-note>
-            @if ($pricingSource === 'company')
-                O preco sugerido sera recalculado automaticamente quando a potencia do sistema mudar. Voce ainda pode ajustar manualmente antes de salvar.
-            @elseif ($pricingSource === 'regional')
-                Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.
-            @else
-                Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.
-            @endif
-        </p>
+                <div class="solar-composition-list solar-composition-list--costs">
+                    <article class="solar-composition-item">
+                        <span class="solar-composition-item__label">Modulos</span>
+                        <strong class="solar-composition-item__value">{{ $initialKitBreakdown['modules'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['modules'], 2, ',', '.') : '-' }}</strong>
+                    </article>
+                    <article class="solar-composition-item">
+                        <span class="solar-composition-item__label">Inversor</span>
+                        <strong class="solar-composition-item__value">{{ $initialKitBreakdown['inverter'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['inverter'], 2, ',', '.') : '-' }}</strong>
+                    </article>
+                    <article class="solar-composition-item">
+                        <span class="solar-composition-item__label">Estrutura</span>
+                        <strong class="solar-composition-item__value">{{ $initialKitBreakdown['structure'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['structure'], 2, ',', '.') : '-' }}</strong>
+                    </article>
+                    <article class="solar-composition-item">
+                        <span class="solar-composition-item__label">Instalacao</span>
+                        <strong class="solar-composition-item__value">{{ $initialKitBreakdown['installation'] !== null ? 'R$ ' . number_format((float) $initialKitBreakdown['installation'], 2, ',', '.') : '-' }}</strong>
+                    </article>
+                </div>
 
-        <div class="solar-inline-tip">
-            <strong>Leitura comercial:</strong>
-            <span>o Solar sugere um valor inicial e mantem o campo liberado para ajuste fino na negociacao.</span>
-        </div>
-
-        <div class="hub-grid hub-grid--billing">
-            <div>
-                <label for="suggested_price" class="hub-auth-label">Preco sugerido (R$)</label>
-                <input id="suggested_price" name="suggested_price" type="text" inputmode="decimal" class="hub-auth-input" value="{{ old('suggested_price', $project->suggested_price) }}" data-pricing-suggested-price data-currency-brl>
-                @error('suggested_price')
-                    <p class="hub-note">{{ $message }}</p>
-                @enderror
-                <p class="solar-field-note solar-field-note--automatic">
-                    <span class="solar-mini-badge solar-mini-badge--automatic">Automatico</span>
-                    {{ $pricingSource === 'company'
-                        ? 'Preco sugerido com base na configuracao da empresa. Voce pode ajustar manualmente.'
-                        : 'Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente.' }}
+                <p class="solar-sizing-panel__note solar-pricing-panel__note" data-pricing-note>
+                    @if ($pricingSource === 'company')
+                        O orcamento inicial sera recalculado automaticamente quando a potencia do sistema mudar. Voce ainda pode ajustar manualmente antes de salvar.
+                    @elseif ($pricingSource === 'regional')
+                        Orcamento inicial baseado em media de mercado. Voce pode ajustar manualmente.
+                    @else
+                        Orcamento inicial baseado em media de mercado. Voce pode ajustar manualmente.
+                    @endif
                 </p>
-            </div>
 
-            <div>
-                <label for="pricing_notes" class="hub-auth-label">Observacoes comerciais</label>
-                <input id="pricing_notes" name="pricing_notes" type="text" class="hub-auth-input" value="{{ old('pricing_notes', $project->pricing_notes) }}">
-                @error('pricing_notes')
-                    <p class="hub-note">{{ $message }}</p>
-                @enderror
-                <p class="solar-field-note">Registre condicao comercial, prazo ou ressalva importante para a proposta.</p>
-            </div>
+                <div class="solar-inline-tip">
+                    <strong>Leitura comercial:</strong>
+                    <span>o Solar sugere um valor inicial e mantem o campo liberado para ajuste fino na negociacao.</span>
+                </div>
+
+                <div class="hub-grid hub-grid--billing">
+                    <div>
+                        <label for="suggested_price" class="hub-auth-label">Orcamento inicial (R$)</label>
+                        <input id="suggested_price" name="suggested_price" type="text" inputmode="decimal" class="hub-auth-input" value="{{ old('suggested_price', $project->suggested_price) }}" data-pricing-suggested-price data-currency-brl>
+                        @error('suggested_price')
+                            <p class="hub-note">{{ $message }}</p>
+                        @enderror
+                        <p class="solar-field-note solar-field-note--automatic">
+                            <span class="solar-origin-pill solar-origin-pill--{{ $fieldOrigins['suggested_price']['state'] }}">{{ $fieldOrigins['suggested_price']['badge'] }}</span>
+                            {{ $pricingSource === 'company'
+                                ? 'Valor inicial com base na configuracao da empresa. Voce pode ajustar manualmente.'
+                                : 'Valor inicial baseado em media de mercado. Voce pode ajustar manualmente.' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="pricing_notes" class="hub-auth-label">Observacoes comerciais</label>
+                        <input id="pricing_notes" name="pricing_notes" type="text" class="hub-auth-input" value="{{ old('pricing_notes', $project->pricing_notes) }}">
+                        @error('pricing_notes')
+                            <p class="hub-note">{{ $message }}</p>
+                        @enderror
+                        <p class="solar-field-note">Registre condicao comercial, prazo ou ressalva importante para o atendimento.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="hub-card hub-card--subtle solar-flow-section solar-financial-panel">
+                <div class="solar-flow-section__header">
+                    <div>
+                        <p class="solar-section-eyebrow">5. Economia estimada</p>
+                        <h3>Use os indicadores como apoio comercial</h3>
+                    </div>
+                    <p class="hub-note">Mostre economia, retorno e ROI de forma objetiva, sem transformar esta tela em um laudo financeiro.</p>
+                </div>
+
+                <div class="solar-sizing-panel__highlights solar-financial-panel__highlights">
+                    <article class="solar-sizing-chip solar-sizing-chip--featured solar-sizing-chip--commercial">
+                        <span class="solar-sizing-chip__label">Economia mensal estimada</span>
+                        <strong class="solar-sizing-chip__value" data-financial-preview="monthly">
+                            {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') : 'Informe a conta de energia' }}
+                        </strong>
+                        <span class="solar-sizing-chip__meta">Considerando custo minimo residual de {{ 'R$ ' . number_format($residualMinimumCost, 2, ',', '.') }} por mes.</span>
+                    </article>
+
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Economia anual</span>
+                        <strong class="solar-sizing-chip__value" data-financial-preview="annual">
+                            {{ $initialAnnualSavings !== null ? 'R$ ' . number_format((float) $initialAnnualSavings, 2, ',', '.') : 'Aguardando simulacao' }}
+                        </strong>
+                    </article>
+
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Economia em 25 anos</span>
+                        <strong class="solar-sizing-chip__value" data-financial-preview="lifetime">
+                            {{ $initialLifetimeSavings !== null ? 'R$ ' . number_format((float) $initialLifetimeSavings, 2, ',', '.') : 'Aguardando simulacao' }}
+                        </strong>
+                    </article>
+
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">Retorno estimado</span>
+                        <strong class="solar-sizing-chip__value" data-financial-preview="payback">
+                            {{ $initialPaybackMonths !== null ? $initialPaybackMonths . ' meses' : 'Aguardando simulacao' }}
+                        </strong>
+                    </article>
+
+                    <article class="solar-sizing-chip">
+                        <span class="solar-sizing-chip__label">ROI aproximado</span>
+                        <strong class="solar-sizing-chip__value" data-financial-preview="roi">
+                            {{ $initialRoiPercentage !== null ? number_format((float) $initialRoiPercentage, 1, ',', '.') . '%' : 'Aguardando simulacao' }}
+                        </strong>
+                    </article>
+                </div>
+
+                <p class="solar-sizing-panel__note solar-financial-panel__note" data-financial-note>
+                    @if ($initialMonthlySavings !== null)
+                        Simulacao ativa com base na conta atual de energia. Use os valores como reforco comercial do atendimento.
+                    @else
+                        Informe o valor da conta de energia para gerar a simulacao financeira automatica.
+                    @endif
+                </p>
+            </section>
         </div>
-    </section>
-
-    <section class="hub-card hub-card--subtle solar-flow-section solar-financial-panel">
-        <div class="solar-flow-section__header">
-            <div>
-                <p class="solar-section-eyebrow">5. Simulacao financeira</p>
-                <h3>Transforme a simulacao em argumento comercial</h3>
-            </div>
-            <p class="hub-note">Mostre economia, retorno e ROI de forma objetiva.</p>
-        </div>
-
-        <div class="solar-sizing-panel__highlights solar-financial-panel__highlights">
-            <article class="solar-sizing-chip solar-sizing-chip--featured solar-sizing-chip--commercial">
-                <span class="solar-sizing-chip__label">Economia mensal estimada</span>
-                <strong class="solar-sizing-chip__value" data-financial-preview="monthly">
-                    {{ $initialMonthlySavings !== null ? 'R$ ' . number_format((float) $initialMonthlySavings, 2, ',', '.') : 'Informe a conta de energia' }}
-                </strong>
-                <span class="solar-sizing-chip__meta">Considerando custo minimo residual de {{ 'R$ ' . number_format($residualMinimumCost, 2, ',', '.') }} por mes.</span>
-            </article>
-
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Economia anual</span>
-                <strong class="solar-sizing-chip__value" data-financial-preview="annual">
-                    {{ $initialAnnualSavings !== null ? 'R$ ' . number_format((float) $initialAnnualSavings, 2, ',', '.') : 'Aguardando simulacao' }}
-                </strong>
-            </article>
-
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Economia em 25 anos</span>
-                <strong class="solar-sizing-chip__value" data-financial-preview="lifetime">
-                    {{ $initialLifetimeSavings !== null ? 'R$ ' . number_format((float) $initialLifetimeSavings, 2, ',', '.') : 'Aguardando simulacao' }}
-                </strong>
-            </article>
-
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">Retorno estimado</span>
-                <strong class="solar-sizing-chip__value" data-financial-preview="payback">
-                    {{ $initialPaybackMonths !== null ? $initialPaybackMonths . ' meses' : 'Aguardando simulacao' }}
-                </strong>
-            </article>
-
-            <article class="solar-sizing-chip">
-                <span class="solar-sizing-chip__label">ROI aproximado</span>
-                <strong class="solar-sizing-chip__value" data-financial-preview="roi">
-                    {{ $initialRoiPercentage !== null ? number_format((float) $initialRoiPercentage, 1, ',', '.') . '%' : 'Aguardando simulacao' }}
-                </strong>
-            </article>
-        </div>
-
-        <p class="solar-sizing-panel__note solar-financial-panel__note" data-financial-note>
-            @if ($initialMonthlySavings !== null)
-                Simulacao ativa com base na conta atual de energia. Use os valores como reforco comercial da proposta.
-            @else
-                Informe o valor da conta de energia para gerar a simulacao financeira automatica.
-            @endif
-        </p>
-    </section>
+    </details>
 
     <section class="hub-card hub-card--subtle solar-flow-section">
         <div class="solar-flow-section__header">
             <div>
                 <p class="solar-section-eyebrow">6. Observacoes e status</p>
-                <h3>Feche o contexto comercial do projeto</h3>
+                <h3>Defina status e proximos passos do projeto</h3>
             </div>
-            <p class="hub-note">Defina etapa do funil e registre os proximos passos.</p>
+            <p class="hub-note">Se ainda estiver revisando a base, mantenha como rascunho e siga para a simulacao depois.</p>
         </div>
 
         <div class="hub-grid hub-grid--billing">
@@ -768,7 +891,7 @@
 
             <div>
                 <label for="notes" class="hub-auth-label">Observacoes gerais</label>
-                <textarea id="notes" name="notes" class="hub-auth-input" placeholder="Ex.: condicao do telhado, expectativa do cliente, prazo de retorno, contexto da simulacao...">{{ old('notes', $project->notes) }}</textarea>
+                <textarea id="notes" name="notes" class="hub-auth-input" placeholder="Ex.: condicao do telhado, expectativa do cliente, prazo de retorno, contexto do atendimento...">{{ old('notes', $project->notes) }}</textarea>
                 @error('notes')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror

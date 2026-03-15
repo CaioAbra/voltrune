@@ -2,20 +2,55 @@
 
 @section('title', 'Solar | Voltrune')
 
+@php
+    $nextAction = match (true) {
+        $kpis['customers'] === 0 => [
+            'title' => 'Cadastre o primeiro cliente',
+            'body' => 'O fluxo do Solar sempre comeca pelo cliente. Depois disso, voce abre o projeto com menos retrabalho.',
+            'label' => 'Abrir clientes',
+            'route' => route('solar.customers.index'),
+        ],
+        $kpis['projects'] === 0 => [
+            'title' => 'Abra o primeiro projeto',
+            'body' => 'Com um cliente cadastrado, o proximo passo e registrar local, consumo e dados base da instalacao.',
+            'label' => 'Abrir projetos',
+            'route' => route('solar.projects.index'),
+        ],
+        $pipeline['simulations_without_quotes'] > 0 => [
+            'title' => 'Revise as simulacoes pendentes',
+            'body' => 'Voce ja tem simulacoes prontas para virar orcamento. Revise primeiro as que ainda nao foram convertidas.',
+            'label' => 'Abrir simulacoes',
+            'route' => route('solar.simulations.index'),
+        ],
+        $pipeline['quotes_follow_up_due'] > 0 => [
+            'title' => 'Atualize os follow-ups vencidos',
+            'body' => 'Existem oportunidades com proximo contato atrasado. Vale priorizar o pipeline comercial antes de abrir novas propostas.',
+            'label' => 'Abrir orcamentos',
+            'route' => route('solar.quotes.index', ['sort' => 'follow_up_asc']),
+        ],
+        default => [
+            'title' => 'Acompanhe os orcamentos ativos',
+            'body' => 'Com a base montada, o foco agora e revisar itens, preco final e proximo passo comercial de cada orcamento.',
+            'label' => 'Abrir orcamentos',
+            'route' => route('solar.quotes.index'),
+        ],
+    };
+@endphp
+
 @section('solar-content')
     <section class="solar-page-shell">
         <section class="hub-card hub-card--subtle solar-page-intro">
             <div class="solar-page-intro__header">
                 <div class="solar-page-intro__copy">
-                    <p class="solar-section-eyebrow">Operacao comercial</p>
-                    <h2>Fluxo de venda para energia solar</h2>
-                    <p class="hub-note">O Solar foi organizado para quem precisa sair do lead ao orcamento com velocidade, leitura tecnica clara e discurso comercial consistente.</p>
+                    <p class="solar-section-eyebrow">Operacao do Solar</p>
+                    <h2>Organize o atendimento do primeiro contato ao orcamento</h2>
+                    <p class="hub-note">Use o Solar para cadastrar clientes, abrir projetos, revisar simulacoes e fechar orcamentos com mais clareza e menos retrabalho.</p>
                 </div>
 
                 <div class="solar-page-intro__meta">
-                    <span class="solar-project-showcase__status-label">Jornada recomendada</span>
-                    <strong>Cliente -> projeto -> simulacao -> proposta</strong>
-                    <p>Entre no modulo certo de acordo com o estagio da venda e mantenha o contexto da operacao em cada etapa.</p>
+                    <span class="solar-project-showcase__status-label">Fluxo oficial</span>
+                    <strong>Cliente -> Projeto -> Simulacao -> Orcamento</strong>
+                    <p>Se estiver comecando, siga essa ordem. Ela foi pensada para reduzir retrabalho e manter contexto em cada etapa.</p>
                 </div>
             </div>
         </section>
@@ -49,51 +84,81 @@
             </article>
 
             <article class="hub-card hub-card--subtle solar-quick-card">
+                <span class="solar-quick-card__eyebrow">Catalogo</span>
+                <div>
+                    <h3>{{ $kpis['catalog'] }}</h3>
+                    <p>{{ $kpis['catalog'] === 1 ? 'item ativo no catalogo' : 'itens ativos no catalogo' }}</p>
+                </div>
+                <a href="{{ route('solar.catalog.index') }}" class="hub-btn hub-btn--subtle">Abrir catalogo</a>
+            </article>
+
+            <article class="hub-card hub-card--subtle solar-quick-card">
                 <span class="solar-quick-card__eyebrow">Fechamento</span>
                 <div>
                     <h3>{{ $kpis['quotes'] }}</h3>
-                    <p>{{ $pipeline['quotes_review'] }} em revisao, {{ $pipeline['quotes_sent'] }} enviadas e {{ $pipeline['quotes_won'] }} fechadas</p>
+                    <p>{{ $pipeline['quotes_review'] }} em revisao, {{ $pipeline['quotes_sent'] }} enviadas, {{ $pipeline['quotes_follow_up_due'] }} com follow-up vencido e {{ $pipeline['quotes_won'] }} fechadas</p>
                 </div>
                 <a href="{{ route('solar.quotes.index') }}" class="hub-btn hub-btn--subtle">Abrir orcamentos</a>
             </article>
         </section>
 
-        <section class="solar-page-grid solar-page-grid--cards">
-            <article class="hub-card hub-card--subtle solar-quick-card">
-                <span class="solar-quick-card__eyebrow">Base comercial</span>
-                <div>
-                    <h3>Clientes</h3>
-                    <p>Cadastre contratantes e mantenha a base pronta para abrir novos projetos sem retrabalho.</p>
-                </div>
-                <a href="{{ route('solar.customers.index') }}" class="hub-btn">Abrir clientes</a>
-            </article>
+        <section class="hub-card solar-page-panel">
+            <div class="solar-page-panel__header">
+                <p class="solar-section-eyebrow">Comece por aqui</p>
+                <h2>{{ $nextAction['title'] }}</h2>
+                <p class="hub-note">{{ $nextAction['body'] }}</p>
+            </div>
 
-            <article class="hub-card hub-card--subtle solar-quick-card">
-                <span class="solar-quick-card__eyebrow">Entrada do funil</span>
-                <div>
-                    <h3>Projetos</h3>
-                    <p>Organize local, consumo e contexto da instalacao para preparar o dimensionamento automatico.</p>
-                </div>
-                <a href="{{ route('solar.projects.index') }}" class="hub-btn">Abrir projetos</a>
-            </article>
+            <div class="hub-actions">
+                <a href="{{ $nextAction['route'] }}" class="hub-btn">{{ $nextAction['label'] }}</a>
+            </div>
 
-            <article class="hub-card hub-card--subtle solar-quick-card">
-                <span class="solar-quick-card__eyebrow">Analise tecnica</span>
-                <div>
-                    <h3>Simulacoes</h3>
-                    <p>Compare potencia, economia e preco sugerido antes de transformar um cenario em proposta.</p>
-                </div>
-                <a href="{{ route('solar.simulations.index') }}" class="hub-btn">Abrir simulacoes</a>
-            </article>
+            <div class="solar-page-grid solar-page-grid--cards">
+                <article class="hub-card hub-card--subtle solar-quick-card">
+                    <span class="solar-quick-card__eyebrow">Passo 1</span>
+                    <div>
+                        <h3>Cliente</h3>
+                        <p>Cadastre a pessoa ou empresa atendida para abrir o fluxo sem repetir informacoes.</p>
+                    </div>
+                    <a href="{{ route('solar.customers.index') }}" class="hub-btn hub-btn--subtle">Abrir clientes</a>
+                </article>
 
-            <article class="hub-card hub-card--subtle solar-quick-card">
-                <span class="solar-quick-card__eyebrow">Fechamento</span>
-                <div>
-                    <h3>Orcamentos</h3>
-                    <p>Consolide materiais, servicos, preco final e status comercial para avancar a negociacao.</p>
-                </div>
-                <a href="{{ route('solar.quotes.index') }}" class="hub-btn">Abrir orcamentos</a>
-            </article>
+                <article class="hub-card hub-card--subtle solar-quick-card">
+                    <span class="solar-quick-card__eyebrow">Passo 2</span>
+                    <div>
+                        <h3>Projeto</h3>
+                        <p>Preencha local, consumo e dados base da instalacao para montar a leitura inicial.</p>
+                    </div>
+                    <a href="{{ route('solar.projects.index') }}" class="hub-btn hub-btn--subtle">Abrir projetos</a>
+                </article>
+
+                <article class="hub-card hub-card--subtle solar-quick-card">
+                    <span class="solar-quick-card__eyebrow">Passo 3</span>
+                    <div>
+                        <h3>Simulacao</h3>
+                        <p>Revise a sugestao do sistema, compare alternativas e ajuste o que for necessario.</p>
+                    </div>
+                    <a href="{{ route('solar.simulations.index') }}" class="hub-btn hub-btn--subtle">Abrir simulacoes</a>
+                </article>
+
+                <article class="hub-card hub-card--subtle solar-quick-card">
+                    <span class="solar-quick-card__eyebrow">Passo 4</span>
+                    <div>
+                        <h3>Orcamento</h3>
+                        <p>Feche itens, preco final e status comercial para avancar o atendimento com seguranca.</p>
+                    </div>
+                    <a href="{{ route('solar.quotes.index') }}" class="hub-btn hub-btn--subtle">Abrir orcamentos</a>
+                </article>
+
+                <article class="hub-card hub-card--subtle solar-quick-card">
+                    <span class="solar-quick-card__eyebrow">Base operacional</span>
+                    <div>
+                        <h3>Catalogo</h3>
+                        <p>Mantenha equipamentos e servicos da empresa prontos para entrar no orcamento com custo e venda coerentes.</p>
+                    </div>
+                    <a href="{{ route('solar.catalog.index') }}" class="hub-btn hub-btn--subtle">Abrir catalogo</a>
+                </article>
+            </div>
         </section>
     </section>
 @endsection

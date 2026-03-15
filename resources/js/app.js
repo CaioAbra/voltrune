@@ -1518,7 +1518,7 @@ const initSolarSizingForm = () => {
       }
 
       if (summaryStatus instanceof HTMLElement && projectStatusInput instanceof HTMLSelectElement) {
-        summaryStatus.textContent = projectStatusInput.options[projectStatusInput.selectedIndex]?.textContent?.trim() || 'Rascunho';
+        summaryStatus.textContent = projectStatusInput.options[projectStatusInput.selectedIndex]?.textContent?.trim() || 'Base em montagem';
       }
 
       if (summaryConsumption instanceof HTMLElement) {
@@ -1551,7 +1551,7 @@ const initSolarSizingForm = () => {
         if (currentSuggestedPrice && currentSuggestedPrice > 0) {
           animateNumber(summaryPrice, currentSuggestedPrice, (value) => formatCurrency(value));
         } else {
-          summaryPrice.textContent = 'Aguardando pre-orcamento';
+          summaryPrice.textContent = 'Aguardando orcamento inicial';
         }
       }
 
@@ -1793,11 +1793,11 @@ const initSolarSizingForm = () => {
             ? ` Economia mensal estimada: ${formatCurrencyMonthly(currentMonthlySavings)}.`
             : '';
           const sourcePrefix = pricingSource === 'company'
-            ? `Pre-orcamento ativo com preco proprio (${formatCurrency(pricingPerKwp)}/kWp): `
+            ? `Leitura automatica ativa com preco proprio (${formatCurrency(pricingPerKwp)}/kWp): `
             : `Preco sugerido baseado em media de mercado. Voce pode ajustar manualmente. Referencia atual: ${formatCurrency(pricingPerKwp)}/kWp. `;
           pricingNote.textContent = `${sourcePrefix}${formatCurrency(currentSuggestedPrice)} com base na potencia atual do sistema. Margem considerada: ${currentMarginContext.label}.${savingsSuffix}`;
         } else {
-          pricingNote.textContent = 'Informe o consumo mensal para gerar o pre-orcamento automatico.';
+          pricingNote.textContent = 'Informe o consumo mensal para gerar o orcamento inicial automatico.';
         }
       }
 

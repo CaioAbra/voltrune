@@ -8,8 +8,8 @@
             <div class="solar-page-intro__header">
                 <div class="solar-page-intro__copy">
                     <p class="solar-section-eyebrow">Editar cliente</p>
-                    <h2>Atualize a base comercial do contratante</h2>
-                    <p class="hub-note">Mantenha os dados do cliente atualizados para evitar ruido no funil e acelerar novas simulacoes e orcamentos.</p>
+                    <h2>Atualize a base comercial do cliente</h2>
+                    <p class="hub-note">Mantenha os dados do cliente atualizados para evitar ruido no atendimento e acelerar novos projetos, simulacoes e orcamentos.</p>
                 </div>
 
                 <div class="solar-page-intro__meta">
@@ -22,8 +22,8 @@
 
         <section class="hub-card solar-page-panel">
             <div class="solar-page-panel__header">
-                <h2>Dados do contratante</h2>
-                <p class="hub-note">Revise contatos, documento e observacoes comerciais para manter a leitura do cliente sempre atual.</p>
+                <h2>Dados do cliente</h2>
+                <p class="hub-note">Revise contato, documento e observacoes para manter a base comercial sempre atual.</p>
             </div>
 
             <div class="hub-actions">

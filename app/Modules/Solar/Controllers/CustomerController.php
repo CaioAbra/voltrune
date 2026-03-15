@@ -21,14 +21,89 @@ class CustomerController extends Controller
     public function index(Request $request): View
     {
         $company = $this->resolveCurrentCompany($request);
-        $customers = SolarCustomer::query()
-            ->where('company_id', $company->id)
-            ->orderBy('name')
+        $filters = [
+            'q' => trim((string) $request->input('q')),
+            'state' => strtoupper(trim((string) $request->input('state'))),
+            'pipeline' => (string) $request->input('pipeline', ''),
+            'sort' => (string) $request->input('sort', 'name_asc'),
+        ];
+        $allowedPipelines = ['with_projects', 'without_projects'];
+        $allowedSorts = ['name_asc', 'recent', 'projects_desc'];
+
+        if (! in_array($filters['pipeline'], $allowedPipelines, true)) {
+            $filters['pipeline'] = '';
+        }
+
+        if (! in_array($filters['sort'], $allowedSorts, true)) {
+            $filters['sort'] = 'name_asc';
+        }
+
+        $baseQuery = SolarCustomer::query()
+            ->where('company_id', $company->id);
+
+        $stateOptions = (clone $baseQuery)
+            ->whereNotNull('state')
+            ->where('state', '!=', '')
+            ->select('state')
+            ->distinct()
+            ->orderBy('state')
+            ->pluck('state');
+
+        $summaryCustomers = (clone $baseQuery)
+            ->withCount('projects')
             ->get();
+
+        $customersQuery = (clone $baseQuery)
+            ->withCount('projects');
+
+        if ($filters['q'] !== '') {
+            $search = '%' . $filters['q'] . '%';
+
+            $customersQuery->where(function ($query) use ($search): void {
+                $query->where('name', 'like', $search)
+                    ->orWhere('email', 'like', $search)
+                    ->orWhere('phone', 'like', $search)
+                    ->orWhere('document', 'like', $search)
+                    ->orWhere('city', 'like', $search)
+                    ->orWhere('state', 'like', $search);
+            });
+        }
+
+        if ($filters['state'] !== '') {
+            $customersQuery->where('state', $filters['state']);
+        }
+
+        if ($filters['pipeline'] === 'with_projects') {
+            $customersQuery->has('projects');
+        } elseif ($filters['pipeline'] === 'without_projects') {
+            $customersQuery->doesntHave('projects');
+        }
+
+        match ($filters['sort']) {
+            'recent' => $customersQuery->latest(),
+            'projects_desc' => $customersQuery->orderByDesc('projects_count')->orderBy('name'),
+            default => $customersQuery->orderBy('name'),
+        };
+
+        $customers = $customersQuery->get();
+        $hasActiveFilters = $filters['q'] !== ''
+            || $filters['state'] !== ''
+            || $filters['pipeline'] !== ''
+            || $filters['sort'] !== 'name_asc';
 
         return view('solar.customers.index', $this->viewData('Clientes', [
             'customers' => $customers,
             'company' => $company,
+            'filters' => $filters,
+            'stateOptions' => $stateOptions,
+            'hasActiveFilters' => $hasActiveFilters,
+            'summary' => [
+                'total' => $summaryCustomers->count(),
+                'with_projects' => $summaryCustomers->filter(fn (SolarCustomer $customer) => $customer->projects_count > 0)->count(),
+                'without_projects' => $summaryCustomers->filter(fn (SolarCustomer $customer) => $customer->projects_count === 0)->count(),
+                'states' => $summaryCustomers->pluck('state')->filter()->unique()->count(),
+                'filtered' => $customers->count(),
+            ],
         ]));
     }
 

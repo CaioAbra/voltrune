@@ -185,4 +185,19 @@ class SolarSizingServiceTest extends TestCase
         $this->assertTrue($context['requires_negotiation']);
         $this->assertNull($service->estimateKitCostForMarginContext(500000, $context));
     }
+
+    public function test_it_estimates_financing_and_projected_cashflow_metrics(): void
+    {
+        $service = new SolarSizingService();
+
+        $financedAmount = $service->estimateFinancedAmount(25000, 5000);
+        $installmentValue = $service->estimateInstallmentValue($financedAmount, 60, 1.25);
+        $netMonthlyBenefit = $service->estimateNetMonthlyBenefit(430, $installmentValue);
+        $projectedSavings = $service->estimateProjectedSavingsWithTariffGrowth(500, 6, 5);
+
+        $this->assertSame(20000.0, $financedAmount);
+        $this->assertSame(475.8, $installmentValue);
+        $this->assertSame(-45.8, $netMonthlyBenefit);
+        $this->assertSame(33822.56, $projectedSavings);
+    }
 }
