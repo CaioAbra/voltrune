@@ -133,10 +133,12 @@ Copy-Item .env.example .env
 php artisan key:generate
 ```
 
-5. Rode as migrations:
+5. Rode as migrations da infraestrutura local e dos bancos do produto:
 
 ```bash
-php artisan migrate
+php artisan migrate --database=sqlite
+php artisan voltrune:migrate-hub
+php artisan voltrune:migrate-solar
 ```
 
 6. Suba o ambiente de desenvolvimento:

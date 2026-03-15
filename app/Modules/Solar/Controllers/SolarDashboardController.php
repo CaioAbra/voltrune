@@ -22,6 +22,31 @@ class SolarDashboardController extends Controller
     public function index(Request $request): View
     {
         $company = CurrentCompanyContext::resolve($request->user(), $request->session());
+        $projectStats = null;
+        $simulationStats = null;
+        $quoteStats = null;
+
+        if ($company) {
+            $projectStats = SolarProject::query()
+                ->where('company_id', $company->id)
+                ->selectRaw("COUNT(*) as total, SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft_total")
+                ->first();
+
+            $simulationStats = SolarSimulation::query()
+                ->leftJoin('solar_quotes', 'solar_quotes.solar_simulation_id', '=', 'solar_simulations.id')
+                ->where('solar_simulations.company_id', $company->id)
+                ->selectRaw('COUNT(DISTINCT solar_simulations.id) as total')
+                ->selectRaw('COUNT(DISTINCT CASE WHEN solar_quotes.id IS NULL THEN solar_simulations.id END) as without_quotes_total')
+                ->first();
+
+            $quoteStats = SolarQuote::query()
+                ->where('company_id', $company->id)
+                ->selectRaw("COUNT(*) as total")
+                ->selectRaw("SUM(CASE WHEN status = 'review' THEN 1 ELSE 0 END) as review_total")
+                ->selectRaw("SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent_total")
+                ->selectRaw("SUM(CASE WHEN status = 'won' THEN 1 ELSE 0 END) as won_total")
+                ->first();
+        }
 
         return view('solar.dashboard', [
             'pageTitle' => 'Dashboard Solar',
@@ -29,16 +54,16 @@ class SolarDashboardController extends Controller
             'navigationItems' => $this->navigation->items(),
             'kpis' => [
                 'customers' => $company ? SolarCustomer::query()->where('company_id', $company->id)->count() : 0,
-                'projects' => $company ? SolarProject::query()->where('company_id', $company->id)->count() : 0,
-                'simulations' => $company ? SolarSimulation::query()->where('company_id', $company->id)->count() : 0,
-                'quotes' => $company ? SolarQuote::query()->where('company_id', $company->id)->count() : 0,
+                'projects' => (int) ($projectStats?->total ?? 0),
+                'simulations' => (int) ($simulationStats?->total ?? 0),
+                'quotes' => (int) ($quoteStats?->total ?? 0),
             ],
             'pipeline' => [
-                'projects_draft' => $company ? SolarProject::query()->where('company_id', $company->id)->where('status', 'draft')->count() : 0,
-                'simulations_without_quotes' => $company ? SolarSimulation::query()->where('company_id', $company->id)->doesntHave('quotes')->count() : 0,
-                'quotes_review' => $company ? SolarQuote::query()->where('company_id', $company->id)->where('status', 'review')->count() : 0,
-                'quotes_sent' => $company ? SolarQuote::query()->where('company_id', $company->id)->where('status', 'sent')->count() : 0,
-                'quotes_won' => $company ? SolarQuote::query()->where('company_id', $company->id)->where('status', 'won')->count() : 0,
+                'projects_draft' => (int) ($projectStats?->draft_total ?? 0),
+                'simulations_without_quotes' => (int) ($simulationStats?->without_quotes_total ?? 0),
+                'quotes_review' => (int) ($quoteStats?->review_total ?? 0),
+                'quotes_sent' => (int) ($quoteStats?->sent_total ?? 0),
+                'quotes_won' => (int) ($quoteStats?->won_total ?? 0),
             ],
         ]);
     }

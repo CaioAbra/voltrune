@@ -31,10 +31,12 @@ class EnsureProductAccessIsActive
             return redirect()->route('hub.activation-pending');
         }
 
-        $hasAccess = $company->productAccesses()
-            ->where('product_key', $productKey)
-            ->where('access_status', 'active')
-            ->exists();
+        $company->loadMissing('productAccesses');
+
+        $hasAccess = $company->productAccesses->contains(static function ($access) use ($productKey): bool {
+            return $access->product_key === $productKey
+                && $access->access_status === 'active';
+        });
 
         abort_unless($hasAccess, 403, 'Acesso ao produto não liberado para esta empresa.');
 

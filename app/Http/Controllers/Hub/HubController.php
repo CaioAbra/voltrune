@@ -103,9 +103,9 @@ class HubController extends Controller
             return 'pending';
         }
 
-        $company->loadMissing('billingRecords');
+        $company->loadMissing('latestBillingRecord');
 
-        return $company->billingRecords->first()?->financial_status ?? 'pending';
+        return $company->latestBillingRecord?->financial_status ?? 'pending';
     }
 
     /**
