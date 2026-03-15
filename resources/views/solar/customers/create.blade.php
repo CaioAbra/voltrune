@@ -8,22 +8,22 @@
             <div class="solar-page-intro__header">
                 <div class="solar-page-intro__copy">
                     <p class="solar-section-eyebrow">Novo cliente</p>
-                    <h2>Cadastre o contratante da proposta</h2>
-                    <p class="hub-note">Use este formulario para registrar a pessoa ou empresa que esta negociando a instalacao. O endereco da usina entra depois, na etapa de projeto.</p>
+                    <h2>Cadastre o cliente do atendimento</h2>
+                    <p class="hub-note">Use este formulario para registrar a pessoa ou empresa atendida. O local da instalacao entra depois, na etapa de projeto.</p>
                 </div>
 
                 <div class="solar-page-intro__meta">
                     <span class="solar-project-showcase__status-label">Proximo passo</span>
                     <strong>Cliente pronto para virar projeto</strong>
-                    <p>Depois de salvar, avance para o projeto e preencha local, consumo e dados tecnicos da instalacao.</p>
+                    <p>Depois de salvar, abra o projeto e preencha local, consumo e os dados base da instalacao.</p>
                 </div>
             </div>
         </section>
 
         <section class="hub-card solar-page-panel">
             <div class="solar-page-panel__header">
-                <h2>Dados do contratante</h2>
-                <p class="hub-note">Preencha o minimo necessario para o time comercial localizar o cliente e seguir com a proposta.</p>
+                <h2>Dados do cliente</h2>
+                <p class="hub-note">Preencha o minimo necessario para localizar o atendimento e seguir para o projeto sem retrabalho.</p>
             </div>
 
             <div class="hub-actions">

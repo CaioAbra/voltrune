@@ -4,6 +4,7 @@ namespace App\Modules\Solar\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Modules\Solar\Models\SolarCustomer;
+use App\Modules\Solar\Models\SolarCatalogItem;
 use App\Modules\Solar\Models\SolarProject;
 use App\Modules\Solar\Models\SolarQuote;
 use App\Modules\Solar\Models\SolarSimulation;
@@ -45,6 +46,7 @@ class SolarDashboardController extends Controller
                 ->selectRaw("SUM(CASE WHEN status = 'review' THEN 1 ELSE 0 END) as review_total")
                 ->selectRaw("SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent_total")
                 ->selectRaw("SUM(CASE WHEN status = 'won' THEN 1 ELSE 0 END) as won_total")
+                ->selectRaw("SUM(CASE WHEN next_contact_at IS NOT NULL AND next_contact_at <= CURRENT_TIMESTAMP THEN 1 ELSE 0 END) as follow_up_due_total")
                 ->first();
         }
 
@@ -54,6 +56,7 @@ class SolarDashboardController extends Controller
             'navigationItems' => $this->navigation->items(),
             'kpis' => [
                 'customers' => $company ? SolarCustomer::query()->where('company_id', $company->id)->count() : 0,
+                'catalog' => $company ? SolarCatalogItem::query()->where('company_id', $company->id)->where('is_active', true)->count() : 0,
                 'projects' => (int) ($projectStats?->total ?? 0),
                 'simulations' => (int) ($simulationStats?->total ?? 0),
                 'quotes' => (int) ($quoteStats?->total ?? 0),
@@ -64,6 +67,7 @@ class SolarDashboardController extends Controller
                 'quotes_review' => (int) ($quoteStats?->review_total ?? 0),
                 'quotes_sent' => (int) ($quoteStats?->sent_total ?? 0),
                 'quotes_won' => (int) ($quoteStats?->won_total ?? 0),
+                'quotes_follow_up_due' => (int) ($quoteStats?->follow_up_due_total ?? 0),
             ],
         ]);
     }

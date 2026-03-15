@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Solar\Controllers\CustomerController;
+use App\Modules\Solar\Controllers\CatalogController;
 use App\Modules\Solar\Controllers\ProjectController;
 use App\Modules\Solar\Controllers\QuoteController;
 use App\Modules\Solar\Controllers\SimulationController;
@@ -48,8 +49,13 @@ $solarRoute->group(function (): void {
         Route::put('/simulations/{simulation}', [SimulationController::class, 'update'])->name('simulations.update');
         Route::post('/simulations/{simulation}/duplicate', [SimulationController::class, 'duplicate'])->name('simulations.duplicate');
         Route::post('/simulations/{simulation}/quotes', [QuoteController::class, 'storeFromSimulation'])->name('simulations.quotes.store');
+        Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
+        Route::post('/catalog', [CatalogController::class, 'store'])->name('catalog.store');
+        Route::put('/catalog/{item}', [CatalogController::class, 'update'])->name('catalog.update');
+        Route::delete('/catalog/{item}', [CatalogController::class, 'destroy'])->name('catalog.destroy');
         Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
         Route::get('/quotes/{quote}/edit', [QuoteController::class, 'edit'])->name('quotes.edit');
+        Route::get('/quotes/{quote}/proposal', [QuoteController::class, 'proposal'])->name('quotes.proposal');
         Route::put('/quotes/{quote}', [QuoteController::class, 'update'])->name('quotes.update');
         Route::post('/quotes/{quote}/duplicate', [QuoteController::class, 'duplicate'])->name('quotes.duplicate');
         Route::patch('/quotes/{quote}/status', [QuoteController::class, 'updateStatus'])->name('quotes.status.update');

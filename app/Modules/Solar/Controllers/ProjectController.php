@@ -35,15 +35,101 @@ class ProjectController extends Controller
     public function index(Request $request): View
     {
         $company = $this->resolveCurrentCompany($request);
-        $projects = SolarProject::query()
+        $filters = [
+            'q' => trim((string) $request->input('q')),
+            'status' => (string) $request->input('status', ''),
+            'state' => strtoupper(trim((string) $request->input('state'))),
+            'geocoding' => (string) $request->input('geocoding', ''),
+            'sort' => (string) $request->input('sort', 'recent'),
+        ];
+        $allowedStatuses = ['draft', 'qualified', 'proposal', 'won'];
+        $allowedGeocoding = ['ready', 'not_found', 'address_loaded', 'not_requested', 'pending'];
+        $allowedSorts = ['recent', 'name_asc', 'consumption_desc', 'price_desc'];
+
+        if (! in_array($filters['status'], $allowedStatuses, true)) {
+            $filters['status'] = '';
+        }
+
+        if (! in_array($filters['geocoding'], $allowedGeocoding, true)) {
+            $filters['geocoding'] = '';
+        }
+
+        if (! in_array($filters['sort'], $allowedSorts, true)) {
+            $filters['sort'] = 'recent';
+        }
+
+        $baseQuery = SolarProject::query()
             ->with('customer')
+            ->withCount(['simulations', 'quotes'])
             ->where('company_id', $company->id)
-            ->orderBy('name')
-            ->get();
+            ;
+
+        $stateOptions = SolarProject::query()
+            ->where('company_id', $company->id)
+            ->whereNotNull('state')
+            ->where('state', '!=', '')
+            ->select('state')
+            ->distinct()
+            ->orderBy('state')
+            ->pluck('state');
+
+        $summaryProjects = (clone $baseQuery)->get();
+        $projectsQuery = clone $baseQuery;
+
+        if ($filters['q'] !== '') {
+            $search = '%' . $filters['q'] . '%';
+
+            $projectsQuery->where(function ($query) use ($search): void {
+                $query->where('name', 'like', $search)
+                    ->orWhere('city', 'like', $search)
+                    ->orWhere('state', 'like', $search)
+                    ->orWhere('utility_company', 'like', $search)
+                    ->orWhereHas('customer', function ($customerQuery) use ($search): void {
+                        $customerQuery->where('name', 'like', $search);
+                    });
+            });
+        }
+
+        if ($filters['status'] !== '') {
+            $projectsQuery->where('status', $filters['status']);
+        }
+
+        if ($filters['state'] !== '') {
+            $projectsQuery->where('state', $filters['state']);
+        }
+
+        if ($filters['geocoding'] !== '') {
+            $projectsQuery->where('geocoding_status', $filters['geocoding']);
+        }
+
+        match ($filters['sort']) {
+            'name_asc' => $projectsQuery->orderBy('name'),
+            'consumption_desc' => $projectsQuery->orderByDesc('monthly_consumption_kwh')->orderBy('name'),
+            'price_desc' => $projectsQuery->orderByDesc('suggested_price')->orderBy('name'),
+            default => $projectsQuery->latest(),
+        };
+
+        $projects = $projectsQuery->get();
+        $hasActiveFilters = $filters['q'] !== ''
+            || $filters['status'] !== ''
+            || $filters['state'] !== ''
+            || $filters['geocoding'] !== ''
+            || $filters['sort'] !== 'recent';
 
         return view('solar.projects.index', $this->viewData('Projetos', [
             'company' => $company,
             'projects' => $projects,
+            'filters' => $filters,
+            'stateOptions' => $stateOptions,
+            'hasActiveFilters' => $hasActiveFilters,
+            'summary' => [
+                'total' => $summaryProjects->count(),
+                'draft' => $summaryProjects->where('status', 'draft')->count(),
+                'qualified' => $summaryProjects->where('status', 'qualified')->count(),
+                'proposal' => $summaryProjects->where('status', 'proposal')->count(),
+                'geocoding_ready' => $summaryProjects->where('geocoding_status', 'ready')->count(),
+                'filtered' => $projects->count(),
+            ],
         ]));
     }
 
@@ -295,7 +381,7 @@ class ProjectController extends Controller
     {
         return array_merge([
             'pageTitle' => $pageTitle,
-            'pageDescription' => 'Fluxo de pré-orçamento rápido para instaladores: cliente, local, consumo, sistema sugerido e valor comercial na mesma jornada.',
+            'pageDescription' => 'Fluxo guiado para instaladores: cliente, local, consumo, simulacao e orcamento na mesma jornada.',
             'navigationItems' => $this->navigation->items(),
         ], $data);
     }

@@ -2,7 +2,9 @@
 
 namespace App\Modules\Solar\Services;
 
+use App\Modules\Solar\Models\SolarCatalogItem;
 use App\Modules\Solar\Models\SolarSimulation;
+use Illuminate\Support\Collection;
 
 class SolarQuoteBlueprintService
 {
@@ -21,6 +23,9 @@ class SolarQuoteBlueprintService
             'suggested_price' => $simulation->suggested_price !== null ? (float) $simulation->suggested_price : null,
             'estimated_monthly_savings' => $simulation->estimated_monthly_savings !== null ? (float) $simulation->estimated_monthly_savings : null,
             'estimated_payback_months' => $simulation->estimated_payback_months,
+            'payment_mode' => $simulation->payment_mode,
+            'estimated_installment_value' => $simulation->estimated_installment_value !== null ? (float) $simulation->estimated_installment_value : null,
+            'estimated_net_monthly_benefit' => $simulation->estimated_net_monthly_benefit !== null ? (float) $simulation->estimated_net_monthly_benefit : null,
             'inverter_model' => $simulation->inverter_model,
             'solar_factor_used' => $simulation->solar_factor_used !== null ? (float) $simulation->solar_factor_used : null,
         ];
@@ -46,11 +51,15 @@ class SolarQuoteBlueprintService
     /**
      * @return array<int, array<string, mixed>>
      */
-    public function buildSeedItemsFromSimulation(SolarSimulation $simulation): array
+    public function buildSeedItemsFromSimulation(SolarSimulation $simulation, ?Collection $catalogItems = null): array
     {
         $kitCost = $simulation->estimated_kit_cost !== null ? (float) $simulation->estimated_kit_cost : 0.0;
         $suggestedPrice = $simulation->suggested_price !== null ? (float) $simulation->suggested_price : 0.0;
         $composition = is_array($simulation->system_composition_json) ? array_values($simulation->system_composition_json) : [];
+        $catalogByCategory = ($catalogItems ?? collect())
+            ->filter(fn (SolarCatalogItem $item) => $item->is_active)
+            ->groupBy('category')
+            ->map(fn (Collection $items): ?SolarCatalogItem => $items->first());
 
         $components = [
             [
@@ -92,8 +101,22 @@ class SolarQuoteBlueprintService
         $lastIndex = array_key_last($components);
 
         foreach ($components as $index => $component) {
+            /** @var ?SolarCatalogItem $catalogItem */
+            $catalogItem = $catalogByCategory->get($component['category']);
             $totalCost = round((float) $component['total_cost'], 2);
             $quantity = max((float) $component['quantity'], 1);
+
+            if ($catalogItem instanceof SolarCatalogItem) {
+                $catalogQuantity = max((float) ($catalogItem->default_quantity ?: 1), 1);
+                $quantity = $component['category'] === 'module'
+                    ? max($quantity, $catalogQuantity)
+                    : $catalogQuantity;
+                $catalogTotalCost = round((float) $catalogItem->default_cost * $quantity, 2);
+
+                if ($catalogTotalCost > 0) {
+                    $totalCost = $catalogTotalCost;
+                }
+            }
 
             if ($totalCost <= 0 && $suggestedPrice <= 0) {
                 continue;
@@ -107,18 +130,23 @@ class SolarQuoteBlueprintService
                 $totalPrice = $totalCost;
             }
 
-            $runningPrice += $totalPrice;
+            $resolvedTotalPrice = ($catalogItem?->default_price ?? 0) > 0
+                ? round((float) $catalogItem->default_price * $quantity, 2)
+                : $totalPrice;
+
+            $runningPrice += $resolvedTotalPrice;
 
             $seedItems[] = [
-                'type' => $component['type'],
-                'category' => $component['category'],
-                'name' => $component['name'],
-                'description' => $component['description'],
+                'solar_catalog_item_id' => $catalogItem?->id,
+                'type' => $catalogItem?->type ?: $component['type'],
+                'category' => $catalogItem?->category ?: $component['category'],
+                'name' => $catalogItem?->name ?: $component['name'],
+                'description' => $catalogItem?->notes ?: $component['description'],
                 'quantity' => $quantity,
-                'unit_cost' => round($totalCost / $quantity, 2),
-                'unit_price' => round($totalPrice / $quantity, 2),
+                'unit_cost' => round((($catalogItem?->default_cost ?? 0) > 0 ? ((float) $catalogItem->default_cost) : ($totalCost / $quantity)), 2),
+                'unit_price' => round((($catalogItem?->default_price ?? 0) > 0 ? ((float) $catalogItem->default_price) : ($totalPrice / $quantity)), 2),
                 'total_cost' => $totalCost,
-                'total_price' => $totalPrice,
+                'total_price' => $resolvedTotalPrice,
             ];
         }
 

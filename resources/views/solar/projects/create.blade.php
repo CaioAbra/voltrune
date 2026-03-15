@@ -8,22 +8,22 @@
             <div class="solar-page-intro__header">
                 <div class="solar-page-intro__copy">
                     <p class="solar-section-eyebrow">Novo projeto</p>
-                    <h2>Monte um pre-orcamento comercial sem perder contexto</h2>
-                    <p class="hub-note">Este fluxo foi reorganizado para o vendedor enxergar local, automacao, sistema sugerido e leitura financeira sem esmagar a informacao em cards estreitos.</p>
+                    <h2>Monte um projeto comercial sem perder contexto</h2>
+                    <p class="hub-note">Comece pelo essencial: cliente, local e consumo. O Solar atualiza a leitura inicial do orcamento logo abaixo.</p>
                 </div>
 
                 <div class="solar-page-intro__meta">
                     <span class="solar-project-showcase__status-label">Resultado esperado</span>
-                    <strong>Projeto pronto para virar simulacao</strong>
-                    <p>Preencha a base do cliente, valide local e consumo, e deixe o Solar preparar a primeira leitura tecnico-comercial.</p>
+                    <strong>Projeto pronto para gerar a primeira simulacao</strong>
+                    <p>Preencha os dados base primeiro. Os ajustes do sistema e a leitura comercial ficam disponiveis na mesma jornada.</p>
                 </div>
             </div>
         </section>
 
         <section class="hub-card solar-page-panel">
             <div class="solar-page-panel__header">
-                <h2>Novo pre-orcamento solar</h2>
-                <p class="hub-note">Monte um projeto comercial com cliente, local, consumo, sistema sugerido e valor inicial sem sair da jornada do instalador.</p>
+                <h2>Novo projeto solar</h2>
+                <p class="hub-note">Preencha o essencial primeiro. Os blocos de revisao tecnica e comercial aparecem logo abaixo para ajuste fino.</p>
             </div>
 
             <div class="hub-actions">

@@ -16,6 +16,7 @@ class SolarQuoteItem extends Model
      */
     protected $fillable = [
         'solar_quote_id',
+        'solar_catalog_item_id',
         'type',
         'category',
         'name',
@@ -35,6 +36,7 @@ class SolarQuoteItem extends Model
         return [
             'type' => 'string',
             'category' => 'string',
+            'solar_catalog_item_id' => 'integer',
             'quantity' => 'decimal:2',
             'unit_cost' => 'decimal:2',
             'unit_price' => 'decimal:2',
@@ -46,5 +48,10 @@ class SolarQuoteItem extends Model
     public function quote(): BelongsTo
     {
         return $this->belongsTo(SolarQuote::class, 'solar_quote_id');
+    }
+
+    public function catalogItem(): BelongsTo
+    {
+        return $this->belongsTo(SolarCatalogItem::class, 'solar_catalog_item_id');
     }
 }

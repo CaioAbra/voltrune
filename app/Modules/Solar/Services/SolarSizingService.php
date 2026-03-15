@@ -15,6 +15,9 @@ class SolarSizingService
     public const ESTIMATED_AREA_PER_KWP = 4.5;
     public const MODULE_AREA_SQM = 2.3;
     public const AVERAGE_DAYS_PER_MONTH = 30.0;
+    public const DEFAULT_TARIFF_GROWTH_YEARLY = 6.0;
+    public const DEFAULT_INSTALLMENT_COUNT = 60;
+    public const DEFAULT_MONTHLY_INTEREST_RATE = 1.25;
 
     private const DEFAULT_REGIONAL_PRICE_PER_KWP = [
         'AC' => 4550.0,
@@ -421,6 +424,83 @@ class SolarSizingService
         }
 
         return round($annualSavings * $years, 2);
+    }
+
+    public function estimateProjectedSavingsWithTariffGrowth(
+        float|int|string|null $monthlySavings,
+        float|int|string|null $tariffGrowthYearly = null,
+        int $years = 5,
+    ): ?float {
+        $baseSavings = $monthlySavings !== null && $monthlySavings !== '' ? (float) $monthlySavings : 0.0;
+        $growthRate = $tariffGrowthYearly !== null && $tariffGrowthYearly !== ''
+            ? (float) $tariffGrowthYearly
+            : self::DEFAULT_TARIFF_GROWTH_YEARLY;
+
+        if ($baseSavings <= 0 || $years <= 0) {
+            return null;
+        }
+
+        $projectedSavings = 0.0;
+
+        for ($year = 0; $year < $years; $year++) {
+            $projectedSavings += ($baseSavings * 12) * ((1 + ($growthRate / 100)) ** $year);
+        }
+
+        return round($projectedSavings, 2);
+    }
+
+    public function estimateFinancedAmount(
+        float|int|string|null $suggestedPrice,
+        float|int|string|null $upfrontPayment = null,
+    ): ?float {
+        $price = $suggestedPrice !== null && $suggestedPrice !== '' ? (float) $suggestedPrice : 0.0;
+        $entry = $upfrontPayment !== null && $upfrontPayment !== '' ? (float) $upfrontPayment : 0.0;
+
+        if ($price <= 0) {
+            return null;
+        }
+
+        return round(max($price - max($entry, 0), 0), 2);
+    }
+
+    public function estimateInstallmentValue(
+        float|int|string|null $financedAmount,
+        int|float|string|null $installmentCount,
+        float|int|string|null $monthlyInterestRate = null,
+    ): ?float {
+        $principal = $financedAmount !== null && $financedAmount !== '' ? (float) $financedAmount : 0.0;
+        $months = $installmentCount !== null && $installmentCount !== '' ? (int) $installmentCount : 0;
+        $ratePercent = $monthlyInterestRate !== null && $monthlyInterestRate !== ''
+            ? (float) $monthlyInterestRate
+            : self::DEFAULT_MONTHLY_INTEREST_RATE;
+
+        if ($principal <= 0 || $months <= 0) {
+            return null;
+        }
+
+        $rate = $ratePercent / 100;
+
+        if ($rate <= 0) {
+            return round($principal / $months, 2);
+        }
+
+        $factor = ((1 + $rate) ** $months);
+
+        return round($principal * (($rate * $factor) / ($factor - 1)), 2);
+    }
+
+    public function estimateNetMonthlyBenefit(
+        float|int|string|null $monthlySavings,
+        float|int|string|null $installmentValue = null,
+    ): ?float {
+        $savings = $monthlySavings !== null && $monthlySavings !== '' ? (float) $monthlySavings : 0.0;
+        $installment = $installmentValue !== null && $installmentValue !== '' ? (float) $installmentValue : 0.0;
+
+        if ($savings <= 0 && $installment <= 0) {
+            return null;
+        }
+
+        return round($savings - $installment, 2);
     }
 
     public function estimateAreaSquareMeters(float|int|string|null $systemPowerKwp): ?float

@@ -34,14 +34,14 @@
             <div class="solar-page-intro__header">
                 <div class="solar-page-intro__copy">
                     <p class="solar-section-eyebrow">Configuracoes</p>
-                    <h2>Base comercial usada nas propostas</h2>
-                    <p class="hub-note">Defina os padroes da sua operacao para acelerar pre-dimensionamento, preco sugerido e margem de referencia sem perder flexibilidade na negociacao.</p>
+                    <h2>Base comercial usada nos orcamentos</h2>
+                    <p class="hub-note">Defina os padroes da sua operacao para acelerar a leitura inicial do orcamento sem perder flexibilidade na negociacao.</p>
                 </div>
 
                 <div class="solar-page-intro__meta">
                     <span class="solar-project-showcase__status-label">Impacto</span>
                     <strong>Esses dados afetam novos projetos</strong>
-                    <p>Potencia padrao, inversor base, preco por kWp e a regra de margem alimentam a leitura inicial das proximas propostas.</p>
+                    <p>Potencia padrao, inversor base, preco por kWp e a regra de margem alimentam a leitura inicial dos proximos orcamentos.</p>
                 </div>
             </div>
         </section>
