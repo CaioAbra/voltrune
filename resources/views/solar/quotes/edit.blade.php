@@ -30,149 +30,123 @@
     $itemsLockedPrice = $quoteSummary['item_count'] > 0;
     $statusLabel = $statusOptions[$quote->status] ?? strtoupper((string) $quote->status);
     $resolvedFinalPrice = $quoteSummary['item_count'] > 0 ? $quoteSummary['total_price'] : $quote->final_price;
+    $simulationSnapshot = is_array($quote->simulation_snapshot_json) ? $quote->simulation_snapshot_json : [];
 @endphp
 
 @section('solar-content')
-    <section class="space-y-8">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Orcamento solar</p>
-                <h1 class="text-3xl font-semibold text-slate-900">{{ $quote->title }}</h1>
-                <p class="mt-2 max-w-3xl text-sm text-slate-600">
-                    Esta tela organiza a proposta comercial com materiais, servicos, custo, preco final e margem.
-                </p>
-            </div>
+    <section class="hub-card solar-project-show solar-project-shell">
+        <div class="hub-actions solar-project-show__actions">
+            <a href="#adicionar-item" class="hub-btn">Adicionar item</a>
 
-            <div class="flex flex-wrap gap-3">
-                <a href="#adicionar-item" class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800">
-                    Adicionar item
-                </a>
+            <form action="{{ route('solar.quotes.duplicate', $quote->id) }}" method="POST">
+                @csrf
+                <button type="submit" class="hub-btn hub-btn--subtle">Duplicar orcamento</button>
+            </form>
 
-                <form action="{{ route('solar.quotes.duplicate', $quote->id) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                        Duplicar orcamento
-                    </button>
-                </form>
+            <form action="{{ route('solar.quotes.status.update', $quote->id) }}" method="POST">
+                @csrf
+                @method('PATCH')
+                <input type="hidden" name="status" value="review">
+                <button type="submit" class="hub-btn hub-btn--subtle">Enviar para revisao</button>
+            </form>
 
-                <form action="{{ route('solar.quotes.status.update', $quote->id) }}" method="POST">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="review">
-                    <button type="submit" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                        Gerar proposta
-                    </button>
-                </form>
-
-                @if ($simulation)
-                    <a href="{{ route('solar.simulations.show', $simulation->id) }}" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50">
-                        Voltar a simulacao
-                    </a>
-                @endif
-            </div>
+            @if ($simulation)
+                <a href="{{ route('solar.simulations.show', $simulation->id) }}" class="hub-btn hub-btn--subtle">Voltar a simulacao</a>
+            @endif
         </div>
 
-        <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.9fr)]">
+        <section class="hub-card hub-card--subtle solar-project-showcase solar-quote-editor-hero">
+            <div class="solar-project-showcase__header">
                 <div>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{{ $statusLabel }}</span>
-                        <span class="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">{{ $quoteSummary['item_count'] }} {{ $quoteSummary['item_count'] === 1 ? 'item' : 'itens' }}</span>
-                        <span class="inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">{{ $simulation?->name ?: 'Proposta manual' }}</span>
-                    </div>
+                    <p class="solar-section-eyebrow">Orcamento solar</p>
+                    <h2>{{ $quote->title }}</h2>
+                    <p class="hub-note">
+                        Esta tela organiza a proposta comercial com materiais, servicos, custo, preco final e margem.
+                    </p>
 
-                    <div class="mt-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
-                        <article class="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm transition-colors hover:bg-white">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Custo total</span>
-                            <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $quoteSummary['item_count'] > 0 ? 'R$ ' . number_format((float) $quoteSummary['total_cost'], 2, ',', '.') : '-' }}</p>
-                        </article>
-                        <article class="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm transition-colors hover:bg-amber-100/70">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-700">Preco final</span>
-                            <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $resolvedFinalPrice ? 'R$ ' . number_format((float) $resolvedFinalPrice, 2, ',', '.') : '-' }}</p>
-                        </article>
-                        <article class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 shadow-sm transition-colors hover:bg-emerald-100/70">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Lucro bruto</span>
-                            <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $quoteSummary['item_count'] > 0 ? 'R$ ' . number_format((float) $quoteSummary['gross_profit'], 2, ',', '.') : '-' }}</p>
-                        </article>
-                        <article class="rounded-2xl border border-sky-200 bg-sky-50 p-5 shadow-sm transition-colors hover:bg-sky-100/70">
-                            <span class="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Margem</span>
-                            <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $quoteSummary['item_count'] > 0 ? number_format((float) $quoteSummary['margin_percent'], 2, ',', '.') . '%' : '-' }}</p>
-                        </article>
+                    <div class="solar-project-showcase__chips">
+                        <span class="solar-mini-badge solar-mini-badge--editable">{{ $statusLabel }}</span>
+                        <span class="solar-mini-badge solar-mini-badge--automatic">{{ $quoteSummary['item_count'] }} {{ $quoteSummary['item_count'] === 1 ? 'item' : 'itens' }}</span>
+                        <span class="solar-mini-badge">{{ $simulationSnapshot['name'] ?? $simulation?->name ?: 'Proposta manual' }}</span>
                     </div>
                 </div>
 
-                <aside class="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Contexto comercial</p>
-                    <h2 class="mt-3 text-xl font-semibold">{{ $customerName }}</h2>
-                    <p class="mt-3 text-sm leading-6 text-slate-300">
-                        {{ $quote->status === 'sent' ? 'Proposta enviada. Agora o foco e acompanhar retorno e ajustar negociacao.' : 'Monte a composicao real do kit e avance o status quando a proposta estiver pronta.' }}
-                    </p>
-                    <p class="mt-4 text-xs uppercase tracking-[0.18em] text-slate-400">
-                        Base: {{ $project?->name ?: 'Projeto nao vinculado' }}
-                    </p>
-                </aside>
+                <div class="solar-project-showcase__status is-market">
+                    <span class="solar-project-showcase__status-label">Contexto comercial</span>
+                    <strong>{{ $customerName }}</strong>
+                    <p>{{ $quote->status === 'sent' ? 'Proposta enviada. Agora o foco e acompanhar retorno e ajustar negociacao.' : 'Monte a composicao real do kit e avance o status quando a proposta estiver pronta.' }}</p>
+                    <p>Base: {{ $project?->name ?: 'Projeto nao vinculado' }}</p>
+                </div>
+            </div>
+
+            <div class="solar-project-showcase__hero-grid">
+                <article class="solar-project-showcase-metric">
+                    <span class="solar-project-showcase-metric__label">Custo total</span>
+                    <strong class="solar-project-showcase-metric__value">{{ $quoteSummary['item_count'] > 0 ? 'R$ ' . number_format((float) $quoteSummary['total_cost'], 2, ',', '.') : '-' }}</strong>
+                </article>
+                <article class="solar-project-showcase-metric solar-project-showcase-metric--highlight">
+                    <span class="solar-project-showcase-metric__label">Preco final</span>
+                    <strong class="solar-project-showcase-metric__value">{{ $resolvedFinalPrice ? 'R$ ' . number_format((float) $resolvedFinalPrice, 2, ',', '.') : '-' }}</strong>
+                </article>
+                <article class="solar-project-showcase-metric solar-project-showcase-metric--commercial">
+                    <span class="solar-project-showcase-metric__label">Lucro bruto</span>
+                    <strong class="solar-project-showcase-metric__value">{{ $quoteSummary['item_count'] > 0 ? 'R$ ' . number_format((float) $quoteSummary['gross_profit'], 2, ',', '.') : '-' }}</strong>
+                </article>
+                <article class="solar-project-showcase-metric">
+                    <span class="solar-project-showcase-metric__label">Margem</span>
+                    <strong class="solar-project-showcase-metric__value" data-show-format="percent">{{ $quoteSummary['item_count'] > 0 ? number_format((float) $quoteSummary['margin_percent'], 2, ',', '.') . '%' : '-' }}</strong>
+                </article>
             </div>
         </section>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-            <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Resumo da proposta</p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900">Dados comerciais e origem</h2>
+        <div class="hub-grid solar-project-show__grid solar-project-show__grid--quote-summary">
+            <section class="hub-card hub-card--subtle solar-project-show__card">
+                <p class="solar-section-eyebrow">Resumo da proposta</p>
+                <h2>Dados comerciais e origem</h2>
 
-                <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Projeto</span>
-                        <p class="mt-2 text-base font-semibold text-slate-900">{{ $project?->name ?: '-' }}</p>
-                    </article>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Cliente</span>
-                        <p class="mt-2 text-base font-semibold text-slate-900">{{ $customerName }}</p>
-                    </article>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Simulacao</span>
-                        <p class="mt-2 text-base font-semibold text-slate-900">{{ $simulation?->name ?: 'Nao vinculada' }}</p>
-                    </article>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Preco sugerido</span>
-                        <p class="mt-2 text-base font-semibold text-slate-900">{{ $simulation?->suggested_price ? 'R$ ' . number_format((float) $simulation->suggested_price, 2, ',', '.') : '-' }}</p>
-                    </article>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Potencia da simulacao</span>
-                        <p class="mt-2 text-base font-semibold text-slate-900">{{ $simulation?->system_power_kwp ? number_format((float) $simulation->system_power_kwp, 2, ',', '.') . ' kWp' : '-' }}</p>
-                    </article>
-                    <article class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <span class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Payback estimado</span>
-                        <p class="mt-2 text-base font-semibold text-slate-900">{{ $simulation?->estimated_payback_months ? $simulation->estimated_payback_months . ' meses' : '-' }}</p>
-                    </article>
+                <div class="solar-project-show__info-grid">
+                    <p><strong>Projeto</strong><span>{{ $project?->name ?: '-' }}</span></p>
+                    <p><strong>Cliente</strong><span>{{ $customerName }}</span></p>
+                    <p><strong>Simulacao</strong><span>{{ $simulationSnapshot['name'] ?? $simulation?->name ?: 'Nao vinculada' }}</span></p>
+                    <p><strong>Preco sugerido</strong><span>{{ ($simulationSnapshot['suggested_price'] ?? $simulation?->suggested_price) ? 'R$ ' . number_format((float) ($simulationSnapshot['suggested_price'] ?? $simulation?->suggested_price), 2, ',', '.') : '-' }}</span></p>
+                    <p><strong>Potencia da simulacao</strong><span>{{ ($simulationSnapshot['system_power_kwp'] ?? $simulation?->system_power_kwp) ? number_format((float) ($simulationSnapshot['system_power_kwp'] ?? $simulation?->system_power_kwp), 2, ',', '.') . ' kWp' : '-' }}</span></p>
+                    <p><strong>Payback estimado</strong><span>{{ ($simulationSnapshot['estimated_payback_months'] ?? $simulation?->estimated_payback_months) ? ($simulationSnapshot['estimated_payback_months'] ?? $simulation?->estimated_payback_months) . ' meses' : '-' }}</span></p>
                 </div>
             </section>
 
-            <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Edicao</p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900">Ajustes da proposta</h2>
+            <section class="hub-card hub-card--subtle solar-flow-section">
+                <div class="solar-flow-section__header solar-flow-section__header--stacked-md">
+                    <div>
+                        <p class="solar-section-eyebrow">Edicao</p>
+                        <h2>Ajustes da proposta</h2>
+                        <p class="hub-note">O preco final fica automatico quando ha itens cadastrados. Sem itens, o valor ainda pode ser informado manualmente.</p>
+                    </div>
+                </div>
 
-                <form action="{{ route('solar.quotes.update', $quote->id) }}" method="POST" class="mt-6 space-y-4">
+                <form action="{{ route('solar.quotes.update', $quote->id) }}" method="POST" class="hub-auth-form">
                     @csrf
                     @method('PUT')
 
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700" for="quote-title">Titulo da proposta</label>
-                        <input id="quote-title" name="title" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" value="{{ old('title', $quote->title) }}" required>
+                    <div class="hub-grid solar-quote-item-form__grid solar-quote-item-form__grid--duo">
+                        <div>
+                            <label class="hub-auth-label" for="quote-title">Titulo da proposta</label>
+                            <input id="quote-title" name="title" type="text" class="hub-auth-input" value="{{ old('title', $quote->title) }}" required>
+                        </div>
+
+                        <div>
+                            <label class="hub-auth-label" for="quote-status">Status</label>
+                            <select id="quote-status" name="status" class="hub-auth-input" required>
+                                @foreach ($statusOptions as $value => $label)
+                                    <option value="{{ $value }}" @selected(old('status', $quote->status) === $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700" for="quote-status">Status</label>
-                        <select id="quote-status" name="status" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" required>
-                            @foreach ($statusOptions as $value => $label)
-                                <option value="{{ $value }}" @selected(old('status', $quote->status) === $value)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700" for="quote-final-price">Preco final</label>
-                        <input id="quote-final-price" name="final_price" type="number" step="0.01" min="0" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400 disabled:bg-slate-100" value="{{ old('final_price', $quote->final_price) }}" @disabled($itemsLockedPrice)>
-                        <p class="mt-2 text-xs leading-5 text-slate-500">
+                        <label class="hub-auth-label" for="quote-final-price">Preco final</label>
+                        <input id="quote-final-price" name="final_price" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('final_price', $quote->final_price) }}" @disabled($itemsLockedPrice)>
+                        <p class="solar-field-note">
                             @if ($itemsLockedPrice)
                                 O preco final esta sendo calculado automaticamente com base nos itens adicionados.
                             @else
@@ -182,40 +156,51 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700" for="quote-notes">Observacoes</label>
-                        <textarea id="quote-notes" name="notes" rows="7" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400">{{ old('notes', $quote->notes) }}</textarea>
+                        <label class="hub-auth-label" for="quote-notes">Observacoes</label>
+                        <textarea id="quote-notes" name="notes" rows="7" class="hub-auth-input">{{ old('notes', $quote->notes) }}</textarea>
                     </div>
 
-                    <div class="pt-2">
-                        <button type="submit" class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800">
-                            Salvar proposta
-                        </button>
+                    <div class="hub-actions">
+                        <button type="submit" class="hub-btn">Salvar proposta</button>
                     </div>
                 </form>
 
-                <form action="{{ route('solar.quotes.status.update', $quote->id) }}" method="POST" class="mt-3">
+                <form action="{{ route('solar.quotes.status.update', $quote->id) }}" method="POST" class="hub-actions">
                     @csrf
                     @method('PATCH')
                     <input type="hidden" name="status" value="sent">
-                    <button type="submit" class="inline-flex items-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
-                        Marcar como enviado
-                    </button>
+                    <button type="submit" class="hub-btn hub-btn--subtle">Marcar como enviado</button>
                 </form>
             </section>
         </div>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(320px,0.9fr)_minmax(0,1.1fr)]">
-            <section id="adicionar-item" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Adicionar item</p>
-                <h2 class="mt-2 text-2xl font-semibold text-slate-900">Material ou servico</h2>
+        <div class="hub-grid solar-project-show__grid solar-project-show__grid--quote-composer">
+            <section id="adicionar-item" class="hub-card hub-card--subtle solar-flow-section solar-pricing-panel solar-quote-item-panel">
+                <div class="solar-flow-section__header solar-quote-item-panel__header">
+                    <div class="solar-quote-item-panel__lead">
+                        <p class="solar-section-eyebrow">Adicionar item</p>
+                        <div class="solar-quote-item-panel__intro">
+                            <h2 class="solar-quote-item-panel__title">Material ou servico</h2>
 
-                <form action="{{ route('solar.quotes.items.store', $quote->id) }}" method="POST" class="mt-6 space-y-4">
+                            <div class="solar-quote-item-panel__support">
+                                <p class="hub-note">Monte a proposta com modulos, inversor, estrutura, cabeamento, instalacao e servicos complementares.</p>
+                                <div class="solar-quote-item-panel__tags">
+                                    <span class="solar-mini-badge solar-mini-badge--automatic">Kit</span>
+                                    <span class="solar-mini-badge">Servico</span>
+                                    <span class="solar-mini-badge">Custo e venda</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form action="{{ route('solar.quotes.items.store', $quote->id) }}" method="POST" class="hub-auth-form solar-quote-item-form">
                     @csrf
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="hub-grid solar-quote-item-form__grid solar-quote-item-form__grid--duo">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700" for="item-type">Tipo</label>
-                            <select id="item-type" name="type" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" required>
+                            <label class="hub-auth-label" for="item-type">Tipo</label>
+                            <select id="item-type" name="type" class="hub-auth-input" required>
                                 @foreach ($typeOptions as $value => $label)
                                     <option value="{{ $value }}" @selected(old('type') === $value)>{{ $label }}</option>
                                 @endforeach
@@ -223,8 +208,8 @@
                         </div>
 
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700" for="item-category">Categoria</label>
-                            <select id="item-category" name="category" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" required>
+                            <label class="hub-auth-label" for="item-category">Categoria</label>
+                            <select id="item-category" name="category" class="hub-auth-input" required>
                                 @foreach ($categoryOptions as $value => $label)
                                     <option value="{{ $value }}" @selected(old('category') === $value)>{{ $label }}</option>
                                 @endforeach
@@ -233,100 +218,100 @@
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700" for="item-name">Nome</label>
-                        <input id="item-name" name="name" type="text" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" value="{{ old('name') }}" required>
+                        <label class="hub-auth-label" for="item-name">Nome</label>
+                        <input id="item-name" name="name" type="text" class="hub-auth-input" value="{{ old('name') }}" required>
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700" for="item-description">Descricao</label>
-                        <textarea id="item-description" name="description" rows="3" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400">{{ old('description') }}</textarea>
+                        <label class="hub-auth-label" for="item-description">Descricao</label>
+                        <textarea id="item-description" name="description" rows="3" class="hub-auth-input">{{ old('description') }}</textarea>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div class="hub-grid solar-quote-item-form__grid solar-quote-item-form__grid--metrics">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700" for="item-quantity">Quantidade</label>
-                            <input id="item-quantity" name="quantity" type="number" step="0.01" min="0.01" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" value="{{ old('quantity', '1') }}" required>
+                            <label class="hub-auth-label" for="item-quantity">Quantidade</label>
+                            <input id="item-quantity" name="quantity" type="number" step="0.01" min="0.01" class="hub-auth-input" value="{{ old('quantity', '1') }}" required>
                         </div>
-
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700" for="item-unit-cost">Custo unitario</label>
-                            <input id="item-unit-cost" name="unit_cost" type="number" step="0.01" min="0" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" value="{{ old('unit_cost', '0') }}" required>
+                            <label class="hub-auth-label" for="item-unit-cost">Custo unitario</label>
+                            <input id="item-unit-cost" name="unit_cost" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('unit_cost', '0') }}" required>
                         </div>
-
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-slate-700" for="item-unit-price">Preco unitario</label>
-                            <input id="item-unit-price" name="unit_price" type="number" step="0.01" min="0" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-slate-400" value="{{ old('unit_price', '0') }}" required>
+                            <label class="hub-auth-label" for="item-unit-price">Preco unitario</label>
+                            <input id="item-unit-price" name="unit_price" type="number" step="0.01" min="0" class="hub-auth-input" value="{{ old('unit_price', '0') }}" required>
                         </div>
                     </div>
 
-                    <button type="submit" class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800">
-                        Adicionar item
-                    </button>
+                    <div class="hub-actions">
+                        <button type="submit" class="hub-btn">Adicionar item</button>
+                    </div>
                 </form>
             </section>
 
-            <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div class="flex flex-wrap items-end justify-between gap-3">
+            <section class="hub-card hub-card--subtle solar-project-show__card">
+                <div class="solar-flow-section__header solar-flow-section__header--stacked-md">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Itens do orcamento</p>
-                        <h2 class="text-2xl font-semibold text-slate-900">Composicao de materiais e servicos</h2>
+                        <p class="solar-section-eyebrow">Itens do orcamento</p>
+                        <h2>Composicao de materiais e servicos</h2>
                     </div>
-                    <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
-                        {{ $quoteSummary['item_count'] }} {{ $quoteSummary['item_count'] === 1 ? 'item' : 'itens' }}
-                    </span>
+                    <div class="solar-project-showcase__status is-ready">
+                        <span class="solar-project-showcase__status-label">Itens cadastrados</span>
+                        <strong>{{ $quoteSummary['item_count'] }} {{ $quoteSummary['item_count'] === 1 ? 'item' : 'itens' }}</strong>
+                        <p>O total da proposta e recalculado a partir da composicao adicionada.</p>
+                    </div>
                 </div>
 
-                <div class="mt-6 overflow-hidden rounded-2xl border border-slate-200">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-200 text-sm">
-                            <thead class="bg-slate-50">
-                                <tr class="text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-                                    <th class="px-4 py-3">Tipo</th>
-                                    <th class="px-4 py-3">Categoria</th>
-                                    <th class="px-4 py-3">Nome</th>
-                                    <th class="px-4 py-3">Quantidade</th>
-                                    <th class="px-4 py-3">Custo unitario</th>
-                                    <th class="px-4 py-3">Preco unitario</th>
-                                    <th class="px-4 py-3">Total</th>
-                                    <th class="px-4 py-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 bg-white">
-                                @forelse ($quote->items as $item)
-                                    <tr class="transition-colors hover:bg-slate-50">
-                                        <td class="px-4 py-4 text-slate-700">{{ $typeOptions[$item->type] ?? ucfirst((string) $item->type) }}</td>
-                                        <td class="px-4 py-4 text-slate-700">{{ $categoryOptions[$item->category] ?? ucfirst((string) $item->category) }}</td>
-                                        <td class="px-4 py-4">
-                                            <div class="font-medium text-slate-900">{{ $item->name }}</div>
-                                            @if ($item->description)
-                                                <div class="mt-1 text-xs text-slate-500">{{ $item->description }}</div>
-                                            @endif
-                                        </td>
-                                        <td class="px-4 py-4 text-slate-700">{{ number_format((float) $item->quantity, 2, ',', '.') }}</td>
-                                        <td class="px-4 py-4 text-slate-700">R$ {{ number_format((float) $item->unit_cost, 2, ',', '.') }}</td>
-                                        <td class="px-4 py-4 text-slate-700">R$ {{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
-                                        <td class="px-4 py-4 font-semibold text-slate-900">R$ {{ number_format((float) $item->total_price, 2, ',', '.') }}</td>
-                                        <td class="px-4 py-4 text-right">
+                <div class="solar-table-wrap">
+                    <table class="hub-table solar-table solar-table--quote-items">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Categoria</th>
+                                <th>Nome</th>
+                                <th>Quantidade</th>
+                                <th>Custo unitario</th>
+                                <th>Preco unitario</th>
+                                <th>Total</th>
+                                <th>Acoes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($quote->items as $item)
+                                <tr class="solar-table__row">
+                                    <td data-label="Tipo" class="solar-table__cell">{{ $typeOptions[$item->type] ?? ucfirst((string) $item->type) }}</td>
+                                    <td data-label="Categoria" class="solar-table__cell">{{ $categoryOptions[$item->category] ?? ucfirst((string) $item->category) }}</td>
+                                    <td data-label="Nome" class="solar-table__cell solar-table__cell--primary">
+                                        <strong class="solar-table__entity">{{ $item->name }}</strong>
+                                        @if ($item->description)
+                                            <div class="hub-table__sub solar-table__meta">{{ $item->description }}</div>
+                                        @endif
+                                    </td>
+                                    <td data-label="Quantidade" class="solar-table__cell">{{ number_format((float) $item->quantity, 2, ',', '.') }}</td>
+                                    <td data-label="Custo unitario" class="solar-table__cell">R$ {{ number_format((float) $item->unit_cost, 2, ',', '.') }}</td>
+                                    <td data-label="Preco unitario" class="solar-table__cell">R$ {{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
+                                    <td data-label="Total" class="solar-table__cell">R$ {{ number_format((float) $item->total_price, 2, ',', '.') }}</td>
+                                    <td data-label="Acoes" class="solar-table__cell solar-table__cell--actions">
+                                        <div class="hub-table-actions solar-table__actions">
                                             <form action="{{ route('solar.quotes.items.destroy', [$quote->id, $item->id]) }}" method="POST">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50" onclick="return confirm('Remover este item do orcamento?');">
-                                                    Remover
-                                                </button>
+                                                <button type="submit" class="hub-btn hub-btn--subtle" onclick="return confirm('Remover este item do orcamento?');">Remover</button>
                                             </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="px-4 py-10 text-center">
-                                            <p class="text-sm font-medium text-slate-900">Nenhum item adicionado ainda.</p>
-                                            <p class="mt-2 text-sm text-slate-500">Monte a proposta com modulos, inversor, estrutura, cabeamento, instalacao e servicos complementares.</p>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr class="solar-table__row">
+                                    <td colspan="8" class="solar-table__cell solar-table__cell--primary">
+                                        <strong class="solar-table__entity">Nenhum item adicionado ainda.</strong>
+                                        <div class="hub-table__sub solar-table__meta">
+                                            Monte a proposta com modulos, inversor, estrutura, cabeamento, instalacao e servicos complementares.
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </div>

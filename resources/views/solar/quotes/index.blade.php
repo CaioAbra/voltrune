@@ -46,6 +46,10 @@
 
             <div class="solar-project-simulations-panel__grid">
                 @forelse ($quotes as $quote)
+                    @php
+                        $resolvedFinalPrice = $quote->items->isNotEmpty() ? $quote->itemsTotalPrice() : $quote->final_price;
+                        $simulationSnapshot = is_array($quote->simulation_snapshot_json) ? $quote->simulation_snapshot_json : [];
+                    @endphp
                     <article class="solar-project-simulation-card">
                         <div class="solar-project-simulation-card__header">
                             <div>
@@ -58,14 +62,14 @@
                         <div class="solar-project-simulation-card__body">
                             <p class="hub-note solar-project-simulation-card__summary">
                                 {{ $quote->project?->customer?->name ?: 'Cliente nao vinculado' }}
-                                @if ($quote->simulation)
-                                    | origem: {{ $quote->simulation->name }}
+                                @if ($simulationSnapshot['name'] ?? $quote->simulation)
+                                    | origem: {{ $simulationSnapshot['name'] ?? $quote->simulation?->name }}
                                 @endif
                             </p>
 
                             <div class="solar-project-simulation-card__metrics">
                                 <span><strong>Itens</strong>{{ $quote->items->count() }}</span>
-                                <span><strong>Preco final</strong>{{ $quote->final_price ? 'R$ ' . number_format((float) $quote->final_price, 2, ',', '.') : '-' }}</span>
+                                <span><strong>Preco final</strong>{{ $resolvedFinalPrice ? 'R$ ' . number_format((float) $resolvedFinalPrice, 2, ',', '.') : '-' }}</span>
                                 <span><strong>Economia</strong>{{ $quote->estimated_savings ? 'R$ ' . number_format((float) $quote->estimated_savings, 2, ',', '.') . '/mes' : '-' }}</span>
                                 <span><strong>Payback</strong>{{ $quote->payback_months ? $quote->payback_months . ' meses' : '-' }}</span>
                                 <span><strong>Projeto</strong>{{ $quote->project?->name ?: '-' }}</span>
@@ -84,7 +88,7 @@
                                 <h3>Nenhum orcamento criado</h3>
                             </div>
                         </div>
-                        <p class="hub-note">Abra uma simulacao e use a acao principal "Gerar proposta" para iniciar o fluxo comercial.</p>
+                        <p class="hub-note">Abra uma simulacao e gere o primeiro orcamento para iniciar o fluxo comercial.</p>
                     </article>
                 @endforelse
             </div>

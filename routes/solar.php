@@ -44,6 +44,8 @@ $solarRoute->group(function (): void {
         Route::put('/settings', [SolarCompanySettingController::class, 'update'])->name('settings.update');
         Route::get('/simulations', [SimulationController::class, 'index'])->name('simulations.index');
         Route::get('/simulations/{simulation}', [SimulationController::class, 'show'])->name('simulations.show');
+        Route::get('/simulations/{simulation}/edit', [SimulationController::class, 'edit'])->name('simulations.edit');
+        Route::put('/simulations/{simulation}', [SimulationController::class, 'update'])->name('simulations.update');
         Route::post('/simulations/{simulation}/duplicate', [SimulationController::class, 'duplicate'])->name('simulations.duplicate');
         Route::post('/simulations/{simulation}/quotes', [QuoteController::class, 'storeFromSimulation'])->name('simulations.quotes.store');
         Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');

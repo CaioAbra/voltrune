@@ -1,39 +1,50 @@
-# Voltrune Documentation
+# Documentacao Da Voltrune
 
-## Purpose
+## Objetivo
 
-This `docs/` directory documents the current Voltrune system as it exists in code today.
+Esta pasta `docs/` registra o estado atual da plataforma Voltrune com base no codigo que esta no repositorio.
 
-It was organized to support:
+Ela existe para apoiar:
 
-- technical onboarding
-- maintenance
-- architectural review
-- internal alignment
-- future case-study preparation
+- onboarding tecnico
+- manutencao
+- revisao arquitetural
+- alinhamento interno
+- replicacao de padroes entre produtos SaaS
 
-The documentation is split by product/domain so each part of the platform can be studied independently.
+## Mapa Da Documentacao
 
-## Documentation Map
-
-- [System Overview](./system-overview.md)
-- [Public Site](./public-site/README.md)
+- [Visao geral do sistema](./system-overview.md)
+- [Site publico](./public-site/README.md)
 - [Hub](./hub/README.md)
 - [Hub Admin](./hub-admin/README.md)
-- [Shared Platform](./shared/README.md)
-- [Solar Module](./solar/README.md)
+- [Camada compartilhada](./shared/README.md)
+- [Modulo Solar](./solar/README.md)
 
-## Why This Structure Exists
+## Como Esta Organizada
 
-Voltrune is not just a single product page or a single module.
+A Voltrune nao e um unico site nem um unico modulo.
 
-Today it is composed of:
+Hoje a plataforma se divide em:
 
-- a public-facing marketing site
-- a Hub with authentication and customer area
-- an admin backoffice
-- product modules, with Solar being the most evolved one
+- site publico para aquisicao
+- Hub para autenticacao e area do cliente
+- Hub Admin para operacao interna
+- modulos de produto protegidos por acesso
 
-Because of that, documenting everything in one flat file would make the material harder to maintain and harder to use for study purposes.
+Por isso, a documentacao foi separada por dominio funcional em vez de concentrar tudo em um arquivo unico.
 
-This folder is intentionally separated by area.
+## Convencao Atual
+
+Sempre que uma mudanca impactar:
+
+- dominio ou subdominio
+- fluxo de autenticacao
+- publicacao de assets
+- integracao entre Hub e produtos
+
+ela deve ser refletida na documentacao de:
+
+- visao geral do sistema
+- camada compartilhada
+- modulo/produto afetado

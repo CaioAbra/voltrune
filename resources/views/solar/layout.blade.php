@@ -13,7 +13,10 @@
 </head>
 <body class="solar-body">
     @php
-        $currentCompany = auth()->user()?->companies()->orderByDesc('company_user.is_owner')->first();
+        $currentCompany = \App\Support\CurrentCompanyContext::resolve(auth()->user(), request()->session());
+        $availableCompanies = auth()->check()
+            ? \App\Support\CurrentCompanyContext::available(auth()->user())
+            : collect();
     @endphp
 
     <div class="solar-app">
@@ -27,7 +30,23 @@
                 <p class="solar-brand__subtitle">Gestão comercial e operacional para energia solar.</p>
             </div>
 
-            <a href="{{ route('hub.dashboard') }}" class="solar-backlink">Voltar ao Hub</a>
+            <div class="hub-actions">
+                @if ($availableCompanies->count() > 1)
+                    <form action="{{ route('workspace.company.update') }}" method="POST">
+                        @csrf
+                        <label class="sr-only" for="solar-active-company">Empresa ativa</label>
+                        <select id="solar-active-company" name="company_id" class="hub-auth-input" onchange="this.form.submit()">
+                            @foreach ($availableCompanies as $companyOption)
+                                <option value="{{ $companyOption->id }}" @selected($currentCompany?->id === $companyOption->id)>
+                                    {{ $companyOption->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
+
+                <a href="{{ route('hub.dashboard') }}" class="solar-backlink">Voltar ao Hub</a>
+            </div>
         </header>
 
         <div class="solar-workspace">

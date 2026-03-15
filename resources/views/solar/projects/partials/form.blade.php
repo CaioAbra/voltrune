@@ -49,7 +49,8 @@
         ? (int) ceil((float) $initialSuggestedPrice / (float) $initialMonthlySavings)
         : null;
     $initialRoiPercentage = $sizingService->estimateRoiPercentage($initialSuggestedPrice, $initialEnergyBillValue);
-    $initialKitCost = $sizingService->estimateKitCost($initialSuggestedPrice, $companySetting?->margin_percent);
+    $initialMarginContext = $sizingService->resolveMarginContext($companySetting, $initialSystemPower);
+    $initialKitCost = $sizingService->estimateKitCostForMarginContext($initialSuggestedPrice, $initialMarginContext);
     $initialGrossProfit = $sizingService->estimateGrossProfit($initialSuggestedPrice, $initialKitCost);
     $initialKitBreakdown = $sizingService->estimateKitCostBreakdown($initialKitCost);
     $initialComposition = $sizingService->resolveSystemComposition(
@@ -64,6 +65,37 @@
         'regional' => 'Media regional',
         default => 'Fallback padrao nacional',
     };
+    $marginRangesPayload = $companySetting?->marginRanges
+        ? $companySetting->marginRanges
+            ->map(fn ($range) => [
+                'min_kwp' => (float) $range->min_kwp,
+                'max_kwp' => $range->max_kwp !== null ? (float) $range->max_kwp : null,
+                'margin_percent' => $range->margin_percent !== null ? (float) $range->margin_percent : null,
+                'requires_negotiation' => (bool) $range->requires_negotiation,
+            ])
+            ->values()
+            ->all()
+        : [];
+    $initialMarginLabel = match ($initialMarginContext['source']) {
+        'range' => $initialMarginContext['requires_negotiation']
+            ? 'Negociacao manual'
+            : number_format((float) $initialMarginContext['margin_percent'], 2, ',', '.') . '%',
+        'unmatched' => 'Sem faixa',
+        'pending' => 'Aguardando potencia',
+        'default' => number_format((float) \App\Modules\Solar\Services\SolarSizingService::DEFAULT_GROSS_MARGIN_PERCENT, 2, ',', '.') . '%',
+        default => $initialMarginContext['margin_percent'] !== null
+            ? number_format((float) $initialMarginContext['margin_percent'], 2, ',', '.') . '%'
+            : 'Nao configurada',
+    };
+    $initialMarginDetail = match ($initialMarginContext['source']) {
+        'range' => $initialMarginContext['requires_negotiation']
+            ? 'Faixa configurada para negociacao manual.'
+            : 'Faixa de potencia aplicada automaticamente.',
+        'unmatched' => 'Nenhuma faixa cobre a potencia atual do sistema.',
+        'pending' => 'A margem por faixa aparece depois que a potencia for calculada.',
+        'default' => 'Sem margem fixa cadastrada. O Solar usa o padrao interno como referencia.',
+        default => 'Indicador interno com menor peso visual.',
+    };
 @endphp
 
 <div
@@ -76,6 +108,9 @@
     data-pricing-source="{{ $pricingSource }}"
     data-regional-price-lookup='@json($regionalPriceLookup ?? [], JSON_UNESCAPED_UNICODE)'
     data-margin-percent="{{ old('company_margin_percent', $companySetting?->margin_percent) }}"
+    data-margin-mode="{{ $companySetting?->margin_mode ?: \App\Modules\Solar\Models\SolarCompanySetting::MARGIN_MODE_FIXED }}"
+    data-margin-ranges='@json($marginRangesPayload, JSON_UNESCAPED_UNICODE)'
+    data-margin-default-percent="{{ \App\Modules\Solar\Services\SolarSizingService::DEFAULT_GROSS_MARGIN_PERCENT }}"
     data-default-inverter-model="{{ $companySetting?->default_inverter_model }}"
     data-residual-minimum-cost="{{ $residualMinimumCost }}"
     data-solar-factor-used="{{ $resolvedSolarFactor }}"
@@ -171,8 +206,8 @@
                 <span data-geocoding-precision-display>{{ $geocodingPrecisionLabel }}</span>
             </span>
             <span class="solar-technical-panel__signal">
-                <strong>Margem</strong>
-                <span data-pricing-preview="margin">{{ $companySetting?->margin_percent ? number_format((float) $companySetting->margin_percent, 2, ',', '.') . '%' : 'Nao configurada' }}</span>
+                <strong>Margem aplicada</strong>
+                <span data-pricing-preview="margin">{{ $initialMarginLabel }}</span>
             </span>
             <span class="solar-technical-panel__signal">
                 <strong>Preco por kWp</strong>
@@ -328,7 +363,7 @@
                     name="energy_utility_id"
                     class="hub-auth-input"
                     data-utility-select
-                    data-utility-lookup='@json($utilityLookup, JSON_UNESCAPED_UNICODE)'
+                    data-utility-lookup="{{ e(json_encode($utilityLookup, JSON_UNESCAPED_UNICODE)) }}"
                 >
                     <option value="">Selecionar automaticamente</option>
                     @foreach ($utilities as $utility)
@@ -337,6 +372,7 @@
                         </option>
                     @endforeach
                 </select>
+                <script type="application/json" data-utility-lookup-json>@json($utilityLookup, JSON_UNESCAPED_UNICODE)</script>
                 @error('energy_utility_id')
                     <p class="hub-note">{{ $message }}</p>
                 @enderror
@@ -551,9 +587,9 @@
             <article class="solar-sizing-chip">
                 <span class="solar-sizing-chip__label">Margem de referencia</span>
                 <strong class="solar-sizing-chip__value" data-pricing-preview="margin">
-                    {{ $companySetting?->margin_percent ? number_format((float) $companySetting->margin_percent, 2, ',', '.') . '%' : 'Nao configurada' }}
+                    {{ $initialMarginLabel }}
                 </strong>
-                <span class="solar-sizing-chip__meta">Indicador interno com menor peso visual.</span>
+                <span class="solar-sizing-chip__meta" data-pricing-preview="margin-detail">{{ $initialMarginDetail }}</span>
             </article>
 
             <article class="solar-sizing-chip">

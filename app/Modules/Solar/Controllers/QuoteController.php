@@ -8,6 +8,8 @@ use App\Modules\Solar\Models\SolarQuote;
 use App\Modules\Solar\Models\SolarQuoteItem;
 use App\Modules\Solar\Models\SolarSimulation;
 use App\Modules\Solar\Services\SolarNavigationService;
+use App\Modules\Solar\Services\SolarQuoteBlueprintService;
+use App\Support\CurrentCompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,6 +18,7 @@ class QuoteController extends Controller
 {
     public function __construct(
         private readonly SolarNavigationService $navigation,
+        private readonly SolarQuoteBlueprintService $quoteBlueprints,
     ) {
     }
 
@@ -43,19 +46,28 @@ class QuoteController extends Controller
             ->with(['project.customer'])
             ->where('company_id', $company->id)
             ->findOrFail($simulation);
+        $simulationSnapshot = $this->quoteBlueprints->buildSimulationSnapshot($simulationRecord);
+        $baseTotals = $this->quoteBlueprints->resolveBaseTotals($simulationSnapshot, $simulationRecord);
 
         $quote = SolarQuote::create([
             'company_id' => $company->id,
             'solar_project_id' => $simulationRecord->solar_project_id,
             'solar_simulation_id' => $simulationRecord->id,
+            'simulation_snapshot_json' => $simulationSnapshot,
             'title' => $this->makeQuoteTitle($simulationRecord),
-            'final_price' => $simulationRecord->suggested_price,
-            'total_value' => $simulationRecord->suggested_price ?? 0,
-            'estimated_savings' => $simulationRecord->estimated_monthly_savings,
-            'payback_months' => $simulationRecord->estimated_payback_months,
+            'final_price' => $baseTotals['final_price'],
+            'total_value' => $baseTotals['total_value'],
+            'estimated_savings' => $baseTotals['estimated_savings'],
+            'payback_months' => $baseTotals['payback_months'],
             'status' => 'draft',
             'notes' => $this->makeQuoteNotes($simulationRecord),
         ]);
+
+        foreach ($this->quoteBlueprints->buildSeedItemsFromSimulation($simulationRecord) as $itemPayload) {
+            $quote->items()->create($itemPayload);
+        }
+
+        $this->syncQuoteTotals($quote->refresh()->load('items', 'simulation'));
 
         return redirect()
             ->route('solar.quotes.edit', $quote->id)
@@ -218,9 +230,7 @@ class QuoteController extends Controller
 
         abort_unless($user, 403);
 
-        $company = $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        $company = CurrentCompanyContext::resolve($user, $request->session());
 
         abort_unless($company instanceof Company, 403, 'Empresa ativa nao encontrada.');
 
@@ -280,6 +290,14 @@ class QuoteController extends Controller
         $summary = $this->quoteSummary($quote);
 
         if ($summary['item_count'] === 0) {
+            $quote->loadMissing('simulation');
+            $baseTotals = $this->quoteBlueprints->resolveBaseTotals(
+                is_array($quote->simulation_snapshot_json) ? $quote->simulation_snapshot_json : null,
+                $quote->simulation,
+            );
+
+            $quote->update($baseTotals);
+
             return;
         }
 

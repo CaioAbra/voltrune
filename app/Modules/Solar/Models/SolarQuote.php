@@ -20,6 +20,7 @@ class SolarQuote extends Model
         'company_id',
         'solar_project_id',
         'solar_simulation_id',
+        'simulation_snapshot_json',
         'title',
         'final_price',
         'total_value',
@@ -35,6 +36,7 @@ class SolarQuote extends Model
     protected function casts(): array
     {
         return [
+            'simulation_snapshot_json' => 'array',
             'final_price' => 'decimal:2',
             'total_value' => 'decimal:2',
             'estimated_savings' => 'decimal:2',

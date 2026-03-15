@@ -184,6 +184,24 @@
 }
 
 @media (max-width: 560px) {
+  .filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -0.1rem;
+    padding-bottom: 0.25rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .filter-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
   .grimoire-filters {
     gap: 0.42rem;
   }

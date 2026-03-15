@@ -1,22 +1,22 @@
-# Shared Platform
+# Camada Compartilhada
 
-## Purpose
+## Objetivo
 
-This section documents the cross-cutting layers that support the full platform.
+Esta secao documenta as partes compartilhadas que sustentam toda a plataforma.
 
-These parts are not tied to a single module.
+Nao sao elementos de um unico modulo.
 
-They exist to support:
+Elas existem para suportar:
 
-- authentication routing
-- company-aware access
-- admin access
-- command execution
-- shared domain models
+- roteamento de autenticacao
+- acesso orientado por empresa
+- acesso administrativo
+- comandos operacionais
+- configuracao de dominios e subdominios
 
-## Main Shared Models
+## Modelos Compartilhados Principais
 
-References:
+Referencias:
 
 - [Company.php](/d:/projects/voltrune/app/Models/Company.php)
 - [User.php](/d:/projects/voltrune/app/Models/User.php)
@@ -24,49 +24,59 @@ References:
 - [CompanyProductAccess.php](/d:/projects/voltrune/app/Models/CompanyProductAccess.php)
 - [CompanyBillingRecord.php](/d:/projects/voltrune/app/Models/CompanyBillingRecord.php)
 
-Why these models matter:
+Por que eles importam:
 
-- they are the backbone of Hub and product gating
-- they define who the customer is in platform terms
-- they define what the customer can access
+- sustentam o Hub e a liberacao de produtos
+- definem quem e o cliente dentro da plataforma
+- definem o que a empresa pode acessar
 
-## Shared Middleware
+## Middlewares Compartilhados
 
-Main middleware:
+Principais middlewares:
 
 - [EnsureCompanyIsActive.php](/d:/projects/voltrune/app/Http/Middleware/EnsureCompanyIsActive.php)
 - [EnsureProductAccessIsActive.php](/d:/projects/voltrune/app/Http/Middleware/EnsureProductAccessIsActive.php)
 - [EnsureHubAdmin.php](/d:/projects/voltrune/app/Http/Middleware/EnsureHubAdmin.php)
 
-Why they exist:
+Por que existem:
 
-- authentication alone is not enough
-- access depends on company state and product entitlement
-- admin access must be explicitly separated
+- autenticacao isolada nao basta
+- o acesso depende do estado da empresa e da liberacao do produto
+- a area admin precisa ficar explicitamente separada
 
-These middleware classes are central to platform behavior.
+## Padrao De Publicacao Multi-Subdominio
 
-## Shared Commands
+O padrao atual da Voltrune usa:
 
-Current commands include:
+- um projeto Laravel unico
+- build unico do frontend em `public/build`
+- multiplos subdominios apontando para produtos diferentes
 
-- Hub migrations
-- Solar migrations
-- Hub admin seeding
-- Solar utility sync
+Guia detalhado:
 
-Why commands are important in this project:
+- [Publicacao multi-subdominio](./publicacao-multi-subdominio.md)
 
-- the platform uses multiple logical areas
-- migration and operational setup are product-aware
-- some system capabilities depend on scheduled or manual sync processes
+## Comandos Compartilhados
 
-## Shared Architectural Principle
+Os comandos atuais incluem:
 
-Voltrune is structured around:
+- migrations do Hub
+- migrations do Solar
+- seed/admin do Hub
+- sincronizacao de utilidades do Solar
 
-- one identity layer
-- one company layer
-- multiple product layers
+Por que isso importa:
 
-The shared platform code is what keeps those layers coherent.
+- a plataforma tem mais de uma area logica
+- setup e manutencao sao orientados por produto
+- algumas capacidades dependem de sincronizacao agendada ou manual
+
+## Principio Arquitetural Compartilhado
+
+A Voltrune esta estruturada em torno de:
+
+- uma camada unica de identidade
+- uma camada unica de empresa
+- multiplas camadas de produto
+
+E essa camada compartilhada que mantem essas partes coerentes entre si.

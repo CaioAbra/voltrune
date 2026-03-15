@@ -49,7 +49,7 @@
                     $isAccessible = (bool) ($productAccess[$productKey] ?? false);
                     $productLabel = $productLabels[$productKey] ?? strtoupper($productKey);
                 @endphp
-                <article class="hub-card">
+                <article class="hub-card hub-product-card">
                     <h3>{{ $productLabel }}</h3>
                     <p>{{ $description }}</p>
                     @if ($isAccessible)

@@ -14,6 +14,7 @@ use App\Modules\Solar\Services\SolarNavigationService;
 use App\Modules\Solar\Services\SolarRadiationService;
 use App\Modules\Solar\Services\SolarSimulationService;
 use App\Modules\Solar\Services\SolarSizingService;
+use App\Support\CurrentCompanyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -91,8 +92,8 @@ class ProjectController extends Controller
         return view('solar.projects.show', $this->viewData('Projeto solar', [
             'company' => $company,
             'project' => $projectRecord,
-            'defaultSimulation' => $projectRecord->simulations->first(),
-            'simulations' => $projectRecord->simulations,
+            'defaultSimulation' => $projectRecord->simulations->sortByDesc('id')->values()->first(),
+            'simulations' => $projectRecord->simulations->sortByDesc('id')->values(),
             'quotes' => $projectRecord->quotes,
             'companySetting' => $companySetting,
             'effectivePricePerKwp' => $pricingContext['value'],
@@ -138,7 +139,7 @@ class ProjectController extends Controller
 
         $projectRecord = SolarProject::create($data);
         $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord, $companySetting);
-        $this->simulations->syncDefaultForProject($projectRecord, $companySetting);
+        $this->simulations->createSnapshotForProject($projectRecord, $companySetting);
 
         return redirect()
             ->route('solar.projects.index')
@@ -269,7 +270,6 @@ class ProjectController extends Controller
             )
         );
         $projectRecord = $this->refreshProjectRadiationAndSizing($projectRecord->refresh(), $companySetting);
-        $this->simulations->syncDefaultForProject($projectRecord, $companySetting);
 
         return redirect()
             ->route('solar.projects.index')
@@ -353,9 +353,7 @@ class ProjectController extends Controller
 
         abort_unless($user, 403);
 
-        $company = $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        $company = CurrentCompanyContext::resolve($user, $request->session());
 
         abort_unless($company instanceof Company, 403, 'Empresa ativa nao encontrada.');
 
@@ -492,6 +490,7 @@ class ProjectController extends Controller
     private function companySetting(Company $company): ?SolarCompanySetting
     {
         return SolarCompanySetting::query()
+            ->with('marginRanges')
             ->where('company_id', $company->id)
             ->first();
     }

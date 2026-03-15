@@ -39,6 +39,16 @@ O objetivo desta documentacao e registrar o que ja existe no codigo, como as tel
 - [Organizacao das telas](./organizacao-das-telas.md)
 - [Operacao e comandos](./operations.md)
 - [Estado atual](./current-state.md)
+- [Publicacao multi-subdominio](../shared/publicacao-multi-subdominio.md)
+
+## Publicacao Atual
+
+No estado atual:
+
+- local: `http://127.0.0.1:8000/solar`
+- producao: `https://solar.voltrune.com`
+
+O login continua centralizado no Hub, com sessao compartilhada por dominio raiz.
 
 ## Referencias Principais
 

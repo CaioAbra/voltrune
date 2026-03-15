@@ -3,94 +3,131 @@
 @section('title', 'Projetos | Voltrune Solar')
 
 @section('solar-content')
-    <section class="hub-card">
-        <div class="hub-actions">
-            <a href="{{ route('solar.projects.create') }}" class="hub-btn">Novo projeto</a>
-        </div>
-
-        @if (session('solar_status'))
-            <div
-                class="hub-alert hub-alert--success solar-flash-alert"
-                data-flash-alert
-                data-flash-timeout="5000"
-                role="status"
-                aria-live="polite"
-            >
-                <div class="solar-flash-alert__content">
-                    {{ session('solar_status') }}
+    <section class="solar-page-shell">
+        <section class="hub-card hub-card--subtle solar-page-intro">
+            <div class="solar-page-intro__header">
+                <div class="solar-page-intro__copy">
+                    <p class="solar-section-eyebrow">Projetos</p>
+                    <h2>Locais de instalacao e contexto da venda</h2>
+                    <p class="hub-note">Cada projeto representa o local da instalacao solar e concentra cliente, endereco, consumo e automacao comercial para abrir a simulacao correta.</p>
                 </div>
-                <button type="button" class="solar-flash-alert__close" data-flash-close aria-label="Fechar aviso">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
 
-        @if ($projects->isEmpty())
-            <h2>Projetos de instalação</h2>
-            <p>Nenhum projeto cadastrado para esta empresa ainda.</p>
-            <p class="hub-note">Cada projeto representa o local da instalação solar e servirá de base para localização técnica e simulação futura.</p>
-        @else
-            <div class="hub-card hub-card--subtle solar-table-panel">
-                <h2>Local da instalação</h2>
-                <p>Projetos representam o local da instalação solar. O sistema parte do CEP e dos dados básicos do imóvel para preparar a geolocalização interna.</p>
+                <div class="solar-page-intro__meta">
+                    <span class="solar-project-showcase__status-label">Leitura recomendada</span>
+                    <strong>CEP, consumo e concessionaria primeiro</strong>
+                    <p>Com o projeto bem montado, a simulacao nasce com menos digitacao e mais coerencia comercial.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="hub-card solar-page-panel">
+            <div class="hub-actions">
+                <a href="{{ route('solar.projects.create') }}" class="hub-btn">Novo projeto</a>
             </div>
 
-            <div class="hub-table-wrap solar-table-wrap">
-                <table class="hub-table solar-table solar-table--projects">
-                    <thead>
-                        <tr>
-                            <th>Projeto</th>
-                            <th>Cliente</th>
-                            <th>Cidade/UF</th>
-                            <th>Consumo mensal</th>
-                            <th>Concessionária</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($projects as $project)
-                            <tr class="solar-table__row">
-                                <td data-label="Projeto" class="solar-table__cell solar-table__cell--primary">
-                                    <strong class="solar-table__entity">{{ $project->name }}</strong>
-                                    <div class="hub-table__sub solar-table__meta">
-                                        {{ $project->street ?: 'Endereço em preparação' }}{{ $project->number ? ', '.$project->number : '' }}
-                                        @if ($project->zip_code)
-                                            <span> | CEP {{ $project->zip_code }}</span>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td data-label="Cliente" class="solar-table__cell">{{ $project->customer?->name ?: '-' }}</td>
-                                <td data-label="Cidade / UF" class="solar-table__cell">
-                                    @php
-                                        $location = trim(collect([$project->city, $project->state])->filter()->implode('/'));
-                                    @endphp
-                                    {{ $location !== '' ? $location : 'Aguardando localização' }}
-                                </td>
-                                <td data-label="Consumo mensal" class="solar-table__cell">{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</td>
-                                <td data-label="Concessionária" class="solar-table__cell">{{ $project->utility_company ?: '-' }}</td>
-                                <td data-label="Status" class="solar-table__cell">
-                                    <div class="hub-inline-badges">
-                                        <span class="hub-badge">{{ strtoupper($project->status) }}</span>
-                                        <span class="hub-badge hub-badge--muted">{{ strtoupper($project->geocoding_status ?? 'pending') }}</span>
-                                    </div>
-                                </td>
-                                <td data-label="Ações" class="solar-table__cell solar-table__cell--actions">
-                                    <div class="hub-table-actions solar-table__actions">
-                                        <a href="{{ route('solar.projects.show', $project->id) }}" class="hub-btn">Ver</a>
-                                        <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn hub-btn--subtle">Editar</a>
-                                        <form action="{{ route('solar.projects.destroy', $project->id) }}" method="post">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="hub-btn" onclick="return confirm('Excluir este projeto?');">Excluir</button>
-                                        </form>
-                                    </div>
-                                </td>
+            @if (session('solar_status'))
+                <div
+                    class="hub-alert hub-alert--success solar-flash-alert"
+                    data-flash-alert
+                    data-flash-timeout="5000"
+                    role="status"
+                    aria-live="polite"
+                >
+                    <div class="solar-flash-alert__content">
+                        {{ session('solar_status') }}
+                    </div>
+                    <button type="button" class="solar-flash-alert__close" data-flash-close aria-label="Fechar aviso">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            @if ($projects->isEmpty())
+                <div class="solar-page-panel__header">
+                    <h2>Projetos de instalacao</h2>
+                    <p class="hub-note">Nenhum projeto cadastrado para esta empresa ainda. Comece pelo local da instalacao para destravar simulacao e proposta.</p>
+                </div>
+            @else
+                <div class="hub-card hub-card--subtle solar-table-panel">
+                    <div class="solar-page-panel__header">
+                        <h2>Local da instalacao</h2>
+                        <p class="hub-note">O sistema parte do CEP e dos dados basicos do imovel para preparar geolocalizacao, concessionaria e leitura comercial do pre-orcamento.</p>
+                    </div>
+                </div>
+
+                <div class="hub-table-wrap solar-table-wrap">
+                    <table class="hub-table solar-table solar-table--projects">
+                        <thead>
+                            <tr>
+                                <th>Projeto</th>
+                                <th>Cliente</th>
+                                <th>Cidade/UF</th>
+                                <th>Consumo mensal</th>
+                                <th>Concessionaria</th>
+                                <th>Status</th>
+                                <th>Acoes</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        @endif
+                        </thead>
+                        <tbody>
+                            @foreach ($projects as $project)
+                                @php
+                                    $projectStatusLabel = match ($project->status) {
+                                        'draft' => 'Rascunho',
+                                        'qualified' => 'Qualificado',
+                                        'proposal' => 'Proposta',
+                                        'won' => 'Fechado',
+                                        default => strtoupper((string) $project->status),
+                                    };
+                                    $geocodingStatusLabel = match ($project->geocoding_status ?? 'pending') {
+                                        'ready' => 'Localizacao pronta',
+                                        'not_found' => 'Nao encontrada',
+                                        'address_loaded' => 'Endereco parcial',
+                                        'not_requested' => 'Aguardando CEP',
+                                        default => 'Em andamento',
+                                    };
+                                @endphp
+                                <tr class="solar-table__row">
+                                    <td data-label="Projeto" class="solar-table__cell solar-table__cell--primary">
+                                        <strong class="solar-table__entity">{{ $project->name }}</strong>
+                                        <div class="hub-table__sub solar-table__meta">
+                                            {{ $project->street ?: 'Endereco em preparacao' }}{{ $project->number ? ', '.$project->number : '' }}
+                                            @if ($project->zip_code)
+                                                <span> | CEP {{ $project->zip_code }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td data-label="Cliente" class="solar-table__cell">{{ $project->customer?->name ?: '-' }}</td>
+                                    <td data-label="Cidade / UF" class="solar-table__cell">
+                                        @php
+                                            $location = trim(collect([$project->city, $project->state])->filter()->implode('/'));
+                                        @endphp
+                                        {{ $location !== '' ? $location : 'Aguardando localizacao' }}
+                                    </td>
+                                    <td data-label="Consumo mensal" class="solar-table__cell">{{ $project->monthly_consumption_kwh ? number_format((float) $project->monthly_consumption_kwh, 2, ',', '.') . ' kWh' : '-' }}</td>
+                                    <td data-label="Concessionaria" class="solar-table__cell">{{ $project->utility_company ?: '-' }}</td>
+                                    <td data-label="Status" class="solar-table__cell">
+                                        <div class="hub-inline-badges">
+                                            <span class="hub-badge">{{ $projectStatusLabel }}</span>
+                                            <span class="hub-badge hub-badge--muted">{{ $geocodingStatusLabel }}</span>
+                                        </div>
+                                    </td>
+                                    <td data-label="Acoes" class="solar-table__cell solar-table__cell--actions">
+                                        <div class="hub-table-actions solar-table__actions">
+                                            <a href="{{ route('solar.projects.show', $project->id) }}" class="hub-btn">Ver</a>
+                                            <a href="{{ route('solar.projects.edit', $project->id) }}" class="hub-btn hub-btn--subtle">Editar</a>
+                                            <form action="{{ route('solar.projects.destroy', $project->id) }}" method="post">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="hub-btn" onclick="return confirm('Excluir este projeto?');">Excluir</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </section>
     </section>
 @endsection

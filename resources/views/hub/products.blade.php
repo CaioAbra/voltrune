@@ -40,7 +40,7 @@
                 $isAccessible = (bool) ($productAccess[$productKey] ?? false);
                 $productLabel = $productLabels[$productKey] ?? strtoupper($productKey);
             @endphp
-            <article class="hub-card">
+            <article class="hub-card hub-product-card">
                 <h2>{{ $productLabel }}</h2>
                 <p>{{ $description }}</p>
                 <p class="hub-note">Disponibilidade gerenciada manualmente pela equipe Voltrune</p>

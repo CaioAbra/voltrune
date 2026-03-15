@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CurrentCompanyController;
 use App\Http\Controllers\VigilanteLeadController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,11 @@ if (! app()->environment('local') && $rootDomain !== '') {
 }
 
 $webRoutes->group(function (): void {
+    Route::middleware('auth')->group(function (): void {
+        Route::post('/workspace/company', [CurrentCompanyController::class, 'update'])
+            ->name('workspace.company.update');
+    });
+
     Route::get('/', function (Request $request) {
         $hubDomain = (string) env('HUB_DOMAIN', 'hub.voltrune.com');
 

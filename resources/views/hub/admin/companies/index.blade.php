@@ -176,7 +176,7 @@
 
                         @if ($focus === 'contracts')
                             <tr>
-                                <td>
+                                <td data-label="Empresa">
                                     <strong>{{ $company->name }}</strong>
                                     <div class="hub-table__sub">{{ $company->slug }}</div>
                                 </td>
@@ -184,27 +184,27 @@
                                 <td>{{ $contracts->count() > 0 ? $contracts->pluck('product_key')->map(fn ($key) => strtoupper($key))->implode(', ') : 'Nenhum' }}</td>
                                 <td>{{ $billingCycle ? strtoupper($billingCycle) : 'Não definido' }}</td>
                                 <td>R$ {{ number_format($totalNegotiated, 2, ',', '.') }}</td>
-                                <td class="hub-table-actions">
+                                <td data-label="Acoes" class="hub-table-actions">
                                     <a href="{{ route('hub.admin.companies.show', $company) }}" class="hub-btn">Operar</a>
                                 </td>
                             </tr>
                         @elseif ($focus === 'billing')
                             <tr>
-                                <td>
+                                <td data-label="Empresa">
                                     <strong>{{ $company->name }}</strong>
                                     <div class="hub-table__sub">{{ $company->slug }}</div>
                                 </td>
                                 <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $financialStatus, 'label' => $financialStatusLabels[$financialStatus] ?? strtoupper($financialStatus)])</td>
                                 <td>{{ $billing?->payment_method ? strtoupper($billing->payment_method) : 'Não definido' }}</td>
-                                <td>{{ optional($billing?->last_payment_date)->format('d/m/Y') ?? '-' }}</td>
-                                <td>{{ optional($billing?->next_billing_date)->format('d/m/Y') ?? '-' }}</td>
-                                <td class="hub-table-actions">
+                                <td data-label="Ultimo pagamento">{{ optional($billing?->last_payment_date)->format('d/m/Y') ?? '-' }}</td>
+                                <td data-label="Proxima cobranca">{{ optional($billing?->next_billing_date)->format('d/m/Y') ?? '-' }}</td>
+                                <td data-label="Acoes" class="hub-table-actions">
                                     <a href="{{ route('hub.admin.companies.show', $company) }}" class="hub-btn">Operar</a>
                                 </td>
                             </tr>
                         @elseif ($focus === 'access')
                             <tr>
-                                <td>
+                                <td data-label="Empresa">
                                     <strong>{{ $company->name }}</strong>
                                     <div class="hub-table__sub">{{ $company->slug }}</div>
                                 </td>
@@ -232,7 +232,7 @@
                                     @endif
                                 </td>
                                 <td>{{ $owner?->name ?? 'Não definido' }}</td>
-                                <td class="hub-table-actions">
+                                <td data-label="Acoes" class="hub-table-actions">
                                     <a href="{{ route('hub.admin.companies.show', $company) }}" class="hub-btn">Operar</a>
                                 </td>
                             </tr>
@@ -241,7 +241,7 @@
                                 'hub-row--needs-attention' => $rowNeedsAttention && ! $rowIsCritical,
                                 'hub-row--critical' => $rowIsCritical,
                             ])>
-                                <td>
+                                <td data-label="Empresa">
                                     <strong>{{ $company->name }}</strong>
                                     <div class="hub-table__sub">{{ $company->slug }}</div>
                                     <div class="hub-row-flags">
@@ -265,7 +265,7 @@
                                     {{ $owner?->name ?? 'Não definido' }}
                                     <div class="hub-table__sub">{{ $visibleUsers->count() }} usuário(s)</div>
                                 </td>
-                                <td>{{ $owner?->email ?? '-' }}</td>
+                                <td data-label="E-mail">{{ $owner?->email ?? '-' }}</td>
                                 <td>@include('hub.admin.partials.status-badge', ['type' => 'company', 'value' => $company->status, 'label' => $companyStatusLabels[$company->status] ?? strtoupper($company->status)])</td>
                                 <td>@include('hub.admin.partials.status-badge', ['type' => 'financial', 'value' => $financialStatus, 'label' => $financialStatusLabels[$financialStatus] ?? strtoupper($financialStatus)])</td>
                                 <td>
@@ -279,8 +279,8 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td>{{ optional($company->created_at)->format('d/m/Y H:i') }}</td>
-                                <td class="hub-table-actions">
+                                <td data-label="Data de cadastro">{{ optional($company->created_at)->format('d/m/Y H:i') }}</td>
+                                <td data-label="Acoes" class="hub-table-actions">
                                     <a href="{{ route('hub.admin.companies.show', $company) }}" class="hub-btn">Operar</a>
                                     <form method="post" action="{{ route('hub.admin.companies.status.update', $company) }}">
                                         @csrf

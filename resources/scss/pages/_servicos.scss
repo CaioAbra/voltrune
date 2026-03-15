@@ -328,9 +328,13 @@
   .service-entry-actions form,
   .service-entry-actions form .btn,
   .service-cta-panel__actions .btn,
+  .service-cta-panel__actions form,
+  .service-cta-panel__actions form .btn,
   .service-overview-card,
   .launch-queue-inline form,
-  .launch-queue-inline .btn {
+  .launch-queue-inline .btn,
+  .systems-grid .system-card__actions form,
+  .systems-grid .system-card__actions .btn {
     width: 100%;
   }
 

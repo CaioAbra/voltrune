@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Modules\Solar\Models\SolarCustomer;
 use App\Modules\Solar\Services\SolarNavigationService;
+use App\Support\CurrentCompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -123,9 +124,7 @@ class CustomerController extends Controller
 
         abort_unless($user, 403);
 
-        $company = $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        $company = CurrentCompanyContext::resolve($user, $request->session());
 
         abort_unless($company instanceof Company, 403, 'Empresa ativa nao encontrada.');
 

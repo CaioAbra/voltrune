@@ -1,98 +1,80 @@
-# Operations And Commands
+# Operacao E Comandos
 
-## Main Runtime Dependencies
+## Dependencias Principais Em Runtime
 
-Solar currently depends on:
+Hoje o Solar depende de:
 
-- Laravel application runtime
-- `solar_mysql` connection
-- ViaCEP for CEP enrichment
-- Nominatim/OpenStreetMap for geocoding
-- PVGIS for solar factor
-- ANEEL + IBGE public data for utility coverage sync
+- runtime da aplicacao Laravel
+- conexao `solar_mysql`
+- ViaCEP para enriquecimento de CEP
+- Nominatim/OpenStreetMap para geocodificacao
+- PVGIS para fator solar
+- dados publicos ANEEL + IBGE para sincronizacao de concessionarias
 
-## Important Commands
+## Comandos Importantes
 
-### Run Solar-only migrations
+### Rodar migrations do Solar
 
-Command:
+Comando:
 
 `php artisan voltrune:migrate-solar`
 
-Why:
+Por que importa:
 
-- keeps Solar schema changes isolated from the rest of the platform
+- mantem o schema do Solar isolado do restante da plataforma
 
-Reference:
+Referencia:
 
 - [MigrateSolarCommand.php](/d:/projects/voltrune/app/Console/Commands/MigrateSolarCommand.php)
 
-### Seed or sync utilities
+### Seed ou sync de concessionarias
 
-Command:
+Comando:
 
 `php artisan voltrune:seed-solar-utilities`
 
-Behavior:
+Comportamento:
 
-- tries national sync first
-- falls back to local seed if needed
+- tenta sincronizacao nacional primeiro
+- se necessario, cai para seed local
 
-Why:
-
-- improves resilience during setup
-
-Reference:
+Referencia:
 
 - [SeedSolarUtilitiesCommand.php](/d:/projects/voltrune/app/Console/Commands/SeedSolarUtilitiesCommand.php)
 
-### National utility sync
+### Sync nacional de concessionarias
 
-Command:
+Comando:
 
 `php artisan voltrune:sync-solar-utilities-national --prune`
 
-Why:
+Por que importa:
 
-- keeps the utility catalog aligned with public data
-- reduces state/city mismatches in the project form
+- mantem o catalogo de concessionarias alinhado com dados publicos
+- reduz divergencias entre cidade, estado e sugestao de concessionaria
 
-Reference:
+Referencia:
 
 - [SyncSolarUtilitiesNationalCommand.php](/d:/projects/voltrune/app/Console/Commands/SyncSolarUtilitiesNationalCommand.php)
 
-### Scheduled utility refresh
+### Backfill de simulacoes padrao
 
-Defined in:
-
-- [routes/console.php](/d:/projects/voltrune/routes/console.php)
-
-Current behavior:
-
-- daily sync at `03:30`
-
-Why:
-
-- keeps national coverage fresh without manual intervention
-
-### Backfill default simulations from existing projects
-
-Command:
+Comando:
 
 `php artisan solar:backfill-project-simulations`
 
-Why:
+Por que importa:
 
-- creates the default simulation for legacy projects
-- supports the gradual transition from project-centric sizing to scenario-centric sizing
+- cria a simulacao padrao para projetos legados
+- apoia a transicao do fluxo centrado em projeto para o fluxo centrado em simulacao
 
-Reference:
+Referencia:
 
 - [BackfillSolarProjectSimulationsCommand.php](/d:/projects/voltrune/app/Console/Commands/BackfillSolarProjectSimulationsCommand.php)
 
-## Tests That Protect Critical Logic
+## Validacoes Automatizadas Relevantes
 
-Main unit tests:
+Testes que protegem a camada critica do Solar:
 
 - [SolarSizingServiceTest.php](/d:/projects/voltrune/tests/Unit/SolarSizingServiceTest.php)
 - [SolarGeocodingServiceTest.php](/d:/projects/voltrune/tests/Unit/SolarGeocodingServiceTest.php)
@@ -101,25 +83,107 @@ Main unit tests:
 - [EnergyUtilityResolverServiceTest.php](/d:/projects/voltrune/tests/Unit/EnergyUtilityResolverServiceTest.php)
 - [ProjectControllerLocationPreparationTest.php](/d:/projects/voltrune/tests/Unit/ProjectControllerLocationPreparationTest.php)
 
-Why these tests matter:
+Por que esses testes importam:
 
-- sizing is the commercial core
-- geocoding influences radiation quality
-- radiation influences system sizing credibility
-- utility resolution affects trust in location coherence
+- sizing e o nucleo comercial
+- geocodificacao influencia a qualidade do fator solar
+- fator solar influencia a credibilidade do dimensionamento
+- resolucao de concessionaria influencia coerencia do contexto do projeto
 
-## Safe Maintenance Guidance
+## Operacao De Publicacao Em Producao
 
-When changing Solar, the safest order of attention is:
+### Dominios atuais
+
+Em producao, a Voltrune opera hoje com:
+
+- `voltrune.com` para o site publico
+- `hub.voltrune.com` para o Hub
+- `solar.voltrune.com` para o Solar
+
+Em ambiente local:
+
+- site publico na raiz
+- Hub em `/hub`
+- Solar em `/solar`
+
+### Build do frontend
+
+O build e unico para toda a aplicacao.
+
+Comando:
+
+```bash
+npm run build
+```
+
+Saida:
+
+- `public/build`
+
+Nao existe build separado dentro de `/solar`.
+
+### Publicacao do subdominio Solar
+
+Na Hostoo/cPanel, o subdominio Solar foi publicado em uma pasta publica propria:
+
+- `~/public_html/solar`
+
+Arquivos necessarios:
+
+- `index.php`
+- `.htaccess`
+
+Links simbolicos necessarios para assets:
+
+```bash
+ln -s ../build build
+ln -s ../favicon.ico favicon.ico
+ln -s ../images images
+ln -s ../robots.txt robots.txt
+ln -s ../sitemap.xml sitemap.xml
+```
+
+Sem esses links:
+
+- a pagina pode carregar em HTML puro
+- mas CSS, JS e outros arquivos publicos nao serao entregues
+
+### Limpeza de cache apos deploy
+
+Depois de alterar dominio, subdominio, rotas ou configuracao, a sequencia segura e:
+
+```bash
+php artisan optimize:clear
+php artisan config:clear
+php artisan route:clear
+php artisan cache:clear
+```
+
+### Checklist rapido de validacao
+
+1. Confirmar `.env` de producao com `ROOT_DOMAIN`, `HUB_DOMAIN`, `SOLAR_DOMAIN` e `SESSION_DOMAIN`.
+2. Confirmar `php artisan route:list`.
+3. Confirmar `https://solar.voltrune.com/build/manifest.json`.
+4. Confirmar login compartilhado entre Hub e Solar.
+5. Confirmar dashboard, projetos, simulacoes e orcamentos do Solar.
+
+Guia detalhado relacionado:
+
+- [Publicacao multi-subdominio](../shared/publicacao-multi-subdominio.md)
+
+## Ordem Segura De Manutencao
+
+Quando for mexer no Solar, a ordem mais segura de atencao costuma ser:
 
 1. services
-2. project controller contract
-3. form/show views
-4. frontend interactions
-5. styling
+2. contrato do controller
+3. rotas e publicacao
+4. views
+5. interacoes frontend
+6. styling
 
-Why:
+Por que:
 
-- styling regressions are visible
-- service regressions change business outcome
-- controller regressions can silently break persistence
+- regressao visual aparece rapido
+- regressao em service altera resultado comercial
+- regressao em rota/publicacao pode derrubar o produto inteiro em producao

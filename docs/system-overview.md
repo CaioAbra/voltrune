@@ -1,99 +1,123 @@
-# System Overview
+# Visao Geral Do Sistema
 
-## What Voltrune Is
+## O Que E A Voltrune
 
-Voltrune is a Laravel-based platform with multiple layers:
+A Voltrune e uma plataforma Laravel com multiplas camadas de produto e acesso.
 
-- public site for acquisition and positioning
-- Hub for account access and customer navigation
-- Hub Admin for internal operations
-- product modules under gated access
+Hoje ela combina:
 
-The most developed product module today is Solar.
+- site publico para aquisicao e posicionamento
+- Hub para autenticacao e navegacao do cliente
+- Hub Admin para operacao interna
+- modulos de produto protegidos por acesso
 
-## High-Level Domains
+O modulo de produto mais maduro hoje e o Solar.
 
-### 1. Public Site
+## Dominios Funcionais Principais
 
-Purpose:
+### 1. Site Publico
 
-- present the company
-- capture interest
-- generate leads
-- communicate service/product value
+Papel:
 
-Main route source:
+- apresentar a empresa
+- captar interesse
+- gerar leads
+- posicionar servicos e produtos
+
+Rotas principais:
 
 - [routes/web.php](/d:/projects/voltrune/routes/web.php)
 
+Em producao, o site publico fica associado ao `ROOT_DOMAIN`.
+
 ### 2. Hub
 
-Purpose:
+Papel:
 
-- authenticate users
-- register companies
-- expose customer dashboard and account area
-- act as the access gateway to products
+- autenticar usuarios
+- registrar e contextualizar empresas
+- expor dashboard e area da conta
+- funcionar como porta de entrada para os produtos SaaS
 
-Main route source:
+Rotas principais:
 
 - [routes/hub.php](/d:/projects/voltrune/routes/hub.php)
 
+Em producao, o Hub fica associado ao `HUB_DOMAIN`.
+
 ### 3. Hub Admin
 
-Purpose:
+Papel:
 
-- manage companies
-- manage product access
-- manage contracts
-- manage billing state
+- operar empresas
+- controlar acesso a produtos
+- controlar contratos
+- controlar cobranca e estado comercial
 
-This is the internal operating console for Voltrune staff.
+Esta e a console interna da Voltrune.
 
 ### 4. Solar
 
-Purpose:
+Papel:
 
-- enable solar installers to create commercial pre-budgets fast
-- organize the solar workflow around customer, project, simulation and quote
+- permitir que instaladores solares montem leitura comercial e pre-orcamento com agilidade
+- organizar o fluxo em cliente, projeto, simulacao e orcamento
 
-Main route source:
+Rotas principais:
 
 - [routes/solar.php](/d:/projects/voltrune/routes/solar.php)
 
-Current functional chain:
+Cadeia funcional atual:
 
-1. customer
-2. project
-3. simulation
-4. quote
+1. cliente
+2. projeto
+3. simulacao
+4. orcamento
 
-## Runtime Model
+Em producao, o Solar fica associado ao `SOLAR_DOMAIN`.
 
-At runtime, the system behaves like this:
+## Modelo De Execucao
 
-1. a user reaches the public site
-2. the user registers or logs in through Hub
-3. the user is associated with a company
-4. access is checked against company status and product entitlement
-5. enabled modules become accessible
+Em alto nivel, a plataforma funciona assim:
 
-This access chain is one of the most important architectural choices in the platform.
+1. o usuario entra pelo site publico
+2. o usuario se registra ou faz login pelo Hub
+3. o usuario e associado a uma empresa
+4. o acesso e validado por status da empresa e liberacao do produto
+5. os modulos habilitados ficam disponiveis
 
-It allows Voltrune to behave like a multi-product SaaS without requiring a separate app per product.
+Essa cadeia de acesso e uma das decisoes arquiteturais mais importantes da plataforma.
 
-## Core Platform Idea
+Ela permite que a Voltrune opere como um SaaS multiproduto sem exigir um projeto Laravel separado por produto.
 
-The current platform is built around:
+## Padrao Atual De Dominio
 
-- company-centered access
-- product gating
-- gradual module maturity
+No estado atual, o padrao recomendado e:
 
-This means:
+- `voltrune.com` para o site publico
+- `hub.voltrune.com` para o Hub
+- `solar.voltrune.com` para o modulo Solar
 
-- users do not just log into a generic dashboard
-- they log into a company context
-- products are enabled according to commercial state
+Em ambiente local, o comportamento continua simplificado:
 
-That architecture is especially visible in Hub and Solar.
+- site publico na raiz local
+- Hub em `/hub`
+- Solar em `/solar`
+
+Isso evita complexidade de DNS no desenvolvimento, sem perder a separacao correta em producao.
+
+## Ideia Central Da Plataforma
+
+A plataforma atual esta organizada em torno de:
+
+- uma camada unica de identidade
+- uma camada unica de empresa
+- multiplas camadas de produto
+
+Isso significa:
+
+- o usuario nao entra em um dashboard generico
+- ele entra em um contexto de empresa
+- os produtos sao habilitados conforme o estado comercial e contratual
+
+Esse padrao aparece de forma muito clara no Hub e no Solar.

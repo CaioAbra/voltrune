@@ -1,126 +1,132 @@
-# Current State And Limitations
+# Estado Atual E Limitacoes
 
-## What Is Mature Enough Today
+## O Que Ja Esta Maduro Hoje
 
-Solar is already strong in:
+O Solar ja esta forte em:
 
-- pre-budget generation
-- first commercial conversation support
-- location-assisted automation
-- regional solar factor usage
-- market fallback pricing
-- guided project editing
-- commercial reading of saved projects
-- simulation snapshots linked to projects
-- simulation-level composition and cost visibility
+- geracao de pre-orcamento
+- apoio a primeira conversa comercial
+- automacao orientada por localizacao
+- uso de fator solar regional
+- fallback comercial por mercado
+- edicao guiada de projetos
+- leitura comercial de cenarios por simulacao
+- simulacoes ligadas a projetos
+- orcamentos com composicao real de itens
 
-## Current Limitations
+## Refinos Recentes De Interface
 
-### 1. No real equipment catalog yet
+As ultimas rodadas consolidaram alguns comportamentos importantes de UX:
 
-Today the module does not manage:
+- projeto, simulacao e orcamento agora compartilham uma linguagem visual mais consistente
+- listagens e cards principais respondem melhor a larguras intermediarias e notebooks com escala de exibicao
+- titulos, metricas e valores financeiros passaram a quebrar de forma mais controlada
+- estados com um unico card deixaram de ocupar largura excessiva sem necessidade
+- a hierarquia entre acao principal, secundaria e terciaria ficou mais explicita nas areas de simulacao
 
-- inverter brands as structured data
-- module brands as structured data
-- supplier stock
-- SKU-level costs
+## Limitacoes Atuais
 
-Why:
+### 1. Ainda nao existe catalogo estruturado de equipamentos
 
-- product focus has been on commercial velocity, not procurement depth
+Hoje o modulo ainda nao gerencia:
 
-Current workaround:
+- marcas de inversor como entidade estruturada
+- marcas de modulo como entidade estruturada
+- estoque de fornecedor
+- custos por SKU
 
-- company defaults
-- descriptive composition
-- estimated kit breakdown
-- simulation-level persisted cost groups and gross profit
+Workaround atual:
 
-### 2. External dependency sensitivity
+- defaults da empresa
+- composicao descritiva
+- detalhamento estimado do kit
+- itens manuais no orcamento
 
-Solar still depends on public services for:
+### 2. Sensibilidade a dependencias externas
 
-- CEP enrichment
-- geocoding
-- PVGIS factor
+O Solar ainda depende de servicos publicos para:
 
-What has already been done:
+- enriquecimento de CEP
+- geocodificacao
+- fator PVGIS
 
-- caching
-- fallback factor
-- persisted factor reuse
-- safe degradation
+O que ja foi feito:
 
-What this means:
+- cache
+- fallback de fator solar
+- reuso de fator persistido
+- degradacao segura
 
-- the system remains usable
-- but real-time automation can still be affected by third-party latency
+Impacto pratico:
 
-### 3. Utility data is strong but not magical
+- o sistema continua utilizavel
+- mas a automacao em tempo real ainda pode sofrer com latencia de terceiros
 
-The utility catalog now covers Brazil using public sources, but it still depends on:
+### 3. Simulacao financeira ainda e propositalmente simples
 
-- source data consistency
-- correct city and state inference
+Hoje a simulacao nao modela:
 
-Why this matters:
+- inflacao tarifaria
+- financiamento
+- complexidade tributaria
+- cenarios avancados de payback
 
-- location mistakes can create wrong utility suggestions
-- UX reliability depends on clean location data
+Isso foi uma escolha intencional para priorizar:
 
-### 4. Financial simulation is intentionally simple
+- velocidade comercial
+- clareza de leitura
+- simplicidade operacional
 
-Current simulation does not model:
+### 4. A transicao entre projeto e simulacao ainda e incremental
 
-- tariff inflation
-- financing
-- tax complexity
-- advanced payback scenarios
+Hoje:
 
-Why:
+- o projeto ainda persiste parte do snapshot calculado
+- a simulacao foi fortalecida como entidade real
+- o orcamento ja nasce da simulacao, mas o fluxo de proposta ainda nao esta completo em profundidade
 
-- the current goal is a clear and fast first commercial estimate
+Essa transicao foi aceita para evitar ruptura do fluxo existente.
 
-### 5. Transition between project and simulation is incremental
+### 5. Publicacao do Solar em subdominio ainda depende de padrao operacional
 
-Today:
+O Solar ja esta funcionando em `solar.voltrune.com`, mas a publicacao correta depende de:
 
-- project still persists much of the calculated snapshot
-- simulation is synchronized from project as a real entity
-- quote is prepared to point to simulation, but the full proposal workflow is not complete yet
+- variaveis de ambiente corretas
+- registro correto das rotas por dominio
+- sessao compartilhada com o Hub
+- links simbolicos para assets publicos na pasta do subdominio
 
-Why:
+Sem isso, os erros mais provaveis sao:
 
-- the module needs continuity while the domain model matures
-- this avoids breaking current project editing and show flows
+- Solar cair no dominio do Hub
+- loop de redirecionamento
+- home institucional abrir no lugar do produto
+- tela do Solar carregar sem CSS/JS
 
-## Why These Tradeoffs Were Accepted
+## Por Que Essas Trocas Foram Aceitas
 
-The current product strategy values:
+A estrategia atual privilegia:
 
-- fast usefulness
-- commercial clarity
-- operational simplicity
+- utilidade rapida
+- clareza comercial
+- simplicidade de operacao
 
-over:
+acima de:
 
-- deep engineering detail
-- procurement-grade catalog management
-- highly complex financial modeling
+- detalhe profundo de engenharia
+- catalogo de compras completo
+- modelagem financeira avancada
 
-This is the correct tradeoff for the current stage of the module.
+Para o momento atual do produto, essa troca continua coerente.
 
-## Recommended Future Evolution
+## Evolucao Recomendada
 
-When the product needs the next maturity step, the most coherent sequence is:
+Quando o produto precisar de mais maturidade, a sequencia mais consistente e:
 
-1. structured equipment catalog by company
-2. supplier and cost source integration
-3. quote workflow fully driven by simulation
-4. richer financial models
-5. engineering validation depth
+1. catalogo estruturado de equipamentos por empresa
+2. integracao com fornecedor e origem de custo
+3. fluxo de proposta mais completo a partir da simulacao
+4. modelos financeiros mais ricos
+5. profundidade de validacao de engenharia
 
-Why this order:
-
-- it preserves the current commercial-first identity
-- it adds depth without destroying usability
+Essa ordem preserva a identidade comercial do produto sem destruir a usabilidade atual.

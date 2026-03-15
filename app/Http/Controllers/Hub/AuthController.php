@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hub;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\User;
+use App\Support\CurrentCompanyContext;
 use App\Support\HubAdminAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,7 @@ class AuthController extends Controller
     public function login(Request $request): RedirectResponse
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email', 'exists:hub_mysql.users,email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
@@ -61,7 +62,15 @@ class AuthController extends Controller
         }
 
         if (! HubAdminAccess::isAdmin($user) && $company?->status !== 'active') {
+            if ($company) {
+                CurrentCompanyContext::remember($user, $request->session(), $company->id);
+            }
+
             return redirect()->route('hub.activation-pending');
+        }
+
+        if ($company) {
+            CurrentCompanyContext::remember($user, $request->session(), $company->id);
         }
 
         $defaultRoute = HubAdminAccess::isAdmin($user)
@@ -118,12 +127,17 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
+        if ($company = $this->resolveCurrentCompany($user)) {
+            CurrentCompanyContext::remember($user, $request->session(), $company->id);
+        }
+
         return redirect()->route('hub.activation-pending')
             ->with('status', 'Conta criada com sucesso. Aguarde a ativacao da equipe Voltrune.');
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        CurrentCompanyContext::forget($request->session());
         Auth::logout();
 
         $request->session()->invalidate();
@@ -174,8 +188,6 @@ class AuthController extends Controller
 
     private function resolveCurrentCompany(User $user): ?Company
     {
-        return $user->companies()
-            ->orderByDesc('company_user.is_owner')
-            ->first();
+        return CurrentCompanyContext::resolve($user);
     }
 }

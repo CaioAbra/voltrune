@@ -53,4 +53,51 @@ class SolarSimulationServiceTest extends TestCase
         $this->assertSame('draft', $payload['status']);
         $this->assertCount(4, $payload['system_composition_json']);
     }
+
+    public function test_it_rebuilds_an_existing_simulation_payload_from_manual_overrides(): void
+    {
+        $project = new SolarProject([
+            'company_id' => 1,
+            'energy_bill_value' => 510,
+            'monthly_consumption_kwh' => 690,
+            'state' => 'SP',
+            'solar_factor_used' => 138.0,
+            'solar_factor_source' => 'pvgis',
+        ]);
+        $simulation = new \App\Modules\Solar\Models\SolarSimulation([
+            'system_power_kwp' => 5.0,
+            'module_power' => 550,
+            'module_quantity' => 10,
+            'estimated_generation_kwh' => 690,
+            'suggested_price' => 21550,
+            'inverter_model' => 'Modelo anterior',
+            'status' => 'draft',
+            'notes' => 'Versao inicial.',
+        ]);
+        $setting = new SolarCompanySetting([
+            'default_module_power' => 550,
+            'default_inverter_model' => 'Solis 5kW',
+            'price_per_kwp' => 4300,
+        ]);
+
+        $service = new SolarSimulationService(new SolarSizingService());
+        $payload = $service->rebuildPayload($simulation, $project, $setting, [
+            'system_power_kwp' => 6.1,
+            'module_quantity' => 12,
+            'estimated_generation_kwh' => 841.8,
+            'suggested_price' => 26230,
+            'inverter_model' => 'Novo inversor',
+            'status' => 'proposal',
+            'notes' => 'Cenario ajustado.',
+        ]);
+
+        $this->assertSame(6.1, (float) $payload['system_power_kwp']);
+        $this->assertSame(12, $payload['module_quantity']);
+        $this->assertSame(841.8, (float) $payload['estimated_generation_kwh']);
+        $this->assertSame(26230.0, (float) $payload['suggested_price']);
+        $this->assertSame('Novo inversor', $payload['inverter_model']);
+        $this->assertSame('proposal', $payload['status']);
+        $this->assertSame('Cenario ajustado.', $payload['notes']);
+        $this->assertSame(440.0, (float) $payload['estimated_monthly_savings']);
+    }
 }
